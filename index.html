@@ -15,6 +15,7 @@
 <body class="bg-gray-100">
 
 <div class="max-w-4xl mx-auto pb-20">
+    <!-- БАНЕР ЗВЕРХУ -->
     <div class="w-full overflow-hidden shadow-sm">
         <img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Баннер" class="w-full h-auto object-cover block">
     </div>
@@ -35,24 +36,34 @@
         <button onclick="resetFilters()" class="bg-gray-200 text-gray-700 px-4 rounded-2xl text-sm font-medium hover:bg-gray-300">Всі</button>
     </div>
 
+    <!-- Статус завантаження -->
     <div id="loading-status" class="text-center py-10 text-gray-500 font-medium">
         ⏳ Завантаження товарів та актуальних цін...
     </div>
 
+    <!-- Категорії -->
     <div id="categories" class="px-4 mb-6 grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
     
+    <!-- Товари -->
     <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
 </div>
 
+<!-- Модальне вікно КАРТКИ ТОВАРУ -->
 <div id="product-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onclick="hideProductModal()">
     <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative" onclick="event.stopPropagation()">
         <button onclick="hideProductModal()" class="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold z-10">✕</button>
-        <img id="modal-product-image" src="" class="w-full h-72 object-cover" onerror="this.src='https://via.placeholder.com/400x300?text=Фото'">
+        
+        <!-- ИСПРАВЛЕНО: Контейнер для фото в модальном окне, чтобы картинка не вылезала -->
+        <div class="w-full h-72 bg-gray-50 flex items-center justify-center overflow-hidden">
+            <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" onerror="this.src='https://via.placeholder.com/400x300?text=Фото'">
+        </div>
+
         <div class="p-6">
             <span id="modal-product-category" class="text-xs font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md"></span>
             <h2 id="modal-product-name" class="text-xl font-bold text-gray-800 mt-3 leading-tight"></h2>
             <p id="modal-product-description" class="text-gray-600 text-sm mt-2 whitespace-pre-line"></p>
             
+            <!-- БЛОК ВИБОРУ РОЗМІРУ -->
             <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                 <span class="text-gray-600 font-medium text-sm pl-2">Оберіть розмір:</span>
                 <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600">
@@ -76,6 +87,7 @@
                 </select>
             </div>
             
+            <!-- Вибір кількості -->
             <div class="mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                 <span class="text-gray-600 font-medium text-sm pl-2">Кількість:</span>
                 <div class="flex items-center gap-1">
@@ -98,6 +110,7 @@
     </div>
 </div>
 
+<!-- Кошик -->
 <div id="cart-modal" class="hidden fixed inset-0 bg-black/70 flex items-end z-50">
     <div class="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-auto p-5">
         <div class="flex justify-between mb-6">
@@ -178,7 +191,10 @@ function renderProducts(products) {
         html += `
             <div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border flex flex-col justify-between">
                 <div>
-                    <img src="${p.image || 'https://via.placeholder.com/300x200?text=Фото'}" class="w-full h-40 object-cover" onerror="this.src='https://via.placeholder.com/300x200?text=Фото'">
+                    <!-- ИСПРАВЛЕНО: Контейнер для картинок на витрине, чтобы они не обрезались -->
+                    <div class="w-full h-40 bg-gray-50 flex items-center justify-center overflow-hidden">
+                        <img src="${p.image || 'https://via.placeholder.com/300x200?text=Фото'}" class="max-w-full max-h-full object-contain" onerror="this.src='https://via.placeholder.com/300x200?text=Фото'">
+                    </div>
                     <div class="p-3">
                         <h3 class="font-medium text-sm line-clamp-2 text-gray-800">${p.name}</h3>
                         <p class="text-gray-500 text-xs mt-1 min-h-[16px]">${p.description || ''}</p>
