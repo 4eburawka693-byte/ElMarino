@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElMarino Магазин</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: system-ui, sans-serif; }
+        .product-card { transition: all 0.2s ease; cursor: pointer; }
+        .product-card:active { transform: scale(0.98); }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+<div class="max-w-4xl mx-auto pb-20">
+    <!-- БАНЕР ЗВЕРХУ -->
+    <div class="w-full overflow-hidden shadow-sm">
+        <img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Баннер" class="w-full h-auto object-cover block">
+    </div>
+
+    <header class="bg-purple-700 text-white p-4 sticky top-0 z-50 shadow">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold">🛍️ ElMarino Магазин</h1>
+            <button onclick="showCart()" class="flex items-center gap-2 bg-white text-purple-700 px-5 py-2 rounded-2xl font-medium">
+                🛒 <span id="cart-count" class="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">0</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="p-4 flex gap-2">
+        <input id="search" type="text" placeholder="🔍 Пошук товарів..." 
+               class="w-full p-4 rounded-2xl border focus:border-purple-600 outline-none shadow-sm" 
+               onkeyup="filterProducts()">
+        <button onclick="resetFilters()" class="bg-gray-200 text-gray-700 px-4 rounded-2xl text-sm font-medium hover:bg-gray-300">Всі</button>
+    </div>
+
+    <!-- Категорії -->
+    <div id="categories" class="px-4 mb-6 grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+    
+    <!-- Товари -->
+    <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
+</div>
+
+<!-- Модальне вікно КАРТКИ ТОВАРУ -->
+<div id="product-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onclick="hideProductModal()">
+    <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative" onclick="event.stopPropagation()">
+        <button onclick="hideProductModal()" class="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold z-10">✕</button>
+        <img id="modal-product-image" src="" class="w-full h-72 object-cover" onerror="this.src='https://via.placeholder.com/400x300?text=Фото'">
+        <div class="p-6">
+            <span id="modal-product-category" class="text-xs font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md"></span>
+            <h2 id="modal-product-name" class="text-xl font-bold text-gray-800 mt-3 leading-tight"></h2>
+            <p id="modal-product-description" class="text-gray-600 text-sm mt-2 whitespace-pre-line"></p>
+            
+            <!-- БЛОК ВИБОРУ РОЗМІРУ (Широкий діапазон від 30 до 46) -->
+            <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
+                <span class="text-gray-600 font-medium text-sm pl-2">Оберіть розмір:</span>
+                <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600">
+                    <option value="30">30</option>
+                    <option value="31">31</option>
+                    <option value="32">32</option>
+                    <option value="33">33</option>
+                    <option value="34">34</option>
+                    <option value="35">35</option>
+                    <option value="36">36</option>
+                    <option value="37">37</option>
+                    <option value="38" selected>38</option>
+                    <option value="39">39</option>
+                    <option value="40">40</option>
+                    <option value="41">41</option>
+                    <option value="42">42</option>
+                    <option value="43">43</option>
+                    <option value="44">44</option>
+                    <option value="45">45</option>
+                    <option value="46">46</option>
+                </select>
+            </div>
+            
+            <!-- Вибір кількості в картці товару -->
+            <div class="mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
+                <span class="text-gray-600 font-medium text-sm pl-2">Кількість:</span>
+                <div class="flex items-center gap-1">
+                    <button onclick="changeModalQty(-1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-gray-100 shadow-sm">-</button>
+                    <span id="modal-qty" class="w-12 text-center font-bold text-lg">1</span>
+                    <button onclick="changeModalQty(1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-gray-100 shadow-sm">+</button>
+                </div>
+            </div>
+
+            <div class="mt-6 flex items-center justify-between gap-4 border-t pt-4">
+                <div>
+                    <span class="text-gray-400 text-xs block">Ціна</span>
+                    <span id="modal-product-price" class="text-2xl font-black text-purple-700"></span>
+                </div>
+                <button id="modal-product-btn" class="flex-1 bg-purple-700 hover:bg-purple-800 text-white py-4 rounded-2xl font-semibold transition-colors shadow-lg shadow-purple-700/20">
+                    Додати в кошик
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Кошик -->
+<div id="cart-modal" class="hidden fixed inset-0 bg-black/70 flex items-end z-50">
+    <div class="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-auto p-5">
+        <div class="flex justify-between mb-6">
+            <h2 class="text-2xl font-bold">Кошик</h2>
+            <button onclick="hideCart()" class="text-3xl">✕</button>
+        </div>
+        <div id="cart-items" class="space-y-4"></div>
+        <div class="mt-8 border-t pt-6">
+            <div class="flex justify-between text-xl font-bold">
+                <span>Разом:</span>
+                <span id="cart-total">0 грн</span>
+            </div>
+            <button onclick="placeOrder()" class="mt-6 w-full bg-green-600 text-white py-5 rounded-3xl text-lg font-medium">
+                Оформити замовлення (Telegram)
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ========== СПИСОК ТОВАРІВ ==========
+const allProducts = [
+    {"name":"Пакет фасувальний 10×22 \"Львів\"","category":"пакети фасувальні","price":"95,00","description":"1000 шт. в упаковці","image":"https://i.postimg.cc/Df5Tt4xK/20260317-094037.jpg"},
+    {"name":"Пакет фасувальний 10×22 ЭКО","category":"пакети фасувальні","price":"90,00","description":"1000шт. в упаковці","image":"https://i.postimg.cc/wBn7VsSB/642329173.jpg"},
+    {"name":"Пакет фасувальний 10×22 NewEko","category":"пакети фасувальні","price":"90,00","description":"1000 шт. в упаковці","image":"https://i.postimg.cc/Y0z0MDjR/20260314-122344.jpg"},
+    {"name":"Пакет фасувальний 14×26 NewEko","category":"пакети фасувальні","price":"135,00","description":"1000 шт. в уавковці","image":"https://i.postimg.cc/Kct94rjk/20260320-092639.jpg"},
+    {"name":"Пакет фасувальний 14×26 Green Land","category":"пакети фасувальні","price":"125,00","description":"1000 шт. в упаковці","image":"https://i.postimg.cc/Cx15pN07/20260311-112330-(1)-(1).jpg"},
+    {"name":"Пакет фасувальний 18×35 Овочі","category":"пакети фасувальні","price":"145,00","description":"1000 шт. в упаковці","image":"https://i.postimg.cc/WzTpWmSp/20260313-114123.jpg"},
+    {"name":"Пакет фасувальний 18×35 \"Пінгвін\"","category":"пакети фасувальні","price":"170,00","description":"1000 шт. в упаковці","image":"https://i.postimg.cc/BbNxJZ3X/20260320-094136.jpg"},
+    {"name":"Пакет фасувальний 18×35 Golden Plast","category":"пакети фасувальні","price":"175,00","description":"1000 шт. в упаковці","image":"https://i.postimg.cc/bY9wGMNB/20260313-120453.jpg"},
+    {"name":"Пакет фасувальний 18×35 ЕКО","category":"пакети фасувальні","price":"185,00","description":"1000 шт. в упаковці","image":"https://i.postimg.cc/yYf6jZRm/20260313-120858.jpg"},
+    {"name":"Пакет фасувальний 18×35 Кульбаба","category":"пакети фасувальні","price":"195,00","description":"1000 шт. в упаковці","image":"https://i.postimg.cc/fLhMy7GK/20260313-121142-(1).jpg"},
+    {"name":"Пакет фасувальний 18×35 \"Чемпіон\"","category":"пакети фасувальні","price":"405,00","description":"1000 шт. в упаковці","image":"https://i.postimg.cc/qRJtsKQZ/image-4-(1).jpg"},
+    {"name":"Пакети майка #0 ПолиПак","category":"пакети майка","price":"25,00","description":"100 шт.","image":"https://i.postimg.cc/zXf8yGQX/20260314-115331.jpg"},
+    {"name":"Пакети майка #0 ХВГ","category":"пакети майка","price":"105,00","description":"250 шт.","image":"https://i.postimg.cc/nzTNxvpM/20260314-114831-(1).jpg"},
+    {"name":"Пакети майка #1 ХВГ","category":"пакети майка","price":"115,00","description":"Розмір 22×37 см. 200 шт.","image":"https://i.postimg.cc/L5b7Y2Jr/20260314-114917.jpg"},
+    {"name":"Пакети майка #2 ХВГ","category":"пакети майка","price":"120,00","description":"Розмір 24×43 см. 200 шт.","image":"https://i.postimg.cc/QxFvL9PT/20260314-115016.jpg"},
+    {"name":"Пакети майка #3 ХВГ","category":"пакети майка","price":"200,00","description":"Розмір 30×50 см. 200 шт.","image":"https://i.postimg.cc/8Cm0dhF4/20260314-115109.jpg"},
+    {"name":"Пакети майка #1 Полі Пак","category":"пакети майка","price":"30,00","description":"Розмір 22×36 см. Ціна за 100 шт.","image":"https://i.postimg.cc/BZmYSDmM/20260327-122425.jpg"},
+    {"name":"Пакети майка #1 ЕКО","category":"пакети майка","price":"60,00","description":"Розмір 22×38 см. 200 шт.","image":"https://i.postimg.cc/y8pj1WC7/artflow-202602191153.jpg"},
+    {"name":"Пакети майка #2 ЕКО","category":"пакети майка","price":"85,00","description":"Розмір 22×43 см. 200 шт.","image":"https://i.postimg.cc/TPN7MF7g/20260315-120846.jpg"},
+    {"name":"Пакети майка #1 ECO-PACK","category":"пакети майка","price":"75,00","description":"Розмір 22×38 см. 200 шт.","image":"https://i.postimg.cc/Hs8vvGcv/20260313-084138(1).jpg"},
+    {"name":"Пакети майка #2 Lux","category":"пакети майка","price":"110,00","description":"Розмір 24×42 см. 160 шт.","image":"https://i.postimg.cc/jS7VQGTh/20260315-120433.jpg"},
+    {"name":"Пакети майка #2 ЕКО Лонопласт","category":"пакети майка","price":"65,00","description":"100 шт.","image":"https://i.postimg.cc/d0zhncry/349790912-(1).webp"},
+    {"name":"Пакети майка Дякуємо за покупку 50 шт.","category":"пакети майка","price":"50,00","description":"Розмір 30×50 Ціна за 50 шт.","image":"https://i.postimg.cc/zByKsBgq/20260414-091005.jpg"},
+    {"name":"Пакети майка М'ясна лавка 30×50 50 шт.","category":"пакети майка","price":"60,00","description":"Розмір 30×50 Ціна за 50 шт.","image":"https://i.postimg.cc/DwdMLDvT/image-1-(1).jpg"},
+    {"name":"Пакети майка Роза 30×50 50 шт.","category":"пакети майка","price":"60,00","description":"Розмір 30×50 Ціна за 50 шт.","image":"https://i.postimg.cc/85C91HVG/image-(1).jpg"},
+    {"name":"Пакети майка Дерево 30×55 50 шт.","category":"пакети майка","price":"60,00","description":"Розмір 30×55 Ціна за 50 шт.","image":"https://i.postimg.cc/FKR8vpHG/20260409-083652.jpg"},
+    {"name":"Пакети майка #4 Горох 30×55 50 шт.","category":"пакети майка","price":"65,00","description":"Розмір 30×55 Ціна за 50 шт.","image":"https://i.postimg.cc/vmKT81Fj/image-2-(1).jpg"},
+    {"name":"Пакети майка ThankYou 30×54 50 шт.","category":"пакети майка","price":"65,00","description":"Розмір 30×54. Ціна за 50 шт.","image":"https://i.postimg.cc/g0Zywm7D/20260401-123555.jpg"},
+    {"name":"Пакети майка Доброго Дня 30×55 50 шт.","category":"пакети майка","price":"100,00","description":"Розмір 30×55. Ціна за 50 шт.","image":"https://i.postimg.cc/rmpfhQJ2/image-3-(1).jpg"},
+    {"name":"Пакети майка Газета 40×60 50 шт.","category":"пакети майка","price":"145,00","description":"Розмір 40×60. Ціна за 50 шт.","image":"https://i.postimg.cc/LsFkXrD6/20260331-120027.jpg"},
+    {"name":"Пакети майка Полуниця люкс МІЦНИЙ 30×52 50 шт.","category":"пакети майка","price":"100,00","description":"Розмір 30×52. Ціна за 50 шт.","image":"https://i.postimg.cc/76H45QWd/20260401-110856.jpg"},
+    {"name":"Пакети майка BMW 40×60 50 шт.","category":"пакети майка","price":"116,00","description":"Розмір 50×60. Ціна за 50 шт.","image":"https://i.postimg.cc/j5xzY0hM/20260401-114210.jpg"},
+    {"name":"Мій Магазин","category":"пакети майка","price":"235,00","description":"","image":""},
+    {"name":"Пакети майка Holiday 40×58 25 шт.","category":"пакети майка","price":"130,00","description":"Розмір 40×58 Ціна за 25 шт.","image":"https://i.postimg.cc/43vRV8WZ/20260401-124332-(1).jpg"},
+    {"name":"Поліпропіленовий пакет для паски 25×40 см. КОД: п-2450","category":"інщі пакети + подарункові","price":"5,00","description":"","image":"https://i.postimg.cc/8CcqD49T/grok-image-hzf7oy-(1).jpg"},
+    {"name":"Пакет Serikoff 30×34 КОД: уз-3034","category":"інщі пакети + подарункові","price":"15,00","description":"Розмір 30×34. Невеликий міцний пакет","image":"https://i.postimg.cc/Z5PDCtHb/grok-image-ppl0eh-(1).jpg"},
+    {"name":"Пакет Serikoff 30×34 КОД: ч-3034","category":"інщі пакети + подарункові","price":"15,00","description":"Розмір 30×34. Невеликий міцний пакет","image":"https://i.postimg.cc/Kckb4jMx/grok-image-s5icz2-(1).jpg"},
+    {"name":"Пакет Serikoff 30×34 КОД: пс-3034","category":"інщі пакети + подарункові","price":"15,00","description":"Розмір 30×34. Невеликий міцний пакет","image":"https://i.postimg.cc/Zqsk5zYp/grok-image-2lxx5i-(1).jpg"},
+    {"name":"Пакет Serikoff 30×34 КОД: пч-3034","category":"інщі пакети + подарункові","price":"15,00","description":"Розмір 30×34. Невеликий міцний пакет","image":"https://i.postimg.cc/6pBFVpyk/grok-image-4mbpdq-(1).jpg"},
+    {"name":"Пакет Serikoff 30×34 КОД: чг-3034","category":"інщі пакети + подарункові","price":"15,00","description":"Розмір 30×34. Невеликий міцний пакет","image":"https://i.postimg.cc/KcLWdMTB/1773827432720.jpg"},
+    {"name":"Пакети міні Happy Birthday КОД: хб-2131","category":"інщі пакети + подарункові","price":"2,00","description":"Розмір 21×31 100 шт. - 80.00 грн.","image":"https://i.postimg.cc/xCzgwXwX/image-(1).jpg"},
+    {"name":"Пакет міні Чорний КОД: ч-2131","category":"інщі пакети + подарункові","price":"2,00","description":"Розмір 21×31 100 шт. - 80.00 грн.","image":"https://i.postimg.cc/dVM764vw/image-1-(1).jpg"},
+    {"name":"Пакет D'or - код: дц-475001","category":"інщі пакети + подарункові","price":"10,00","description":"Розмір 47×50. Достатньо міцний пакет","image":"https://i.postimg.cc/sxM4SgBn/1773940397248.jpg"},
+    {"name":"Пакет D'or - код: др-475002","category":"інщі пакети + подарункові","price":"10,00","description":"Розмір 47×50. Достатньо міцний пакет","image":"https://i.postimg.cc/XqrkFYZm/1773940454631.jpg"},
+    {"name":"Пакет D'or - код: дк-475003","category":"інщі пакети + подарункові","price":"10,00","description":"Розмір 47×50. Достатньо міцний пакет","image":"https://i.postimg.cc/kG2v8gVk/1773940499979.jpg"},
+    {"name":"Пакет D'or - код: дко-475004","category":"інщі пакети + подарункові","price":"10,00","description":"Розмір 47×50. Достатньо міцний пакет","image":"https://i.postimg.cc/BbjBDn8R/1773941188811.jpg"},
+    {"name":"Пакет D'or - код: дя-475005","category":"інщі пакети + подарункові","price":"10,00","description":"Розмір 47×50. Достатньо міцний пакет","image":"https://i.postimg.cc/MHnmRpcC/1773941249491.jpg"},
+    {"name":"Пакет D'or - код: дро-475006","category":"інщі пакети + подарункові","price":"10,00","description":"Розмір 47×50. Достатньо міцний пакет","image":"https://i.postimg.cc/PqmXXWSG/1773941316947.jpg"},
+    {"name":"Пакет D'or - код: дга-475007","category":"інщі пакети + подарункові","price":"10,00","description":"Розмір 47×50. Достатньо міцний пакет","image":"https://i.postimg.cc/y6fV8YX5/1773941380232.jpg"},
+    {"name":"Пакет D'or - код: дла-475008","category":"інщі пакети + подарункові","price":"10,00","description":"Розмір 47×50. Достатньо міцний пакет","image":"https://i.postimg.cc/SRjbMC7B/1773941427754.jpg"},
+    {"name":"Пакет D'or - код: дге-475009","category":"інщі пакети + подарункові","price":"10,00","description":"Розмір 47×50. Достатньо міцний пакет","image":"https://i.postimg.cc/t4FQWXWT/1773941491079.jpg"},
+    {"name":"Пакет D'or - код: дка-475010","category":"інщі пакети + подарункові","price":"10,00","description":"Розмір 47×50. Достатньо міцний пакет","image":"https://i.postimg.cc/9M8vCz5s/1773941549243.jpg"},
+    {"name":"Термопакет, пакет для іжі.","category":"термопакети / термосумки","price":"10,00","description":"Крафтовий пакет на алюмінієвій основі.","image":"https://i.postimg.cc/T2HWVc1h/image-2.jpg"},
+    {"name":"Термопакет маленький","category":"термопакети / термосумки","price":"60,00","description":"Розмір 42×32","image":"https://i.postimg.cc/RFpTSXmg/eb09d706-00e0-4736-92ac-f38734e920c9.jpg"},
+    {"name":"Термопакет великий","category":"термопакети / термосумки","price":"70,00","description":"Розмір 45×48","image":"https://i.postimg.cc/J4LQ1DVZ/eb09d706-00e0-4736-92ac-f38734e920c9-(1).jpg"},
+    {"name":"Термосумка 31 л.","category":"термопакети / термосумки","price":"850,00","description":"","image":"https://i.postimg.cc/c4ZS7CWh/1772684754100-1951031723.jpg"},
+    {"name":"Набір одноразового посуду на 5 осіб","category":"посуд одноразовий","price":"25,00","description":"","image":"https://i.postimg.cc/rpQ4P59K/20260403-123917.jpg"},
+    {"name":"Стакан 80 мл. 10 шт.","category":"посуд одноразовий","price":"5,00","description":"10 шт. в упаковці","image":"https://i.postimg.cc/LsKtShyn/416600561-(5).jpg"},
+    {"name":"Стакан 100 мл. 10 шт.","category":"посуд одноразовий","price":"5,00","description":"10 шт. в упаковці","image":"https://i.postimg.cc/rpZtmmjM/Screenshot-20260316-074233-Prom.jpg"},
+    {"name":"Стакан 180 мл. 10 шт.","category":"посуд одноразовий","price":"6,00","description":"10 шт. в упаковці","image":"https://i.postimg.cc/P535xnqY/stakany-ret-prozrachnye-180ml-9wd4-t2-png.jpg"},
+    {"name":"Стакан 270 мл. 10 шт.","category":"посуд одноразовий","price":"10,00","description":"10 шт. в упаковці","image":"https://i.postimg.cc/5tgqj0CS/4119729429-w400-h400-plastikovye-stakany-stakanchiki.webp"},
+    {"name":"Стакан 440 мл. 10 шт.","category":"посуд одноразовий","price":"20,00","description":"10 шт. в упаковці","image":"https://i.postimg.cc/ZRKt2V36/4321022012-w640-h640-4321022012.jpg"},
+    {"name":"Стакан 80 мл. 100 шт.","category":"посуд одноразовий","price":"40,00","description":"100 шт. в упаковці","image":"https://i.postimg.cc/FKr9ZWPX/image-3-(1).jpg"},
+    {"name":"Стакан 100 мл. 100 шт.","category":"посуд одноразовий","price":"40,00","description":"100 шт. в упаковці","image":"https://i.postimg.cc/pr0pHNpR/image-3-(1).jpg"},
+    {"name":"Стакан 180 мл. 100 шт.","category":"посуд одноразовий","price":"55,00","description":"100 шт. в упаковці","image":"https://i.postimg.cc/c4HDBFLQ/image-(1).jpg"},
+    {"name":"Стакан 440 мл. 50 шт.","category":"посуд одноразовий","price":"60,00","description":"50 шт. в упаковці","image":"https://i.postimg.cc/xC3b3Drm/20260408-104600.jpg"},
+    {"name":"Стакан паперовий 185 мл, 10 шт.","category":"посуд одноразовий","price":"20,00","description":"Стакан паперовий Лаванда 180 мл","image":"https://i.postimg.cc/9F9D3151/20260317-132402.jpg"},
+    {"name":"Стакан паперовий 270 мл, 10 шт.","category":"посуд одноразовий","price":"25,00","description":"Стакан паперовий Лаванда 270 мл","image":"https://i.postimg.cc/WbfqQt9W/Lavanda-270.jpg"},
+    {"name":"Стакан паперовий 340 мл, 10 шт.","category":"посуд одноразовий","price":"30,00","description":"Стакан паперовий М'ята 340 мл","image":"https://i.postimg.cc/25jph8Y5/image-(1).jpg"},
+    {"name":"Стакан паперовий 185 мл, 50 шт.","category":"посуд одноразовий","price":"70,00","description":"Стакан паперовий Лаванда 180 мл","image":"https://i.postimg.cc/DzfrTRrD/image-2-(1).jpg"},
+    {"name":"Стакан паперовий 270 мл, 50 шт.","category":"посуд одноразовий","price":"100,00","description":"Стакан паперовий Лаванда 270 мл","image":"https://i.postimg.cc/vTZkxPwP/image-3-(1).jpg"},
+    {"name":"Стакан паперовий 340 мл, 50 шт.","category":"посуд одноразовий","price":"115,00","description":"Стакан паперовий М'ята 340 мл","image":"https://i.postimg.cc/Zqt41h65/image-(4).jpg"},
+    {"name":"Тарілка одноразова 165 мм, 10 шт.","category":"посуд одноразовий","price":"15,00","description":"10 шт. в упаковці","image":"https://i.postimg.cc/bwjX8C8f/Screenshot-20260223-155403-Prom.jpg"},
+    {"name":"Тарілка одноразова 205 мм. 10 шт.","category":"посуд одноразовий","price":"20,00","description":"10 шт. в упаковці","image":"https://i.postimg.cc/rm7mTDTt/615071072.jpg"},
+    {"name":"Тарілка глибока одноразова МІЦНА 500 мл. 10 шт.","category":"посуд одноразовий","price":"35,00","description":"Міцна, прозора","image":"https://i.postimg.cc/kg0LQ1mR/1773895235666.jpg"},
+    {"name":"Ложка одноразова чайна 10 шт.","category":"посуд одноразовий","price":"5,00","description":"В упаковці 10 шт.","image":"https://i.postimg.cc/xjp734WS/2047256206-lozhka-chajnaya-odnorazovaya-800x800.jpg"},
+    {"name":"Виделка одноразова 10 шт.","category":"посуд одноразовий","price":"10,00","description":"В упаковці 10 шт.","image":"https://i.postimg.cc/tCT1bfg1/20260329-131517.jpg"},
+    {"name":"М'ясорубка побутова","category":"господарсткі товари","price":"810,00","description":"Ручна алюмінієва","image":"https://i.postimg.cc/Y0r45rBw/20260319-123042(1)-(1).jpg"},
+    {"name":"Сумка господарська Оксфорд #1","category":"сумки","price":"280,00","description":"Розмір 50×35×20","image":"https://i.postimg.cc/SRgDyYfb/image-1-(1).jpg"},
+    {"name":"Мед різнотрав'я 0.5 л.","category":"інше","price":"120,00","description":"натуральний","image":"https://i.postimg.cc/1X4WNm42/4092308914-w1280-h640-4092308914.jpg"},
+    {"name":"Шльопанці чоловічі, піна КОД: 00120","category":"взуття","price":"120,00","description":"Розміри: 41,42,43,44","image":"https://i.postimg.cc/NFMk9JZ8/20260409-105428.jpg"},
+    {"name":"Кросівки чоловічі сітчасті КОД: 00600","category":"взуття","price":"600,00","description":"Розміри: 44,45","image":"https://i.postimg.cc/pryZrZPY/20260404-101947.jpg"}
+];
+
+// ========== ФУНКЦІЇ МАГАЗИНУ ==========
+let cart = [];
+let currentModalQty = 1;
+
+function renderCategories() {
+    const cats = [...new Set(allProducts.map(p => p.category))].filter(Boolean).sort();
+    let html = '';
+    cats.forEach(cat => {
+        html += `<div onclick="filterByCategory('${cat}')" class="bg-white p-3 rounded-2xl shadow-sm text-center text-xs font-semibold cursor-pointer active:bg-purple-100 border hover:border-purple-300 transition-colors">${cat}</div>`;
+    });
+    document.getElementById('categories').innerHTML = html;
+}
+
+function renderProducts(products) {
+    let html = '';
+    products.forEach((p) => {
+        const realIndex = allProducts.findIndex(item => item.name === p.name);
+        html += `
+            <div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border flex flex-col justify-between">
+                <div>
+                    <img src="${p.image || 'https://via.placeholder.com/300x200?text=Фото'}" class="w-full h-40 object-cover" onerror="this.src='https://via.placeholder.com/300x200?text=Фото'">
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm line-clamp-2 text-gray-800">${p.name}</h3>
+                        <p class="text-gray-500 text-xs mt-1 min-h-[16px]">${p.description || ''}</p>
+                    </div>
+                </div>
+                <div class="p-3 pt-0">
+                    <p class="text-purple-700 font-bold text-lg">${p.price} грн</p>
+                    <button onclick="addToCart(${realIndex}, 1); event.stopPropagation();" 
+                            class="mt-2 w-full bg-purple-700 active:bg-purple-800 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">В кошик</button>
+                </div>
+            </div>`;
+    });
+    document.getElementById('products').innerHTML = html || '<p class="col-span-2 text-center py-10 text-gray-500">Нічого не знайдено</p>';
+}
+
+function showProductDetails(index) {
+    const p = allProducts[index];
+    currentModalQty = 1;
+    document.getElementById('modal-qty').textContent = currentModalQty;
+    
+    document.getElementById('modal-product-image').src = p.image || 'https://via.placeholder.com/400x300?text=Фото';
+    document.getElementById('modal-product-category').textContent = p.category;
+    document.getElementById('modal-product-name').textContent = p.name;
+    document.getElementById('modal-product-description').textContent = p.description || 'Опис відсутній';
+    document.getElementById('modal-product-price').textContent = p.price + ' грн';
+    
+    // Скидаємо вибір на базовий 38 розмір при кожному відкритті картки
+    const sizeSelect = document.getElementById('modal-size-select');
+    sizeSelect.value = "38";
+    
+    // ПРОВЕРКА КАТЕГОРИИ ДЛЯ РОЗМIРУ
+    const sizeBlock = document.getElementById('size-selector-block');
+    if (p.category === 'взуття') {
+        sizeBlock.classList.remove('hidden');
+    } else {
+        sizeBlock.classList.add('hidden');
+    }
+    
+    document.getElementById('modal-product-btn').onclick = function() {
+        let chosenSize = null;
+        if (p.category === 'взуття') {
+            chosenSize = sizeSelect.value;
+        }
+        addToCart(index, currentModalQty, chosenSize);
+        hideProductModal();
+    };
+    
+    document.getElementById('product-modal').classList.remove('hidden');
+}
+
+function changeModalQty(amount) {
+    currentModalQty += amount;
+    if (currentModalQty < 1) currentModalQty = 1;
+    document.getElementById('modal-qty').textContent = currentModalQty;
+}
+
+function hideProductModal() {
+    document.getElementById('product-modal').classList.add('hidden');
+}
+
+function filterByCategory(cat) {
+    document.getElementById('search').value = '';
+    const filtered = allProducts.filter(p => p.category === cat);
+    renderProducts(filtered);
+}
+
+function resetFilters() {
+    document.getElementById('search').value = '';
+    renderProducts(allProducts);
+}
+
+function filterProducts() {
+    const term = document.getElementById('search').value.toLowerCase();
+    const filtered = allProducts.filter(p => 
+        p.name.toLowerCase().includes(term) || 
+        (p.description && p.description.toLowerCase().includes(term))
+    );
+    renderProducts(filtered);
+}
+
+function addToCart(index, qty, size = null) {
+    const product = allProducts[index];
+    
+    const existingItem = cart.find(item => item.product.name === product.name && item.size === size);
+    
+    if (existingItem) {
+        existingItem.quantity += qty;
+    } else {
+        cart.push({ product: product, quantity: qty, size: size });
+    }
+    
+    updateCartCount();
+    
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:9999px;box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1);z-index:100;font-weight:500;';
+    toast.textContent = `✅ Додано: ${qty} шт. ${size ? '(Розм. ' + size + ')' : ''}!`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 1200);
+}
+
+function updateCartCount() {
+    const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+    document.getElementById('cart-count').textContent = totalQty;
+}
+
+function showCart() {
+    if (cart.length === 0) { alert("Кошик порожній"); return; }
+    let html = '';
+    let total = 0;
+    
+    cart.forEach((item, i) => {
+        const price = parseFloat(item.product.price.replace(',', '.'));
+        const itemTotal = price * item.quantity;
+        total += itemTotal;
+        
+        const sizeText = item.size ? `<span class="block text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded mt-1 w-max">Розмір: ${item.size}</span>` : '';
+        
+        html += `
+            <div class="flex gap-4 border-b pb-4 items-center justify-between">
+                <div class="flex gap-3 items-center flex-1">
+                    <img src="${item.product.image || 'https://via.placeholder.com/80'}" class="w-14 h-14 object-cover rounded-xl" onerror="this.src='https://via.placeholder.com/80'">
+                    <div>
+                        <div class="text-sm font-medium text-gray-800 line-clamp-2 leading-tight">${item.product.name}</div>
+                        ${sizeText}
+                        <div class="text-purple-700 font-bold mt-1 text-sm">${item.product.price} грн</div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center bg-gray-100 rounded-lg overflow-hidden border">
+                        <button onclick="updateCartItemQty(${i}, -1)" class="w-8 h-8 font-bold hover:bg-gray-200 active:bg-gray-300">-</button>
+                        <span class="w-8 text-center text-sm font-bold text-gray-700">${item.quantity}</span>
+                        <button onclick="updateCartItemQty(${i}, 1)" class="w-8 h-8 font-bold hover:bg-gray-200 active:bg-gray-300">+</button>
+                    </div>
+                    <button onclick="removeFromCart(${i}); event.stopPropagation();" class="text-red-500 p-2 text-lg">🗑</button>
+                </div>
+            </div>`;
+    });
+    
+    document.getElementById('cart-items').innerHTML = html;
+    document.getElementById('cart-total').textContent = total.toFixed(2) + ' грн';
+    document.getElementById('cart-modal').classList.remove('hidden');
+}
+
+function updateCartItemQty(index, delta) {
+    cart[index].quantity += delta;
+    if (cart[index].quantity <= 0) {
+        removeFromCart(index);
+    } else {
+        updateCartCount();
+        showCart();
+    }
+}
+
+function hideCart() {
+    document.getElementById('cart-modal').classList.add('hidden');
+}
+
+function removeFromCart(i) {
+    cart.splice(i, 1);
+    updateCartCount();
+    if (cart.length === 0) {
+        hideCart();
+    } else {
+        showCart();
+    }
+}
+
+function placeOrder() {
+    if (cart.length === 0) { alert("Кошик порожній"); return; }
+
+    let text = "Замовлення ElMarino:\n\n";
+    let total = 0;
+    
+    cart.forEach(item => {
+        const price = parseFloat(item.product.price.replace(',', '.'));
+        const itemTotal = price * item.quantity;
+        total += itemTotal;
+        
+        const sizeInfo = item.size ? ` (розм. ${item.size})` : '';
+        text += `• ${item.product.name}${sizeInfo} — ${item.quantity} шт. х ${item.product.price} грн (= ${itemTotal.toFixed(2)} грн)\n`;
+    });
+    
+    text += `\nРазом: ${total.toFixed(2)} грн\n\nВкажіть адресу для доставки та ім'я:`;
+    
+    const tgUsername = "ElMarino_we"; 
+    const encodedText = encodeURIComponent(text);
+    const telegramUrl = `https://t.me/${tgUsername}?text=${encodedText}`;
+    
+    window.location.href = telegramUrl;
+    
+    setTimeout(() => {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert("Замовлення також скопійовано в буфер обміну! Якщо Telegram не відкрився автоматично, просто вставте текст у чат.");
+    }, 1000);
+}
+
+// Ініціалізація
+renderCategories();
+renderProducts(allProducts);
+</script>
+</body>
+</html>
