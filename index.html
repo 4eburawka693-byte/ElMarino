@@ -15,7 +15,6 @@
 <body class="bg-gray-100">
 
 <div class="max-w-4xl mx-auto pb-20">
-    <!-- БАНЕР ЗВЕРХУ -->
     <div class="w-full overflow-hidden shadow-sm">
         <img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Баннер" class="w-full h-auto object-cover block">
     </div>
@@ -36,19 +35,15 @@
         <button onclick="resetFilters()" class="bg-gray-200 text-gray-700 px-4 rounded-2xl text-sm font-medium hover:bg-gray-300">Всі</button>
     </div>
 
-    <!-- Статус завантаження -->
     <div id="loading-status" class="text-center py-10 text-gray-500 font-medium">
         ⏳ Завантаження товарів та актуальних цін...
     </div>
 
-    <!-- Категорії -->
     <div id="categories" class="px-4 mb-6 grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
     
-    <!-- Товари -->
     <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
 </div>
 
-<!-- Модальне вікно КАРТКИ ТОВАРУ -->
 <div id="product-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onclick="hideProductModal()">
     <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative" onclick="event.stopPropagation()">
         <button onclick="hideProductModal()" class="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold z-10">✕</button>
@@ -58,7 +53,6 @@
             <h2 id="modal-product-name" class="text-xl font-bold text-gray-800 mt-3 leading-tight"></h2>
             <p id="modal-product-description" class="text-gray-600 text-sm mt-2 whitespace-pre-line"></p>
             
-            <!-- БЛОК ВИБОРУ РОЗМІРУ -->
             <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                 <span class="text-gray-600 font-medium text-sm pl-2">Оберіть розмір:</span>
                 <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600">
@@ -82,7 +76,6 @@
                 </select>
             </div>
             
-            <!-- Вибір кількості -->
             <div class="mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                 <span class="text-gray-600 font-medium text-sm pl-2">Кількість:</span>
                 <div class="flex items-center gap-1">
@@ -105,7 +98,6 @@
     </div>
 </div>
 
-<!-- Кошик -->
 <div id="cart-modal" class="hidden fixed inset-0 bg-black/70 flex items-end z-50">
     <div class="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-auto p-5">
         <div class="flex justify-between mb-6">
@@ -126,32 +118,31 @@
 </div>
 
 <script>
-// ВСТАВЬТЕ СЮДА ID ВАШЕЙ GOOGLE ТАБЛИЦЫ
-const SHEET_ID = 'СЮДА_ВСТАВЬТЕ_ID_ВАШЕЙ_ТАБЛИЦЫ';
+// АВТОМАТИЧЕСКИ ПОДКЛЮЧЕННЫЙ ID ВАШЕЙ ТАБЛИЦЫ
+const SHEET_ID = '1SyxBE2iwqqt-JtEZ8N9vkdrtxUUcxtv_goVA878TMog';
 const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
 let allProducts = [];
 let cart = [];
 let currentModalQty = 1;
 
-// Автоматическое чтение данных из Google Таблицы
+// Автоматичне читання даних з Google Таблиці
 async function loadProductsFromSheet() {
     try {
         const response = await fetch(SPREADSHEET_URL);
         const csvText = await response.text();
         
-        // Простой парсер CSV строк
+        // Розбір рядків CSV з урахуванням лапок
         const lines = csvText.split('\n').map(line => {
-            // Убираем лишние кавычки, которые добавляет Google
             return line.split('","').map(cell => cell.replace(/^"|"$/g, '').trim());
         });
 
         allProducts = [];
         
-        // Пропускаем первую строчку (заголовки таблицы) и берем данные
+        // Пропускаємо перший рядок заголовків
         for (let i = 1; i < lines.length; i++) {
             const row = lines[i];
-            if (row && row[0]) { // Если есть название товара
+            if (row && row[0]) { 
                 allProducts.push({
                     name: row[0],
                     category: row[1] || 'Інше',
@@ -166,8 +157,8 @@ async function loadProductsFromSheet() {
         renderCategories();
         renderProducts(allProducts);
     } catch (error) {
-        console.error('Ошибка загрузки таблицы:', error);
-        document.getElementById('loading-status').textContent = '❌ Не вдалося завантажити товари. Перевірте публікацію таблиці.';
+        console.error('Помилка завантаження:', error);
+        document.getElementById('loading-status').innerHTML = '❌ Не вдалося завантажити товари.<br><span class="text-xs text-red-500">Будь ласка, переконайтеся, що в таблиці увімкнено: Файл -> Поділитися -> Опублікувати в інтернеті.</span>';
     }
 }
 
@@ -387,7 +378,7 @@ function placeOrder() {
     }, 1000);
 }
 
-// Запуск автоматической загрузки из таблицы при открытии сайта
+// Запуск автоматичного завантаження при старті
 loadProductsFromSheet();
 </script>
 </body>
