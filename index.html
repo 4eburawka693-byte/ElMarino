@@ -16,7 +16,7 @@
 
 <div class="max-w-4xl mx-auto pb-20">
     <div class="w-full overflow-hidden shadow-sm">
-        <img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Баннер" class="w-full h-auto object-cover block">
+        <img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Banner" class="w-full h-auto object-cover block">
     </div>
 
     <header class="bg-purple-700 text-white p-4 sticky top-0 z-50 shadow">
@@ -62,9 +62,7 @@
             
             <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                 <span class="text-gray-600 font-medium text-sm pl-2">Оберіть розмір:</span>
-                <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600">
-                    <option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38" selected>38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option>
-                </select>
+                <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[120px]"></select>
             </div>
 
             <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
@@ -129,11 +127,6 @@ async function loadProductsFromSheet() {
         const response = await fetch(SPREADSHEET_URL);
         const csvText = await response.text();
         
-        const lines = csvText.split('\n').map(line => {
-            return line.split('Items Split Mark').map(cell => cell.trim()); 
-        });
-
-        // Простой парсинг CSV
         const parseCSV = (text) => {
             let p = '', r = [];
             let q = false;
@@ -234,33 +227,49 @@ function showProductDetails(index) {
     
     const sizeSelect = document.getElementById('modal-size-select');
     const sizeBlock = document.getElementById('size-selector-block');
-    if (p.category.toLowerCase().includes('взуття')) {
+    const colorSelect = document.getElementById('modal-color-select');
+    const colorBlock = document.getElementById('color-selector-block');
+    
+    const catLower = p.category.toLowerCase();
+    const descLower = p.description.toLowerCase();
+
+    // 1. Парсинг РАЗМЕРОВ (только для категории Взуття)
+    if (catLower.includes('взуття')) {
         sizeBlock.classList.remove('hidden');
-        sizeSelect.value = "38";
+        let sizes = ['36', '37', '38', '39', '40', '41']; // базовые по умолчанию
+        
+        const sizeMatch = p.description.match(/(?:розмір|розміри|размер|размеры)\s*:\s*([^\n\r.]+)/i);
+        if (sizeMatch && sizeMatch[1]) {
+            sizes = sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+        }
+        sizeSelect.innerHTML = sizes.map(s => `<option value="${s}">${s}</option>`).join('');
     } else {
         sizeBlock.classList.add('hidden');
     }
 
-    const colorSelect = document.getElementById('modal-color-select');
-    const colorBlock = document.getElementById('color-selector-block');
-    const catLower = p.category.toLowerCase();
-    
-    if (catLower.includes('свят') || catLower.includes('пакет') || catLower.includes('подарунк')) {
-        colorBlock.classList.remove('hidden');
-        let colors = ['Асорті']; 
+    // 2. Парсинг ЦВЕТОВ (для Взуття, Свята, Пакетів тощо)
+    if (catLower.includes('взуття') || catLower.includes('свят') || catLower.includes('пакет') || catLower.includes('подарунк')) {
+        // Проверяем, есть ли слово "колір/цвет" в описании товара
+        const colorMatch = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
         
-        const match = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
-        if (match && match[1]) {
-            colors = match[1].split(',').map(c => c.trim()).filter(Boolean);
+        if (colorMatch && colorMatch[1]) {
+            colorBlock.classList.remove('hidden');
+            let colors = colorMatch[1].split(',').map(c => c.trim()).filter(Boolean);
+            colorSelect.innerHTML = colors.map(c => `<option value="${c}">${c}</option>`).join('');
+        } else if (catLower.includes('свят') || catLower.includes('пакет') || catLower.includes('подарунк')) {
+            // Для праздничных товаров всегда выводим Ассорти, если цвет не написан
+            colorBlock.classList.remove('hidden');
+            colorSelect.innerHTML = '<option value="Асорті">Асорті</option>';
+        } else {
+            // Для обуви, если цвет не указан вообще в тексте, скрываем блок выбора цвета
+            colorBlock.classList.add('hidden');
         }
-        
-        colorSelect.innerHTML = colors.map(c => `<option value="${c}">${c}</option>`).join('');
     } else {
         colorBlock.classList.add('hidden');
     }
     
     document.getElementById('modal-product-btn').onclick = function() {
-        let chosenSize = p.category.toLowerCase().includes('взуття') ? sizeSelect.value : null;
+        let chosenSize = (!sizeBlock.classList.contains('hidden')) ? sizeSelect.value : null;
         let chosenColor = (!colorBlock.classList.contains('hidden')) ? colorSelect.value : null;
         
         addToCart(index, currentModalQty, chosenSize, chosenColor);
