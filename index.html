@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="uk" class="notranslate" translate="no">
 <head>
     <meta charset="UTF-8">
+    <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ElMarino Магазин</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -9,14 +10,19 @@
         body { font-family: system-ui, sans-serif; }
         .product-card { transition: all 0.2s ease; cursor: pointer; }
         .product-card:active { transform: scale(0.98); }
-        /* Ограничение текста до 2 строк с троеточием */
-        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        /* Жесткое ограничение текста описания до 2 строк с троеточием */
+        .clamp-desc {
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 notranslate">
 
 <div class="max-w-4xl mx-auto pb-20">
-    <!-- БАНЕР ЗВЕРХУ -->
     <div class="w-full overflow-hidden shadow-sm">
         <img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Banner" class="w-full h-auto object-cover block">
     </div>
@@ -37,24 +43,19 @@
         <button onclick="resetFilters()" class="bg-gray-200 text-gray-700 px-4 rounded-2xl text-sm font-medium hover:bg-gray-300">Всі</button>
     </div>
 
-    <!-- Статус завантаження -->
     <div id="loading-status" class="text-center py-10 text-gray-500 font-medium">
         ⏳ Завантаження товарів та актуальних цін...
     </div>
 
-    <!-- Категорії -->
     <div id="categories" class="px-4 mb-6 grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
     
-    <!-- Товари -->
     <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
 </div>
 
-<!-- Модальне вікно КАРТКИ ТОВАРУ -->
 <div id="product-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onclick="hideProductModal()">
     <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative" onclick="event.stopPropagation()">
         <button onclick="hideProductModal()" class="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold z-10">✕</button>
         
-        <!-- Галерея зображень -->
         <div class="w-full h-72 bg-gray-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in" onclick="openFullscreenPhoto()">
             <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" onerror="this.src='https://via.placeholder.com/400x300?text=Фото'">
             <button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＜</button>
@@ -65,22 +66,18 @@
         <div class="p-6">
             <span id="modal-product-category" class="text-xs font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md"></span>
             <h2 id="modal-product-name" class="text-xl font-bold text-gray-800 mt-3 leading-tight"></h2>
-            <!-- Полноразмерное описание здесь -->
             <p id="modal-product-description" class="text-gray-600 text-sm mt-2 whitespace-pre-line"></p>
             
-            <!-- БЛОК ВИБОРУ РОЗМІРУ -->
             <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                 <span class="text-gray-600 font-medium text-sm pl-2">Оберіть розмір:</span>
                 <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[120px]"></select>
             </div>
 
-            <!-- БЛОК ВИБОРУ КОЛЬОРУ -->
             <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                 <span class="text-gray-600 font-medium text-sm pl-2">Оберіть колір:</span>
                 <select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[120px]"></select>
             </div>
             
-            <!-- Вибір кількості -->
             <div class="mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                 <span class="text-gray-600 font-medium text-sm pl-2">Кількість:</span>
                 <div class="flex items-center gap-1">
@@ -103,7 +100,6 @@
     </div>
 </div>
 
-<!-- Полноэкранный просмотр фото (Lightbox) -->
 <div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4" onclick="closeFullscreenPhoto()">
     <button onclick="closeFullscreenPhoto()" class="absolute top-6 right-6 text-white text-3xl font-light hover:text-gray-300 z-50">✕</button>
     
@@ -115,7 +111,6 @@
     </div>
 </div>
 
-<!-- Кошик -->
 <div id="cart-modal" class="hidden fixed inset-0 bg-black/70 flex items-end z-50">
     <div class="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-auto p-5">
         <div class="flex justify-between mb-6">
@@ -221,9 +216,8 @@ function renderProducts(products) {
                         <img src="${mainImage}" class="max-w-full max-h-full object-contain" onerror="this.src='https://via.placeholder.com/300x200?text=Фото'">
                     </div>
                     <div class="p-3">
-                        <h3 class="font-medium text-sm line-clamp-2 text-gray-800">${p.name}</h3>
-                        <!-- Здесь добавлено ограничение line-clamp-2 для аккуратного обрезания -->
-                        <p class="text-gray-500 text-xs mt-1 min-h-[32px] line-clamp-2">${p.description || ''}</p>
+                        <h3 class="font-medium text-sm text-gray-800" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${p.name}</h3>
+                        <p class="text-gray-500 text-xs mt-1 min-h-[32px] clamp-desc">${p.description || ''}</p>
                     </div>
                 </div>
                 <div class="p-3 pt-0">
@@ -257,7 +251,6 @@ function showProductDetails(index) {
     
     const catLower = p.category.toLowerCase();
 
-    // 1. Парсинг РАЗМЕРОВ (только для категории Взуття)
     if (catLower.includes('взуття')) {
         sizeBlock.classList.remove('hidden');
         let sizes = ['36', '37', '38', '39', '40', '41'];
@@ -271,7 +264,6 @@ function showProductDetails(index) {
         sizeBlock.classList.add('hidden');
     }
 
-    // 2. Парсинг ЦВЕТОВ
     if (catLower.includes('взуття') || catLower.includes('свят') || catLower.includes('пакет') || catLower.includes('подарунк')) {
         const colorMatch = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
         
@@ -314,7 +306,6 @@ function updateModalPhoto() {
     }
 }
 
-// Функции для ПОЛНОЭКРАННОГО просмотра фото
 function openFullscreenPhoto() {
     updateLightboxImage();
     document.getElementById('fullscreen-lightbox').classList.remove('hidden');
@@ -380,7 +371,7 @@ function addToCart(index, qty, size = null, color = null) {
     const product = allProducts[index];
     const existingItem = cart.find(item => item.product.name === product.name && item.size === size && item.color === color);
     
-    if (existingItem) {
+         if (existingItem) {
         existingItem.quantity += qty;
     } else {
         cart.push({ product: product, quantity: qty, size: size, color: color });
@@ -389,6 +380,7 @@ function addToCart(index, qty, size = null, color = null) {
     updateCartCount();
     
     const toast = document.createElement('div');
+    toast.className = 'notranslate';
     toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:9999px;box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1);z-index:100;font-weight:500;';
     
     let infoText = '';
@@ -422,11 +414,11 @@ function showCart() {
         const imgUrl = item.product.images.length > 0 ? item.product.images[0] : 'https://via.placeholder.com/80';
         
         html += `
-            <div class="flex gap-4 border-b pb-4 items-center justify-between">
+            <div class="flex gap-4 border-b pb-4 items-center justify-between notranslate">
                 <div class="flex gap-3 items-center flex-1">
                     <img src="${imgUrl}" class="w-14 h-14 object-cover rounded-xl" onerror="this.src='https://via.placeholder.com/80'">
                     <div>
-                        <div class="text-sm font-medium text-gray-800 line-clamp-2 leading-tight">${item.product.name}</div>
+                        <div class="text-sm font-medium text-gray-800 leading-tight" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${item.product.name}</div>
                         <div class="flex flex-wrap">${metaText}</div>
                         <div class="text-purple-700 font-bold mt-1 text-sm">${item.product.price} грн</div>
                     </div>
@@ -503,4 +495,3 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
-
