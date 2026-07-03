@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="google" content="notranslate">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ElMarino Магазин</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: system-ui, sans-serif; }
         .product-card { transition: all 0.2s ease; cursor: pointer; }
         .product-card:active { transform: scale(0.98); }
-        /* Жесткое ограничение текста описания до 2 строк с троеточием */
         .clamp-desc {
             display: -webkit-box !important;
             -webkit-line-clamp: 2 !important;
@@ -27,7 +26,7 @@
         <img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Banner" class="w-full h-auto object-cover block">
     </div>
 
-    <header class="bg-purple-700 text-white p-4 sticky top-0 z-50 shadow">
+    <header class="bg-purple-700 text-white p-4 sticky top-0 z-40 shadow">
         <div class="flex justify-between items-center">
             <h1 class="text-2xl font-bold">🛍️ ElMarino Магазин</h1>
             <button onclick="showCart()" class="flex items-center gap-2 bg-white text-purple-700 px-5 py-2 rounded-2xl font-medium">
@@ -52,11 +51,12 @@
     <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
 </div>
 
-<div id="product-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onclick="hideProductModal()">
-    <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
-        <button onclick="hideProductModal()" class="absolute top-3 right-3 bg-black/60 text-white w-9 h-9 rounded-full flex items-center justify-center text-lg font-bold z-50 shadow-md">✕</button>
+<div id="product-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-3" onclick="hideProductModal()">
+    <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
         
-        <div class="overflow-y-auto p-0 flex-1 pb-8">
+        <button onclick="hideProductModal()" class="absolute top-4 right-4 bg-black/60 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold z-50 shadow-lg border border-white/20">✕</button>
+        
+        <div class="overflow-y-auto p-0 flex-1 pb-24">
             <div class="w-full h-64 bg-gray-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in" onclick="openFullscreenPhoto()">
                 <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" onerror="this.src='https://via.placeholder.com/400x300?text=Фото'">
                 <button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＜</button>
@@ -64,7 +64,7 @@
                 <span id="photo-counter" class="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full font-medium"></span>
             </div>
 
-            <div class="p-5">
+            <div class="p-4">
                 <span id="modal-product-category" class="text-xs font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md"></span>
                 <h2 id="modal-product-name" class="text-xl font-bold text-gray-800 mt-3 leading-tight"></h2>
                 <p id="modal-product-description" class="text-gray-600 text-sm mt-2 whitespace-pre-line"></p>
@@ -87,18 +87,19 @@
                         <button onclick="changeModalQty(1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-gray-100 shadow-sm">+</button>
                     </div>
                 </div>
-
-                <div class="mt-6 flex items-center justify-between gap-4 border-t pt-4">
-                    <div>
-                        <span class="text-gray-400 text-xs block">Ціна</span>
-                        <span id="modal-product-price" class="text-xl font-black text-purple-700"></span>
-                    </div>
-                    <button id="modal-product-btn" class="flex-1 bg-purple-700 hover:bg-purple-800 text-white py-3.5 rounded-2xl font-semibold transition-colors shadow-lg shadow-purple-700/20">
-                        Додати в кошик
-                    </button>
-                </div>
             </div>
         </div>
+
+        <div class="absolute bottom-0 left-0 right-0 bg-white border-t p-4 flex items-center justify-between gap-4 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-20">
+            <div>
+                <span class="text-gray-400 text-xs block">Ціна</span>
+                <span id="modal-product-price" class="text-xl font-black text-purple-700"></span>
+            </div>
+            <button id="modal-product-btn" class="flex-1 bg-purple-700 hover:bg-purple-800 text-white py-3.5 rounded-2xl font-semibold transition-colors shadow-lg shadow-purple-700/20 text-center">
+                Додати в кошик
+            </button>
+        </div>
+
     </div>
 </div>
 
@@ -106,8 +107,8 @@
     <button onclick="closeFullscreenPhoto()" class="absolute top-6 right-6 text-white text-3xl font-light hover:text-gray-300 z-50">✕</button>
     <div class="relative max-w-full max-h-full flex items-center justify-center" onclick="event.stopPropagation()">
         <img id="lightbox-image" src="" class="max-w-[95vw] max-h-[90vh] object-contain rounded shadow-2xl">
-        <button id="lightbox-prev-btn" onclick="changePhoto(-1); updateLightboxImage();" class="absolute left-2 md:-left-16 bg-white/10 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl hover:bg-white/20 active:bg-white/30 select-none">＜</button>
-        <button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage();" class="absolute right-2 md:-right-16 bg-white/10 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl hover:bg-white/20 active:bg-white/30 select-none">＞</button>
+        <button id="lightbox-prev-btn" onclick="changePhoto(-1); updateLightboxImage();" class="absolute left-2 bg-white/10 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none">＜</button>
+        <button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage();" class="absolute right-2 bg-white/10 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none">＞</button>
     </div>
 </div>
 
@@ -137,11 +138,10 @@ const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz
 let allProducts = [];
 let cart = [];
 let currentModalQty = 1;
-
 let currentPhotos = [];
 let currentPhotoIndex = 0;
 
-// Умная обработка кнопки "Назад" на смартфоне
+// Умная обработка кнопки "Назад" телефона
 window.addEventListener('popstate', function () {
     const modalOpen = !document.getElementById('product-modal').classList.contains('hidden');
     const cartOpen = !document.getElementById('cart-modal').classList.contains('hidden');
@@ -305,7 +305,6 @@ function showProductDetails(index) {
         hideProductModal();
     };
     
-    // Добавляем запись в историю для корректной кнопки "Назад"
     history.pushState({modal: "product"}, null, null);
     document.getElementById('product-modal').classList.remove('hidden');
 }
