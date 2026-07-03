@@ -154,7 +154,6 @@ let cart = [];
 let currentModalQty = 1;
 let currentPhotos = [];
 let currentPhotoIndex = 0;
-let pZoomInstance = null;
 
 window.addEventListener('popstate', function () {
     const modalOpen = !document.getElementById('product-modal').classList.contains('hidden');
@@ -338,25 +337,20 @@ function updateModalPhoto() {
 }
 
 function openFullscreenPhoto() {
-    // Включаем отображение самого окна
     document.getElementById('fullscreen-lightbox').classList.remove('hidden');
     history.pushState({modal: "lightbox"}, null, null);
-    
-    // Пересоздаем блок картинок с нуля, чтобы очистить старый зум
     updateLightboxImage();
 }
 
 function updateLightboxImage() {
-    if (pZoomInstance) {
-        pZoomInstance.destroy();
-        pZoomInstance = null;
-    }
-
-    // Полностью стираем старое содержимое контейнера и вставляем новую чистую разметку
     const contentArea = document.getElementById('lightbox-content-area');
+    
+    // Генерируем абсолютно уникальный ID для каждого вызова, чтобы библиотека не путалась
+    const uniqueId = "pz_" + new Date().getTime();
+    
     contentArea.innerHTML = `
-        <div id="pinch-zoom-wrapper" class="pinch-zoom-container" onclick="event.stopPropagation()">
-            <img id="lightbox-image" src="${currentPhotos[currentPhotoIndex]}" class="zoomable-img rounded shadow-2xl">
+        <div id="${uniqueId}" class="pinch-zoom-container" onclick="event.stopPropagation()">
+            <img src="${currentPhotos[currentPhotoIndex]}" class="zoomable-img rounded shadow-2xl">
         </div>
     `;
 
@@ -368,26 +362,22 @@ function updateLightboxImage() {
         prevLbox.classList.add('hidden'); nextLbox.classList.add('hidden');
     }
 
-    // Инициализируем библиотеку на свежесозданном HTML блоке
+    // Запускаем инициализацию с задержкой, чтобы элемент гарантированно появился в памяти браузера
     setTimeout(() => {
-        const el = document.getElementById('pinch-zoom-wrapper');
-        if (el) {
-            pZoomInstance = new PinchZoom.default(el, {
+        const el = document.getElementById(uniqueId);
+        if (el && typeof PinchZoom !== 'undefined') {
+            new PinchZoom.default(el, {
                 draggableUnzoomed: false,
                 minZoom: 1,
                 maxZoom: 4
             });
         }
-    }, 40);
+    }, 50);
 }
 
 function closeFullscreenPhoto() {
     document.getElementById('fullscreen-lightbox').classList.add('hidden');
-    if (pZoomInstance) {
-        pZoomInstance.destroy();
-        pZoomInstance = null;
-    }
-    document.getElementById('lightbox-content-area').innerHTML = ''; // Очищаем верстку
+    document.getElementById('lightbox-content-area').innerHTML = ''; 
 }
 
 function changePhoto(direction) {
