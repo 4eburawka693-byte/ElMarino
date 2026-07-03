@@ -53,48 +53,50 @@
 </div>
 
 <div id="product-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onclick="hideProductModal()">
-    <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative" onclick="event.stopPropagation()">
-        <button onclick="hideProductModal()" class="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold z-10">✕</button>
+    <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+        <button onclick="hideProductModal()" class="absolute top-3 right-3 bg-black/60 text-white w-9 h-9 rounded-full flex items-center justify-center text-lg font-bold z-50 shadow-md">✕</button>
         
-        <div class="w-full h-72 bg-gray-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in" onclick="openFullscreenPhoto()">
-            <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" onerror="this.src='https://via.placeholder.com/400x300?text=Фото'">
-            <button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＜</button>
-            <button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＞</button>
-            <span id="photo-counter" class="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full font-medium"></span>
-        </div>
-
-        <div class="p-6">
-            <span id="modal-product-category" class="text-xs font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md"></span>
-            <h2 id="modal-product-name" class="text-xl font-bold text-gray-800 mt-3 leading-tight"></h2>
-            <p id="modal-product-description" class="text-gray-600 text-sm mt-2 whitespace-pre-line"></p>
-            
-            <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
-                <span class="text-gray-600 font-medium text-sm pl-2">Оберіть розмір:</span>
-                <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[120px]"></select>
+        <div class="overflow-y-auto p-0 flex-1 pb-8">
+            <div class="w-full h-64 bg-gray-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in" onclick="openFullscreenPhoto()">
+                <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" onerror="this.src='https://via.placeholder.com/400x300?text=Фото'">
+                <button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＜</button>
+                <button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＞</button>
+                <span id="photo-counter" class="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full font-medium"></span>
             </div>
 
-            <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
-                <span class="text-gray-600 font-medium text-sm pl-2">Оберіть колір:</span>
-                <select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[120px]"></select>
-            </div>
-            
-            <div class="mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
-                <span class="text-gray-600 font-medium text-sm pl-2">Кількість:</span>
-                <div class="flex items-center gap-1">
-                    <button onclick="changeModalQty(-1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-gray-100 shadow-sm">-</button>
-                    <span id="modal-qty" class="w-12 text-center font-bold text-lg">1</span>
-                    <button onclick="changeModalQty(1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-gray-100 shadow-sm">+</button>
+            <div class="p-5">
+                <span id="modal-product-category" class="text-xs font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md"></span>
+                <h2 id="modal-product-name" class="text-xl font-bold text-gray-800 mt-3 leading-tight"></h2>
+                <p id="modal-product-description" class="text-gray-600 text-sm mt-2 whitespace-pre-line"></p>
+                
+                <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
+                    <span class="text-gray-600 font-medium text-sm pl-2">Оберіть розмір:</span>
+                    <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[120px]"></select>
                 </div>
-            </div>
 
-            <div class="mt-6 flex items-center justify-between gap-4 border-t pt-4">
-                <div>
-                    <span class="text-gray-400 text-xs block">Ціна</span>
-                    <span id="modal-product-price" class="text-2xl font-black text-purple-700"></span>
+                <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
+                    <span class="text-gray-600 font-medium text-sm pl-2">Оберіть колір:</span>
+                    <select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[120px]"></select>
                 </div>
-                <button id="modal-product-btn" class="flex-1 bg-purple-700 hover:bg-purple-800 text-white py-4 rounded-2xl font-semibold transition-colors shadow-lg shadow-purple-700/20">
-                    Додати в кошик
-                </button>
+                
+                <div class="mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
+                    <span class="text-gray-600 font-medium text-sm pl-2">Кількість:</span>
+                    <div class="flex items-center gap-1">
+                        <button onclick="changeModalQty(-1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-gray-100 shadow-sm">-</button>
+                        <span id="modal-qty" class="w-12 text-center font-bold text-lg">1</span>
+                        <button onclick="changeModalQty(1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-gray-100 shadow-sm">+</button>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex items-center justify-between gap-4 border-t pt-4">
+                    <div>
+                        <span class="text-gray-400 text-xs block">Ціна</span>
+                        <span id="modal-product-price" class="text-xl font-black text-purple-700"></span>
+                    </div>
+                    <button id="modal-product-btn" class="flex-1 bg-purple-700 hover:bg-purple-800 text-white py-3.5 rounded-2xl font-semibold transition-colors shadow-lg shadow-purple-700/20">
+                        Додати в кошик
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -102,10 +104,8 @@
 
 <div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4" onclick="closeFullscreenPhoto()">
     <button onclick="closeFullscreenPhoto()" class="absolute top-6 right-6 text-white text-3xl font-light hover:text-gray-300 z-50">✕</button>
-    
     <div class="relative max-w-full max-h-full flex items-center justify-center" onclick="event.stopPropagation()">
         <img id="lightbox-image" src="" class="max-w-[95vw] max-h-[90vh] object-contain rounded shadow-2xl">
-        
         <button id="lightbox-prev-btn" onclick="changePhoto(-1); updateLightboxImage();" class="absolute left-2 md:-left-16 bg-white/10 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl hover:bg-white/20 active:bg-white/30 select-none">＜</button>
         <button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage();" class="absolute right-2 md:-right-16 bg-white/10 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl hover:bg-white/20 active:bg-white/30 select-none">＞</button>
     </div>
@@ -140,6 +140,22 @@ let currentModalQty = 1;
 
 let currentPhotos = [];
 let currentPhotoIndex = 0;
+
+// Умная обработка кнопки "Назад" на смартфоне
+window.addEventListener('popstate', function () {
+    const modalOpen = !document.getElementById('product-modal').classList.contains('hidden');
+    const cartOpen = !document.getElementById('cart-modal').classList.contains('hidden');
+    const lightboxOpen = !document.getElementById('fullscreen-lightbox').classList.contains('hidden');
+
+    if (lightboxOpen) {
+        closeFullscreenPhoto();
+        history.pushState(null, null, window.location.pathname);
+    } else if (modalOpen) {
+        hideProductModal(true);
+    } else if (cartOpen) {
+        hideCart(true);
+    }
+});
 
 async function loadProductsFromSheet() {
     try {
@@ -289,6 +305,8 @@ function showProductDetails(index) {
         hideProductModal();
     };
     
+    // Добавляем запись в историю для корректной кнопки "Назад"
+    history.pushState({modal: "product"}, null, null);
     document.getElementById('product-modal').classList.remove('hidden');
 }
 
@@ -308,21 +326,18 @@ function updateModalPhoto() {
 
 function openFullscreenPhoto() {
     updateLightboxImage();
+    history.pushState({modal: "lightbox"}, null, null);
     document.getElementById('fullscreen-lightbox').classList.remove('hidden');
 }
 
 function updateLightboxImage() {
     document.getElementById('lightbox-image').src = currentPhotos[currentPhotoIndex];
-    
     const prevLbox = document.getElementById('lightbox-prev-btn');
     const nextLbox = document.getElementById('lightbox-next-btn');
-    
     if (currentPhotos.length > 1) {
-        prevLbox.classList.remove('hidden');
-        nextLbox.classList.remove('hidden');
+        prevLbox.classList.remove('hidden'); nextLbox.classList.remove('hidden');
     } else {
-        prevLbox.classList.add('hidden');
-        nextLbox.classList.add('hidden');
+        prevLbox.classList.add('hidden'); nextLbox.classList.add('hidden');
     }
 }
 
@@ -343,9 +358,12 @@ function changeModalQty(amount) {
     document.getElementById('modal-qty').textContent = currentModalQty;
 }
 
-function hideProductModal() {
+function hideProductModal(fromPopState = false) {
     document.getElementById('product-modal').classList.add('hidden');
     closeFullscreenPhoto();
+    if (!fromPopState && window.history.state?.modal === "product") {
+        history.back();
+    }
 }
 
 function filterByCategory(cat) {
@@ -371,7 +389,7 @@ function addToCart(index, qty, size = null, color = null) {
     const product = allProducts[index];
     const existingItem = cart.find(item => item.product.name === product.name && item.size === size && item.color === color);
     
-         if (existingItem) {
+    if (existingItem) {
         existingItem.quantity += qty;
     } else {
         cart.push({ product: product, quantity: qty, size: size, color: color });
@@ -437,6 +455,8 @@ function showCart() {
     
     document.getElementById('cart-items').innerHTML = html;
     document.getElementById('cart-total').textContent = total.toFixed(2) + ' грн';
+    
+    history.pushState({modal: "cart"}, null, null);
     document.getElementById('cart-modal').classList.remove('hidden');
 }
 
@@ -446,8 +466,11 @@ function updateCartItemQty(index, delta) {
     else { updateCartCount(); showCart(); }
 }
 
-function hideCart() {
+function hideCart(fromPopState = false) {
     document.getElementById('cart-modal').classList.add('hidden');
+    if (!fromPopState && window.history.state?.modal === "cart") {
+        history.back();
+    }
 }
 
 function removeFromCart(i) {
