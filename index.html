@@ -48,10 +48,10 @@
     <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative" onclick="event.stopPropagation()">
         <button onclick="hideProductModal()" class="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold z-10">✕</button>
         
-        <div class="w-full h-72 bg-gray-50 flex items-center justify-center overflow-hidden relative">
+        <div class="w-full h-72 bg-gray-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in" onclick="openFullscreenPhoto()">
             <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" onerror="this.src='https://via.placeholder.com/400x300?text=Фото'">
-            <button id="prev-photo-btn" onclick="changePhoto(-1)" class="absolute left-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＜</button>
-            <button id="next-photo-btn" onclick="changePhoto(1)" class="absolute right-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＞</button>
+            <button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＜</button>
+            <button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＞</button>
             <span id="photo-counter" class="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full font-medium"></span>
         </div>
 
@@ -89,6 +89,17 @@
                 </button>
             </div>
         </div>
+    </div>
+</div>
+
+<div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4" onclick="closeFullscreenPhoto()">
+    <button onclick="closeFullscreenPhoto()" class="absolute top-6 right-6 text-white text-3xl font-light hover:text-gray-300 z-50">✕</button>
+    
+    <div class="relative max-w-full max-h-full flex items-center justify-center" onclick="event.stopPropagation()">
+        <img id="lightbox-image" src="" class="max-w-[95vw] max-h-[90vh] object-contain rounded shadow-2xl">
+        
+        <button id="lightbox-prev-btn" onclick="changePhoto(-1); updateLightboxImage();" class="absolute left-2 md:-left-16 bg-white/10 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl hover:bg-white/20 active:bg-white/30 select-none">＜</button>
+        <button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage();" class="absolute right-2 md:-right-16 bg-white/10 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl hover:bg-white/20 active:bg-white/30 select-none">＞</button>
     </div>
 </div>
 
@@ -231,12 +242,11 @@ function showProductDetails(index) {
     const colorBlock = document.getElementById('color-selector-block');
     
     const catLower = p.category.toLowerCase();
-    const descLower = p.description.toLowerCase();
 
     // 1. Парсинг РАЗМЕРОВ (только для категории Взуття)
     if (catLower.includes('взуття')) {
         sizeBlock.classList.remove('hidden');
-        let sizes = ['36', '37', '38', '39', '40', '41']; // базовые по умолчанию
+        let sizes = ['36', '37', '38', '39', '40', '41'];
         
         const sizeMatch = p.description.match(/(?:розмір|розміри|размер|размеры)\s*:\s*([^\n\r.]+)/i);
         if (sizeMatch && sizeMatch[1]) {
@@ -247,9 +257,8 @@ function showProductDetails(index) {
         sizeBlock.classList.add('hidden');
     }
 
-    // 2. Парсинг ЦВЕТОВ (для Взуття, Свята, Пакетів тощо)
+    // 2. Парсинг ЦВЕТОВ
     if (catLower.includes('взуття') || catLower.includes('свят') || catLower.includes('пакет') || catLower.includes('подарунк')) {
-        // Проверяем, есть ли слово "колір/цвет" в описании товара
         const colorMatch = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
         
         if (colorMatch && colorMatch[1]) {
@@ -257,11 +266,9 @@ function showProductDetails(index) {
             let colors = colorMatch[1].split(',').map(c => c.trim()).filter(Boolean);
             colorSelect.innerHTML = colors.map(c => `<option value="${c}">${c}</option>`).join('');
         } else if (catLower.includes('свят') || catLower.includes('пакет') || catLower.includes('подарунк')) {
-            // Для праздничных товаров всегда выводим Ассорти, если цвет не написан
             colorBlock.classList.remove('hidden');
             colorSelect.innerHTML = '<option value="Асорті">Асорті</option>';
         } else {
-            // Для обуви, если цвет не указан вообще в тексте, скрываем блок выбора цвета
             colorBlock.classList.add('hidden');
         }
     } else {
@@ -293,6 +300,31 @@ function updateModalPhoto() {
     }
 }
 
+// Функции для ПОЛНОЭКРАННОГО просмотра фото
+function openFullscreenPhoto() {
+    updateLightboxImage();
+    document.getElementById('fullscreen-lightbox').classList.remove('hidden');
+}
+
+function updateLightboxImage() {
+    document.getElementById('lightbox-image').src = currentPhotos[currentPhotoIndex];
+    
+    const prevLbox = document.getElementById('lightbox-prev-btn');
+    const nextLbox = document.getElementById('lightbox-next-btn');
+    
+    if (currentPhotos.length > 1) {
+        prevLbox.classList.remove('hidden');
+        nextLbox.classList.remove('hidden');
+    } else {
+        prevLbox.classList.add('hidden');
+        nextLbox.classList.add('hidden');
+    }
+}
+
+function closeFullscreenPhoto() {
+    document.getElementById('fullscreen-lightbox').classList.add('hidden');
+}
+
 function changePhoto(direction) {
     currentPhotoIndex += direction;
     if (currentPhotoIndex < 0) currentPhotoIndex = currentPhotos.length - 1;
@@ -308,6 +340,7 @@ function changeModalQty(amount) {
 
 function hideProductModal() {
     document.getElementById('product-modal').classList.add('hidden');
+    closeFullscreenPhoto(); // на всякий случай закрываем и лайтбокс
 }
 
 function filterByCategory(cat) {
@@ -448,7 +481,7 @@ function placeOrder() {
         const textarea = document.createElement('textarea');
         textarea.value = text; document.body.appendChild(textarea);
         textarea.select(); document.execCommand('copy'); document.body.removeChild(textarea);
-        alert("Замовлення також скопійовано в буфер обміну!");
+        alert("Замовлення также скопійовано в буфер обміну!");
     }, 1000);
 }
 
