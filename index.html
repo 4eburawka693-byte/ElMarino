@@ -141,7 +141,6 @@ let currentModalQty = 1;
 let currentPhotos = [];
 let currentPhotoIndex = 0;
 
-// Умная обработка кнопки "Назад" телефона
 window.addEventListener('popstate', function () {
     const modalOpen = !document.getElementById('product-modal').classList.contains('hidden');
     const cartOpen = !document.getElementById('cart-modal').classList.contains('hidden');
@@ -267,15 +266,19 @@ function showProductDetails(index) {
     
     const catLower = p.category.toLowerCase();
 
-    if (catLower.includes('взуття')) {
+    // Изменено тут: теперь и Обувь, и Господарські товари показывают выбор размера
+    if (catLower.includes('взуття') || catLower.includes('господар')) {
         sizeBlock.classList.remove('hidden');
-        let sizes = ['36', '37', '38', '39', '40', '41'];
         
+        // Стандартные размеры по умолчанию (если в таблице пусто)
+        let defaultSizes = catLower.includes('взуття') ? ['36', '37', '38', '39', '40', '41'] : ['#1', '#2', '#3'];
+        
+        // Автоматически ищем строчку вида "Размер: №1, №2" или "Розмір: 40, 41" в описании товара из таблицы
         const sizeMatch = p.description.match(/(?:розмір|розміри|размер|размеры)\s*:\s*([^\n\r.]+)/i);
         if (sizeMatch && sizeMatch[1]) {
-            sizes = sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+            defaultSizes = sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
         }
-        sizeSelect.innerHTML = sizes.map(s => `<option value="${s}">${s}</option>`).join('');
+        sizeSelect.innerHTML = defaultSizes.map(s => `<option value="${s}">${s}</option>`).join('');
     } else {
         sizeBlock.classList.add('hidden');
     }
@@ -401,7 +404,7 @@ function addToCart(index, qty, size = null, color = null) {
     toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:9999px;box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1);z-index:100;font-weight:500;';
     
     let infoText = '';
-    if (size) infoText += ` (Розм. ${size})`;
+    if (size) infoText += ` (Розмір: ${size})`;
     if (color) infoText += ` (Колір: ${color})`;
     toast.textContent = `✅ Додано: ${qty} шт.${infoText}!`;
     
@@ -409,11 +412,7 @@ function addToCart(index, qty, size = null, color = null) {
     setTimeout(() => toast.remove(), 1200);
 }
 
-function updateCartCount() {
-    const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
-    document.getElementById('cart-count').textContent = totalQty;
-}
-
+// Обновление отображения корзины
 function showCart() {
     if (cart.length === 0) { alert("Кошик порожній"); return; }
     let html = '';
@@ -457,6 +456,11 @@ function showCart() {
     
     history.pushState({modal: "cart"}, null, null);
     document.getElementById('cart-modal').classList.remove('hidden');
+}
+
+function updateCartCount() {
+    const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+    document.getElementById('cart-count').textContent = totalQty;
 }
 
 function updateCartItemQty(index, delta) {
