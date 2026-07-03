@@ -120,9 +120,7 @@
 <div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col items-center justify-center p-4" onclick="closeFullscreenPhoto()">
     <button onclick="closeFullscreenPhoto()" class="fixed top-6 right-6 text-white text-3xl font-light hover:text-gray-300 z-[70] bg-black/40 w-12 h-12 rounded-full flex items-center justify-center">✕</button>
     
-    <div id="pinch-zoom-wrapper" class="pinch-zoom-container" onclick="event.stopPropagation()">
-        <img id="lightbox-image" src="" class="zoomable-img rounded shadow-2xl">
-    </div>
+    <div id="lightbox-content-area" class="w-full flex items-center justify-center"></div>
 
     <button id="lightbox-prev-btn" onclick="changePhoto(-1); updateLightboxImage(); event.stopPropagation();" class="fixed left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＜</button>
     <button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage(); event.stopPropagation();" class="fixed right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＞</button>
@@ -156,7 +154,7 @@ let cart = [];
 let currentModalQty = 1;
 let currentPhotos = [];
 let currentPhotoIndex = 0;
-let pZoomInstance = null; // Переменная для хранения зума
+let pZoomInstance = null;
 
 window.addEventListener('popstate', function () {
     const modalOpen = !document.getElementById('product-modal').classList.contains('hidden');
@@ -340,27 +338,28 @@ function updateModalPhoto() {
 }
 
 function openFullscreenPhoto() {
-    updateLightboxImage();
-    history.pushState({modal: "lightbox"}, null, null);
+    // Включаем отображение самого окна
     document.getElementById('fullscreen-lightbox').classList.remove('hidden');
+    history.pushState({modal: "lightbox"}, null, null);
     
-    // Инициализируем библиотеку зума после открытия окна
-    setTimeout(() => {
-        const el = document.getElementById('pinch-zoom-wrapper');
-        if (el) {
-            // Если старый зум остался, удаляем его
-            if (pZoomInstance) { pZoomInstance.destroy(); }
-            pZoomInstance = new PinchZoom.default(el, {
-                draggableUnzoomed: false,
-                minZoom: 1,
-                maxZoom: 4
-            });
-        }
-    }, 50);
+    // Пересоздаем блок картинок с нуля, чтобы очистить старый зум
+    updateLightboxImage();
 }
 
 function updateLightboxImage() {
-    document.getElementById('lightbox-image').src = currentPhotos[currentPhotoIndex];
+    if (pZoomInstance) {
+        pZoomInstance.destroy();
+        pZoomInstance = null;
+    }
+
+    // Полностью стираем старое содержимое контейнера и вставляем новую чистую разметку
+    const contentArea = document.getElementById('lightbox-content-area');
+    contentArea.innerHTML = `
+        <div id="pinch-zoom-wrapper" class="pinch-zoom-container" onclick="event.stopPropagation()">
+            <img id="lightbox-image" src="${currentPhotos[currentPhotoIndex]}" class="zoomable-img rounded shadow-2xl">
+        </div>
+    `;
+
     const prevLbox = document.getElementById('lightbox-prev-btn');
     const nextLbox = document.getElementById('lightbox-next-btn');
     if (currentPhotos.length > 1) {
@@ -368,17 +367,27 @@ function updateLightboxImage() {
     } else {
         prevLbox.classList.add('hidden'); nextLbox.classList.add('hidden');
     }
-    // Сбрасываем зум при переключении картинок стрелочками
-    if (pZoomInstance) { pZoomInstance.setTransform({x: 0, y: 0, scale: 1}); }
+
+    // Инициализируем библиотеку на свежесозданном HTML блоке
+    setTimeout(() => {
+        const el = document.getElementById('pinch-zoom-wrapper');
+        if (el) {
+            pZoomInstance = new PinchZoom.default(el, {
+                draggableUnzoomed: false,
+                minZoom: 1,
+                maxZoom: 4
+            });
+        }
+    }, 40);
 }
 
 function closeFullscreenPhoto() {
     document.getElementById('fullscreen-lightbox').classList.add('hidden');
-    // Полностью уничтожаем зум при закрытии, чтобы он не ломал верстку
     if (pZoomInstance) {
         pZoomInstance.destroy();
         pZoomInstance = null;
     }
+    document.getElementById('lightbox-content-area').innerHTML = ''; // Очищаем верстку
 }
 
 function changePhoto(direction) {
