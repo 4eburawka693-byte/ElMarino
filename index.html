@@ -130,13 +130,33 @@ async function loadProductsFromSheet() {
         const csvText = await response.text();
         
         const lines = csvText.split('\n').map(line => {
-            return line.split('","').map(cell => cell.replace(/^"|"$/g, '').trim());
+            return line.split('Items Split Mark').map(cell => cell.trim()); 
         });
 
+        // Простой парсинг CSV
+        const parseCSV = (text) => {
+            let p = '', r = [];
+            let q = false;
+            let row = [''];
+            for (let i=0; i<text.length; i++) {
+                let c = text[i];
+                if (c === '"') { q = !q; continue; }
+                if (c === ',' && !q) { row.push(''); continue; }
+                if ((c === '\n' || c === '\r') && !q) {
+                    if (c === '\n' && text[i-1] === '\r') continue;
+                    r.push(row); row = ['']; continue;
+                }
+                row[row.length-1] += c;
+            }
+            if (row.length > 1 || row[0] !== '') r.push(row);
+            return r;
+        };
+
+        const rows = parseCSV(csvText);
         allProducts = [];
         
-        for (let i = 1; i < lines.length; i++) {
-            const row = lines[i];
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
             if (row && row[0]) { 
                 let imagesArray = [];
                 if (row[4]) {
@@ -144,10 +164,10 @@ async function loadProductsFromSheet() {
                 }
 
                 allProducts.push({
-                    name: row[0],
-                    category: row[1] || 'Інше',
-                    price: row[2] || '0,00',
-                    description: row[3] || '',
+                    name: row[0].trim(),
+                    category: row[1] ? row[1].trim() : 'Інше',
+                    price: row[2] ? row[2].trim() : '0,00',
+                    description: row[3] ? row[3].trim() : '',
                     images: imagesArray
                 });
             }
@@ -212,7 +232,6 @@ function showProductDetails(index) {
     document.getElementById('modal-product-description').textContent = p.description || 'Опис відсутній';
     document.getElementById('modal-product-price').textContent = p.price + ' грн';
     
-    // Проверка категории обуви
     const sizeSelect = document.getElementById('modal-size-select');
     const sizeBlock = document.getElementById('size-selector-block');
     if (p.category.toLowerCase().includes('взуття')) {
@@ -222,15 +241,14 @@ function showProductDetails(index) {
         sizeBlock.classList.add('hidden');
     }
 
-    // ИСПРАВЛЕНО: Парсинг и отображение цветов для праздничной категории
     const colorSelect = document.getElementById('modal-color-select');
     const colorBlock = document.getElementById('color-selector-block');
+    const catLower = p.category.toLowerCase();
     
-    if (p.category.toLowerCase().includes('свята')) {
+    if (catLower.includes('свят') || catLower.includes('пакет') || catLower.includes('подарунк')) {
         colorBlock.classList.remove('hidden');
-        let colors = ['Асорті']; // значение по умолчанию
+        let colors = ['Асорті']; 
         
-        // Пытаемся вытащить цвета из текста описания (например, "Кольори: Червоний, Синій" или "Цвета: ...")
         const match = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
         if (match && match[1]) {
             colors = match[1].split(',').map(c => c.trim()).filter(Boolean);
@@ -243,7 +261,7 @@ function showProductDetails(index) {
     
     document.getElementById('modal-product-btn').onclick = function() {
         let chosenSize = p.category.toLowerCase().includes('взуття') ? sizeSelect.value : null;
-        let chosenColor = p.category.toLowerCase().includes('свята') ? colorSelect.value : null;
+        let chosenColor = (!colorBlock.classList.contains('hidden')) ? colorSelect.value : null;
         
         addToCart(index, currentModalQty, chosenSize, chosenColor);
         hideProductModal();
@@ -289,7 +307,6 @@ function filterByCategory(cat) {
     renderProducts(filtered);
 }
 
-UX-ЗАКАЗЫ:
 function resetFilters() {
     document.getElementById('search').value = '';
     renderProducts(allProducts);
