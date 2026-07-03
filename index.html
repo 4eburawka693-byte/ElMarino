@@ -17,6 +17,13 @@
             overflow: hidden !important;
             text-overflow: ellipsis !important;
         }
+        /* Стиль для возможности увеличения и прокрутки большой фотки */
+        .zoomable-img {
+            max-width: 100%;
+            max-height: 90vh;
+            object-contain: contain;
+            touch-action: pinch-zoom; /* Разрешает увеличивать пальцами на смартфонах */
+        }
     </style>
 </head>
 <body class="bg-gray-100 notranslate">
@@ -103,12 +110,12 @@
     </div>
 </div>
 
-<div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4" onclick="closeFullscreenPhoto()">
-    <button onclick="closeFullscreenPhoto()" class="absolute top-6 right-6 text-white text-3xl font-light hover:text-gray-300 z-50">✕</button>
+<div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4 overflow-auto" onclick="closeFullscreenPhoto()">
+    <button onclick="closeFullscreenPhoto()" class="fixed top-6 right-6 text-white text-3xl font-light hover:text-gray-300 z-[70] bg-black/40 w-12 h-12 rounded-full flex items-center justify-center">✕</button>
     <div class="relative max-w-full max-h-full flex items-center justify-center" onclick="event.stopPropagation()">
-        <img id="lightbox-image" src="" class="max-w-[95vw] max-h-[90vh] object-contain rounded shadow-2xl">
-        <button id="lightbox-prev-btn" onclick="changePhoto(-1); updateLightboxImage();" class="absolute left-2 bg-white/10 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none">＜</button>
-        <button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage();" class="absolute right-2 bg-white/10 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none">＞</button>
+        <img id="lightbox-image" src="" class="zoomable-img rounded shadow-2xl">
+        <button id="lightbox-prev-btn" onclick="changePhoto(-1); updateLightboxImage();" class="fixed left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＜</button>
+        <button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage();" class="fixed right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＞</button>
     </div>
 </div>
 
@@ -224,7 +231,6 @@ function renderProducts(products) {
         const realIndex = allProducts.findIndex(item => item.name === p.name);
         const mainImage = p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=60';
         
-        // Тут добавлено свойство loading="lazy" для ускорения работы картинок
         html += `
             <div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border flex flex-col justify-between">
                 <div>
@@ -340,6 +346,7 @@ function updateLightboxImage() {
     }
 }
 
+// При закрытии полноэкранного режима сбрасываем масштаб
 function closeFullscreenPhoto() {
     document.getElementById('fullscreen-lightbox').classList.add('hidden');
 }
