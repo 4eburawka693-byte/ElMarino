@@ -18,7 +18,7 @@
             overflow: hidden !important;
             text-overflow: ellipsis !important;
         }
-        /* Контейнер для зума должен занимать всю доступную область */
+        /* Контейнер для зума повинен займати всю доступну область */
         .pinch-zoom-container {
             width: 100%;
             height: 80vh;
@@ -139,7 +139,7 @@
                 <span id="cart-total">0 грн</span>
             </div>
             <button onclick="placeOrder()" class="mt-6 w-full bg-green-600 text-white py-5 rounded-3xl text-lg font-medium">
-                Оформити замовлення (Telegram)
+                Оформити замовлення
             </button>
         </div>
     </div>
@@ -345,7 +345,7 @@ function openFullscreenPhoto() {
 function updateLightboxImage() {
     const contentArea = document.getElementById('lightbox-content-area');
     
-    // Генерируем абсолютно уникальный ID для каждого вызова, чтобы библиотека не путалась
+    // Генеруємо унікальний ID для кожного виклику
     const uniqueId = "pz_" + new Date().getTime();
     
     contentArea.innerHTML = `
@@ -362,7 +362,7 @@ function updateLightboxImage() {
         prevLbox.classList.add('hidden'); nextLbox.classList.add('hidden');
     }
 
-    // Запускаем инициализацию с задержкой, чтобы элемент гарантированно появился в памяти браузера
+    // Ініціалізуємо бібліотеку зуму на створеному елементі
     setTimeout(() => {
         const el = document.getElementById(uniqueId);
         if (el && typeof PinchZoom !== 'undefined') {
@@ -518,10 +518,28 @@ function removeFromCart(i) {
 function placeOrder() {
     if (cart.length === 0) { alert("Кошик порожній"); return; }
 
-    let text = "Замовлення ElMarino:\n\n";
+    // --- НАЛАШТУВАННЯ ТЕЛЕГРАМ-БОТА ---
+    const BOT_TOKEN = '8775134268:AAE9lKCPpZWs4E94uwAbMR26O2GPaJ8osDw'; 
+    const CHAT_ID = '5263239405';    
+    // --------------------------------
+
+    // Запитуємо контакти у покупця перед відправкою
+    let customerContacts = prompt("Будь ласка, введіть ваше Ім'я та Номер телефону (або @юзернейм) для зв'язку:");
+    
+    if (customerContacts === null) return; 
+    if (customerContacts.trim() === "") {
+        alert("Для оформлення замовлення необхідно вказати контактні дані!");
+        return;
+    }
+
+    let text = "🔔 *НОВЕ ЗАМОВЛЕННЯ ElMarino!*\n";
+    text += "━━━━━━━━━━━━━━━━━━━━\n\n";
+    text += `👤 *Покупець:* ${customerContacts}\n`;
+    text += "━━━━━━━━━━━━━━━━━━━━\n\n";
+    
     let total = 0;
     
-    cart.forEach(item => {
+    cart.forEach((item, index) => {
         const price = parseFloat(item.product.price.replace(',', '.'));
         const itemTotal = price * item.quantity;
         total += itemTotal;
@@ -530,23 +548,39 @@ function placeOrder() {
         if (item.size) variantInfo += ` (розм. ${item.size})`;
         if (item.color) variantInfo += ` (колір: ${item.color})`;
         
-        text += `• ${item.product.name}${variantInfo} — ${item.quantity} шт. х ${item.product.price} грн (= ${itemTotal.toFixed(2)} грн)\n`;
+        text += `${index + 1}. 📦 *${item.product.name}*${variantInfo}\n`;
+        text += `   ↳ ${item.quantity} шт. х ${item.product.price} грн (= ${itemTotal.toFixed(2)} грн)\n\n`;
     });
     
-    text += `\nРазом: ${total.toFixed(2)} грн\n\nВкажіть адресу для доставки та ім'я:`;
+    text += "━━━━━━━━━━━━━━━━━━━━\n";
+    text += `💰 *РАЗОМ ДО ОПЛАТИ:* ${total.toFixed(2)} грн\n\n`;
+    text += "📅 Дата: " + new Date().toLocaleString('uk-UA') + "\n";
     
-    const tgUsername = "ElMarino_we"; 
-    const encodedText = encodeURIComponent(text);
-    const telegramUrl = `https://t.me/${tgUsername}?text=${encodedText}`;
-    
-    window.location.href = telegramUrl;
-    
-    setTimeout(() => {
-        const textarea = document.createElement('textarea');
-        textarea.value = text; document.body.appendChild(textarea);
-        textarea.select(); document.execCommand('copy'); document.body.removeChild(textarea);
-        alert("Замовлення также скопійовано в буфер обміну!");
-    }, 1000);
+    const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+
+    fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: CHAT_ID,
+            text: text,
+            parse_mode: 'Markdown' 
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            cart = [];
+            updateCartCount();
+            hideCart();
+            alert("🎉 Дякуємо! Ваше замовлення успішно відправлено менеджереві. Ми зв'яжемося з вами найближчим часом!");
+        } else {
+            alert("Помилка при відправці замовлення. Спробуйте ще раз.");
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert("Сталася помилка мережі. Перевірте з'єднання.");
+    });
 }
 
 loadProductsFromSheet();
