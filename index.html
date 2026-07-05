@@ -35,6 +35,7 @@
 <body class="bg-gray-100 notranslate">
 
 <div class="max-w-4xl mx-auto pb-20">
+    <!-- БАНЕР -->
     <div class="w-full overflow-hidden shadow-sm">
         <img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Banner" class="w-full h-auto object-cover block" loading="eager">
     </div>
@@ -60,10 +61,10 @@
     </div>
 
     <div id="categories" class="px-4 mb-6 grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
-    
     <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
 </div>
 
+<!-- Модальне вікно КАРТКИ ТОВАРУ -->
 <div id="product-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-3" onclick="hideProductModal()">
     <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
         
@@ -82,11 +83,13 @@
                 <h2 id="modal-product-name" class="text-xl font-bold text-gray-800 mt-3 leading-tight"></h2>
                 <p id="modal-product-description" class="text-gray-600 text-sm mt-2 whitespace-pre-line"></p>
                 
+                <!-- БЛОК ВИБОРУ РОЗМІРУ -->
                 <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                     <span class="text-gray-600 font-medium text-sm pl-2">Оберіть розмір:</span>
                     <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[120px]"></select>
                 </div>
 
+                <!-- БЛОК ВИБОРУ КОЛЬОРУ -->
                 <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                     <span class="text-gray-600 font-medium text-sm pl-2">Оберіть колір:</span>
                     <select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[120px]"></select>
@@ -112,10 +115,10 @@
                 Додати в кошик
             </button>
         </div>
-
     </div>
 </div>
 
+<!-- Lightbox -->
 <div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col items-center justify-center p-4" onclick="closeFullscreenPhoto()">
     <button onclick="closeFullscreenPhoto()" class="fixed top-6 right-6 text-white text-3xl font-light hover:text-gray-300 z-[70] bg-black/40 w-12 h-12 rounded-full flex items-center justify-center">✕</button>
     <div id="lightbox-content-area" class="w-full flex items-center justify-center"></div>
@@ -123,6 +126,7 @@
     <button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage(); event.stopPropagation();" class="fixed right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＞</button>
 </div>
 
+<!-- Кошик -->
 <div id="cart-modal" class="hidden fixed inset-0 bg-black/70 flex items-end z-50">
     <div class="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-auto p-5">
         <div class="flex justify-between mb-6">
@@ -275,16 +279,16 @@ function showProductDetails(index) {
     const colorSelect = document.getElementById('modal-color-select');
     const colorBlock = document.getElementById('color-selector-block');
     
-    const catLower = p.category.toLowerCase();
+    const catLower = p.category.toLowerCase().trim();
 
-    // --- УМНАЯ ЛОГИКА ДЛЯ РАЗМЕРОВ ---
+    // --- ЖЕЛЕЗОБЕТОННАЯ ЛОГИКА ДЛЯ РАЗМЕРОВ ---
     const sizeMatch = p.description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r.]+)/i);
     
     if (sizeMatch && sizeMatch[1]) {
         sizeBlock.classList.remove('hidden');
         let parsedSizes = sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
         sizeSelect.innerHTML = parsedSizes.map(s => `<option value="${s}">${s}</option>`).join('');
-    } else if (catLower.includes('взуття')) {
+    } else if (catLower === 'взуття') {
         sizeBlock.classList.remove('hidden');
         let defaultSizes = ['36', '37', '38', '39', '40', '41'];
         sizeSelect.innerHTML = defaultSizes.map(s => `<option value="${s}">${s}</option>`).join('');
@@ -293,14 +297,14 @@ function showProductDetails(index) {
         sizeSelect.innerHTML = '';
     }
 
-    // --- УМНАЯ ЛОГИКА ДЛЯ ЦВЕТОВ ---
+    // --- ЖЕЛЕЗОБЕТОННАЯ ЛОГИКА ДЛЯ ЦВЕТОВ ---
     const colorMatch = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
     
     if (colorMatch && colorMatch[1]) {
         colorBlock.classList.remove('hidden');
         let colors = colorMatch[1].split(',').map(c => c.trim()).filter(Boolean);
         colorSelect.innerHTML = colors.map(c => `<option value="${c}">${c}</option>`).join('');
-    } else if (catLower.includes('свят') || catLower.includes('пакет') || catLower.includes('подарунк')) {
+    } else if (catLower === 'святковий асортимент' || catLower === 'пакети' || catLower === 'подарунки') {
         colorBlock.classList.remove('hidden');
         colorSelect.innerHTML = '<option value="Асорті">Асорті</option>';
     } else {
@@ -402,7 +406,6 @@ function filterByCategory(cat) {
     renderProducts(filtered);
 }
 
-// Повністю скидає фільтри
 function resetFilters() {
     document.getElementById('search').value = '';
     renderProducts(allProducts);
