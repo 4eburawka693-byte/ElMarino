@@ -35,7 +35,6 @@
 <body class="bg-gray-100 notranslate">
 
 <div class="max-w-4xl mx-auto pb-20">
-    <!-- БАНЕР -->
     <div class="w-full overflow-hidden shadow-sm">
         <img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Banner" class="w-full h-auto object-cover block" loading="eager">
     </div>
@@ -64,7 +63,6 @@
     <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
 </div>
 
-<!-- Модальне вікно КАРТКИ ТОВАРУ -->
 <div id="product-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-3" onclick="hideProductModal()">
     <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
         
@@ -83,13 +81,11 @@
                 <h2 id="modal-product-name" class="text-xl font-bold text-gray-800 mt-3 leading-tight"></h2>
                 <p id="modal-product-description" class="text-gray-600 text-sm mt-2 whitespace-pre-line"></p>
                 
-                <!-- БЛОК ВИБОРУ РОЗМІРУ -->
                 <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                     <span class="text-gray-600 font-medium text-sm pl-2">Оберіть розмір:</span>
                     <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[120px]"></select>
                 </div>
 
-                <!-- БЛОК ВИБОРУ КОЛЬОРУ -->
                 <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                     <span class="text-gray-600 font-medium text-sm pl-2">Оберіть колір:</span>
                     <select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[120px]"></select>
@@ -118,7 +114,6 @@
     </div>
 </div>
 
-<!-- Lightbox -->
 <div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col items-center justify-center p-4" onclick="closeFullscreenPhoto()">
     <button onclick="closeFullscreenPhoto()" class="fixed top-6 right-6 text-white text-3xl font-light hover:text-gray-300 z-[70] bg-black/40 w-12 h-12 rounded-full flex items-center justify-center">✕</button>
     <div id="lightbox-content-area" class="w-full flex items-center justify-center"></div>
@@ -126,7 +121,6 @@
     <button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage(); event.stopPropagation();" class="fixed right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＞</button>
 </div>
 
-<!-- Кошик -->
 <div id="cart-modal" class="hidden fixed inset-0 bg-black/70 flex items-end z-50">
     <div class="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-auto p-5">
         <div class="flex justify-between mb-6">
@@ -225,7 +219,14 @@ async function loadProductsFromSheet() {
 }
 
 function renderCategories() {
-    const cats = [...new Set(allProducts.map(p => p.category))].filter(Boolean).sort();
+    // Зберігаємо категорії рівно в тому порядку, як вони йдуть у таблиці зверху вниз
+    const cats = [];
+    allProducts.forEach(p => {
+        if (p.category && !cats.includes(p.category)) {
+            cats.push(p.category);
+        }
+    });
+
     let html = '';
     cats.forEach(cat => {
         html += `<div onclick="filterByCategory('${cat}')" class="bg-white p-3 rounded-2xl shadow-sm text-center text-xs font-semibold cursor-pointer active:bg-purple-100 border hover:border-purple-300 transition-colors">${cat}</div>`;
@@ -281,7 +282,7 @@ function showProductDetails(index) {
     
     const catLower = p.category.toLowerCase().trim();
 
-    // --- ЖЕЛЕЗОБЕТОННАЯ ЛОГИКА ДЛЯ РАЗМЕРОВ ---
+    // --- НАДІЙНА ЛОГИКА ДЛЯ РОЗМІРІВ ---
     const sizeMatch = p.description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r.]+)/i);
     
     if (sizeMatch && sizeMatch[1]) {
@@ -297,7 +298,7 @@ function showProductDetails(index) {
         sizeSelect.innerHTML = '';
     }
 
-    // --- ЖЕЛЕЗОБЕТОННАЯ ЛОГИКА ДЛЯ ЦВЕТОВ ---
+    // --- НАДІЙНА ЛОГИКА ДЛЯ КОЛЬОРІВ ---
     const colorMatch = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
     
     if (colorMatch && colorMatch[1]) {
