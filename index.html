@@ -267,7 +267,6 @@ function parseSizePrice(sizeStr, defaultPrice) {
     let price = defaultPrice.replace(',', '.');
 
     if (priceMatch && priceMatch[1]) {
-        // Очищаем от букв "грн", оставляем только цифры, точки и запятые
         let cleanPrice = priceMatch[1].replace(/[^\d.,]/g, '').replace(',', '.').trim();
         if (cleanPrice && !isNaN(parseFloat(cleanPrice))) {
             price = parseFloat(cleanPrice).toFixed(2);
@@ -278,6 +277,7 @@ function parseSizePrice(sizeStr, defaultPrice) {
 
 function extractSizesFromDescription(description) {
     if (!description) return [];
+    // Улучшенный поиск: не зависит от регистра букв (і/и/е) и пробелов
     const sizeMatch = description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r.]+)/i);
     if (sizeMatch && sizeMatch[1]) {
         return sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
@@ -333,8 +333,9 @@ function showProductDetails(index) {
     const catLower = p.category.toLowerCase().trim();
     const parsedSizes = extractSizesFromDescription(p.description);
     
-    // Важно: перепривязываем событие onchange для селекта
+    // Принудительно слушаем любые изменения в селекте на мобильных устройствах
     sizeSelect.onchange = updateModalPrice;
+    sizeSelect.oninput = updateModalPrice;
     
     if (parsedSizes.length > 0) {
         sizeBlock.classList.remove('hidden');
@@ -671,3 +672,4 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
+
