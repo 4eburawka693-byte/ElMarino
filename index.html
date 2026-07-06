@@ -219,7 +219,6 @@ async function loadProductsFromSheet() {
 }
 
 function renderCategories() {
-    // Зберігаємо категорії рівно в тому порядку, як вони йдуть у таблиці зверху вниз
     const cats = [];
     allProducts.forEach(p => {
         if (p.category && !cats.includes(p.category)) {
@@ -282,7 +281,7 @@ function showProductDetails(index) {
     
     const catLower = p.category.toLowerCase().trim();
 
-    // --- НАДІЙНА ЛОГИКА ДЛЯ РОЗМІРІВ ---
+    // --- УНІВЕРСАЛЬНА ЛОГІКА РОЗМІРІВ ДЛЯ ВСІХ КАТЕГОРІЙ ---
     const sizeMatch = p.description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r.]+)/i);
     
     if (sizeMatch && sizeMatch[1]) {
@@ -290,6 +289,7 @@ function showProductDetails(index) {
         let parsedSizes = sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
         sizeSelect.innerHTML = parsedSizes.map(s => `<option value="${s}">${s}</option>`).join('');
     } else if (catLower === 'взуття') {
+        // Залишаємо авто-розміри тільки для взуття, якщо в таблиці пусто
         sizeBlock.classList.remove('hidden');
         let defaultSizes = ['36', '37', '38', '39', '40', '41'];
         sizeSelect.innerHTML = defaultSizes.map(s => `<option value="${s}">${s}</option>`).join('');
@@ -298,16 +298,13 @@ function showProductDetails(index) {
         sizeSelect.innerHTML = '';
     }
 
-    // --- НАДІЙНА ЛОГИКА ДЛЯ КОЛЬОРІВ ---
+    // --- УНІВЕРСАЛЬНА ЛОГІКА КОЛЬОРІВ ДЛЯ ВСІХ КАТЕГОРІЙ ---
     const colorMatch = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
     
     if (colorMatch && colorMatch[1]) {
         colorBlock.classList.remove('hidden');
         let colors = colorMatch[1].split(',').map(c => c.trim()).filter(Boolean);
         colorSelect.innerHTML = colors.map(c => `<option value="${c}">${c}</option>`).join('');
-    } else if (catLower === 'святковий асортимент' || catLower === 'пакети' || catLower === 'подарунки') {
-        colorBlock.classList.remove('hidden');
-        colorSelect.innerHTML = '<option value="Асорті">Асорті</option>';
     } else {
         colorBlock.classList.add('hidden');
         colorSelect.innerHTML = '';
