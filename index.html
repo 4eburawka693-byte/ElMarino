@@ -149,7 +149,7 @@ let cart = [];
 let currentModalQty = 1;
 let currentPhotos = [];
 let currentPhotoIndex = 0;
-let currentProductIndex = null; // Индекс открытого в модалке товара
+let currentProductIndex = null;
 
 window.addEventListener('popstate', function () {
     const modalOpen = !document.getElementById('product-modal').classList.contains('hidden');
@@ -261,7 +261,6 @@ function renderProducts(products) {
     document.getElementById('products').innerHTML = html || '<p class="col-span-2 text-center py-10 text-gray-500">Нічого не знайдено</p>';
 }
 
-// Быстрое добавление прямо из списка (берется дефолтный первый размер, если он есть)
 function addToCartFromList(index) {
     const p = allProducts[index];
     const catLower = p.category.toLowerCase().trim();
@@ -291,7 +290,6 @@ function addToCartFromList(index) {
     addToCart(index, 1, defaultSize, defaultColor, basePrice);
 }
 
-// Разбор размера и цены (например, из строки "38 (170 грн)")
 function parseSizePrice(sizeStr, defaultPrice) {
     let priceMatch = sizeStr.match(/\(([^)]+)\)/);
     let sizeName = sizeStr.replace(/\s*\([^)]+\)\s*/g, '').trim();
@@ -334,7 +332,6 @@ function showProductDetails(index) {
         
         sizeSelect.innerHTML = parsedSizes.map(s => {
             let parsed = parseSizePrice(s, p.price);
-            // Сохраняем чистую цену в атрибут data-price каждого option
             return `<option value="${parsed.sizeName}" data-price="${parsed.price}">${s}</option>`;
         }).join('');
     } else if (catLower === 'взуття') {
@@ -358,7 +355,7 @@ function showProductDetails(index) {
         colorSelect.innerHTML = '';
     }
     
-    // Обновляем отображение цены в зависимости от выбранного размера
+    // Принудительно обновляем цену под текущий (первый выбранный) размер
     updateModalPrice();
     
     document.getElementById('modal-product-btn').onclick = function() {
@@ -378,7 +375,6 @@ function showProductDetails(index) {
     document.getElementById('product-modal').classList.remove('hidden');
 }
 
-// Функция обновления цены в карточке товара при смене размера
 function updateModalPrice() {
     if (currentProductIndex === null) return;
     const p = allProducts[currentProductIndex];
@@ -386,7 +382,7 @@ function updateModalPrice() {
     const sizeBlock = document.getElementById('size-selector-block');
     
     let activePrice = p.price;
-    if (!sizeBlock.classList.contains('hidden') && sizeSelect.selectedOptions[0]) {
+    if (!sizeBlock.classList.contains('hidden') && sizeSelect.selectedOptions.length > 0) {
         activePrice = sizeSelect.selectedOptions[0].getAttribute('data-price');
     }
     
@@ -413,6 +409,7 @@ function openFullscreenPhoto() {
     updateLightboxImage();
 }
 
+/* Расширенная инициализация PinchZoom для устранения багов на iOS/Android */
 function updateLightboxImage() {
     const contentArea = document.getElementById('lightbox-content-area');
     const uniqueId = "pz_" + new Date().getTime();
@@ -493,7 +490,6 @@ function addToCart(index, qty, size = null, color = null, customPrice = null) {
     const product = allProducts[index];
     const finalPrice = customPrice || product.price;
     
-    // Ищем товар в корзине с точно таким же размером, цветом и ценой
     const existingItem = cart.find(item => 
         item.product.name === product.name && 
         item.size === size && 
@@ -667,3 +663,4 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
+
