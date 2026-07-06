@@ -264,21 +264,21 @@ function renderProducts(products) {
 function parseSizePrice(sizeStr, defaultPrice) {
     let priceMatch = sizeStr.match(/\(([^)]+)\)/);
     let sizeName = sizeStr.replace(/\s*\([^)]+\)\s*/g, '').trim();
-    let price = defaultPrice;
+    let price = defaultPrice.replace(',', '.');
 
     if (priceMatch && priceMatch[1]) {
+        // Очищаем от букв "грн", оставляем только цифры, точки и запятые
         let cleanPrice = priceMatch[1].replace(/[^\d.,]/g, '').replace(',', '.').trim();
         if (cleanPrice && !isNaN(parseFloat(cleanPrice))) {
-            price = parseFloat(cleanPrice).toFixed(2).replace('.', ',');
+            price = parseFloat(cleanPrice).toFixed(2);
         }
     }
-    return { sizeName, price };
+    return { sizeName, price: parseFloat(price).toFixed(2).replace('.', ',') };
 }
 
 function extractSizesFromDescription(description) {
     if (!description) return [];
-    // Ищем строку вида "Розміри: ..." или "Розмір: ..." или "Размеры: ..." или "Размер: ..."
-    const sizeMatch = description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r]+)/i);
+    const sizeMatch = description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r.]+)/i);
     if (sizeMatch && sizeMatch[1]) {
         return sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
     }
@@ -333,7 +333,7 @@ function showProductDetails(index) {
     const catLower = p.category.toLowerCase().trim();
     const parsedSizes = extractSizesFromDescription(p.description);
     
-    // Привязываем функцию обновления цены прямо к событию изменения select
+    // Важно: перепривязываем событие onchange для селекта
     sizeSelect.onchange = updateModalPrice;
     
     if (parsedSizes.length > 0) {
@@ -391,8 +391,10 @@ function updateModalPrice() {
         activePrice = sizeSelect.selectedOptions[0].getAttribute('data-price');
     }
     
-    // Форматируем вывод, чтобы всегда красиво дорисовывались нули в копейках
-    let formattedPrice = parseFloat(activePrice.replace(',', '.')).toFixed(2).replace('.', ',');
+    let cleanNum = parseFloat(activePrice.replace(',', '.'));
+    if (isNaN(cleanNum)) cleanNum = 0;
+    
+    let formattedPrice = cleanNum.toFixed(2).replace('.', ',');
     document.getElementById('modal-product-price').textContent = formattedPrice + ' грн';
 }
 
@@ -479,7 +481,6 @@ function filterByCategory(cat) {
     renderProducts(filtered);
 }
 
-/* Сброс фильтра */
 function resetFilters() {
     document.getElementById('search').value = '';
     renderProducts(allProducts);
