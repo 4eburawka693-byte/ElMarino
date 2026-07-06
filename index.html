@@ -83,7 +83,7 @@
                 
                 <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                     <span class="text-gray-600 font-medium text-sm pl-2">Оберіть розмір:</span>
-                    <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[140px]" onchange="updateModalPrice()"></select>
+                    <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[140px]"></select>
                 </div>
 
                 <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
@@ -261,21 +261,42 @@ function renderProducts(products) {
     document.getElementById('products').innerHTML = html || '<p class="col-span-2 text-center py-10 text-gray-500">Нічого не знайдено</p>';
 }
 
+function parseSizePrice(sizeStr, defaultPrice) {
+    let priceMatch = sizeStr.match(/\(([^)]+)\)/);
+    let sizeName = sizeStr.replace(/\s*\([^)]+\)\s*/g, '').trim();
+    let price = defaultPrice;
+
+    if (priceMatch && priceMatch[1]) {
+        let cleanPrice = priceMatch[1].replace(/[^\d.,]/g, '').replace(',', '.').trim();
+        if (cleanPrice && !isNaN(parseFloat(cleanPrice))) {
+            price = parseFloat(cleanPrice).toFixed(2).replace('.', ',');
+        }
+    }
+    return { sizeName, price };
+}
+
+function extractSizesFromDescription(description) {
+    if (!description) return [];
+    // Ищем строку вида "Розміри: ..." или "Розмір: ..." или "Размеры: ..." или "Размер: ..."
+    const sizeMatch = description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r]+)/i);
+    if (sizeMatch && sizeMatch[1]) {
+        return sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return [];
+}
+
 function addToCartFromList(index) {
     const p = allProducts[index];
     const catLower = p.category.toLowerCase().trim();
-    const sizeMatch = p.description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r.]+)/i);
+    const parsedSizes = extractSizesFromDescription(p.description);
     
     let defaultSize = null;
     let basePrice = p.price;
 
-    if (sizeMatch && sizeMatch[1]) {
-        let parsedSizes = sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
-        if (parsedSizes.length > 0) {
-            let parsed = parseSizePrice(parsedSizes[0], p.price);
-            defaultSize = parsed.sizeName;
-            basePrice = parsed.price;
-        }
+    if (parsedSizes.length > 0) {
+        let parsed = parseSizePrice(parsedSizes[0], p.price);
+        defaultSize = parsed.sizeName;
+        basePrice = parsed.price;
     } else if (catLower === 'взуття') {
         defaultSize = '36';
     }
@@ -288,18 +309,6 @@ function addToCartFromList(index) {
     }
 
     addToCart(index, 1, defaultSize, defaultColor, basePrice);
-}
-
-function parseSizePrice(sizeStr, defaultPrice) {
-    let priceMatch = sizeStr.match(/\(([^)]+)\)/);
-    let sizeName = sizeStr.replace(/\s*\([^)]+\)\s*/g, '').trim();
-    let price = defaultPrice;
-
-    if (priceMatch && priceMatch[1]) {
-        let cleanPrice = priceMatch[1].replace(/[^\d.,]/g, '').trim();
-        if (cleanPrice) price = cleanPrice;
-    }
-    return { sizeName, price };
 }
 
 function showProductDetails(index) {
@@ -322,14 +331,13 @@ function showProductDetails(index) {
     const colorBlock = document.getElementById('color-selector-block');
     
     const catLower = p.category.toLowerCase().trim();
-
-    // --- УНІВЕРСАЛЬНА ЛОГІКА РОЗМІРІВ ---
-    const sizeMatch = p.description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r.]+)/i);
+    const parsedSizes = extractSizesFromDescription(p.description);
     
-    if (sizeMatch && sizeMatch[1]) {
+    // Привязываем функцию обновления цены прямо к событию изменения select
+    sizeSelect.onchange = updateModalPrice;
+    
+    if (parsedSizes.length > 0) {
         sizeBlock.classList.remove('hidden');
-        let parsedSizes = sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
-        
         sizeSelect.innerHTML = parsedSizes.map(s => {
             let parsed = parseSizePrice(s, p.price);
             return `<option value="${parsed.sizeName}" data-price="${parsed.price}">${s}</option>`;
@@ -343,9 +351,7 @@ function showProductDetails(index) {
         sizeSelect.innerHTML = '';
     }
 
-    // --- УНІВЕРСАЛЬНА ЛОГІКА КОЛЬОРІВ ---
     const colorMatch = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
-    
     if (colorMatch && colorMatch[1]) {
         colorBlock.classList.remove('hidden');
         let colors = colorMatch[1].split(',').map(c => c.trim()).filter(Boolean);
@@ -355,7 +361,6 @@ function showProductDetails(index) {
         colorSelect.innerHTML = '';
     }
     
-    // Принудительно обновляем цену под текущий (первый выбранный) размер
     updateModalPrice();
     
     document.getElementById('modal-product-btn').onclick = function() {
@@ -363,7 +368,7 @@ function showProductDetails(index) {
         let chosenColor = (!colorBlock.classList.contains('hidden')) ? colorSelect.value : null;
         
         let activePrice = p.price;
-        if (chosenSize && sizeSelect.selectedOptions[0]) {
+        if (chosenSize && sizeSelect.selectedOptions.length > 0) {
             activePrice = sizeSelect.selectedOptions[0].getAttribute('data-price');
         }
         
@@ -386,7 +391,9 @@ function updateModalPrice() {
         activePrice = sizeSelect.selectedOptions[0].getAttribute('data-price');
     }
     
-    document.getElementById('modal-product-price').textContent = activePrice + ' грн';
+    // Форматируем вывод, чтобы всегда красиво дорисовывались нули в копейках
+    let formattedPrice = parseFloat(activePrice.replace(',', '.')).toFixed(2).replace('.', ',');
+    document.getElementById('modal-product-price').textContent = formattedPrice + ' грн';
 }
 
 function updateModalPhoto() {
@@ -409,7 +416,6 @@ function openFullscreenPhoto() {
     updateLightboxImage();
 }
 
-/* Расширенная инициализация PinchZoom для устранения багов на iOS/Android */
 function updateLightboxImage() {
     const contentArea = document.getElementById('lightbox-content-area');
     const uniqueId = "pz_" + new Date().getTime();
@@ -473,6 +479,7 @@ function filterByCategory(cat) {
     renderProducts(filtered);
 }
 
+/* Сброс фильтра */
 function resetFilters() {
     document.getElementById('search').value = '';
     renderProducts(allProducts);
@@ -563,7 +570,7 @@ function showCart() {
     });
     
     document.getElementById('cart-items').innerHTML = html;
-    document.getElementById('cart-total').textContent = total.toFixed(2) + ' грн';
+    document.getElementById('cart-total').textContent = total.toFixed(2).replace('.', ',') + ' грн';
     
     history.pushState({modal: "cart"}, null, null);
     document.getElementById('cart-modal').classList.remove('hidden');
@@ -625,11 +632,11 @@ function placeOrder() {
         if (item.color) variantInfo += ` (колір: ${item.color})`;
         
         text += `${index + 1}. 📦 *${item.product.name}*${variantInfo}\n`;
-        text += `   ↳ ${item.quantity} шт. х ${item.cartPrice} грн (= ${itemTotal.toFixed(2)} грн)\n\n`;
+        text += `   ↳ ${item.quantity} шт. х ${item.cartPrice} грн (= ${itemTotal.toFixed(2).replace('.', ',')} грн)\n\n`;
     });
     
     text += "━━━━━━━━━━━━━━━━━━━━\n";
-    text += `💰 *РАЗОМ ДО ОПЛАТИ:* ${total.toFixed(2)} грн\n\n`;
+    text += `💰 *РАЗОМ ДО ОПЛАТИ:* ${total.toFixed(2).replace('.', ',')} грн\n\n`;
     text += "📅 Дата: " + new Date().toLocaleString('uk-UA') + "\n";
     
     const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
@@ -663,4 +670,3 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
-
