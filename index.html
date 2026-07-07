@@ -277,7 +277,6 @@ function parseSizePrice(sizeStr, defaultPrice) {
 
 function extractSizesFromDescription(description) {
     if (!description) return [];
-    // Улучшенный поиск: не зависит от регистра букв (і/и/е) и пробелов
     const sizeMatch = description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r.]+)/i);
     if (sizeMatch && sizeMatch[1]) {
         return sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
@@ -333,7 +332,6 @@ function showProductDetails(index) {
     const catLower = p.category.toLowerCase().trim();
     const parsedSizes = extractSizesFromDescription(p.description);
     
-    // Принудительно слушаем любые изменения в селекте на мобильных устройствах
     sizeSelect.onchange = updateModalPrice;
     sizeSelect.oninput = updateModalPrice;
     
@@ -395,7 +393,10 @@ function updateModalPrice() {
     let cleanNum = parseFloat(activePrice.replace(',', '.'));
     if (isNaN(cleanNum)) cleanNum = 0;
     
-    let formattedPrice = cleanNum.toFixed(2).replace('.', ',');
+    // УМНОЖАЕМ на текущее выбранное количество
+    let totalPrice = cleanNum * currentModalQty;
+    
+    let formattedPrice = totalPrice.toFixed(2).replace('.', ',');
     document.getElementById('modal-product-price').textContent = formattedPrice + ' грн';
 }
 
@@ -465,6 +466,9 @@ function changeModalQty(amount) {
     currentModalQty += amount;
     if (currentModalQty < 1) currentModalQty = 1;
     document.getElementById('modal-qty').textContent = currentModalQty;
+    
+    // Пересчитываем цену при изменении количества
+    updateModalPrice();
 }
 
 function hideProductModal(fromPopState = false) {
@@ -672,4 +676,3 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
-
