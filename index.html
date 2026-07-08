@@ -83,7 +83,7 @@
                 
                 <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
                     <span class="text-gray-600 font-medium text-sm pl-2">Оберіть розмір:</span>
-                    <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[140px]" onchange="updateModalPrice()"></select>
+                    <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[140px]"></select>
                 </div>
 
                 <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
@@ -277,11 +277,9 @@ function parseSizePrice(sizeStr, defaultPrice) {
 
 function extractSizesFromDescription(description) {
     if (!description) return [];
-    // Ищем ключевые слова размеров
     const sizeMatch = description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r.]+)/i);
     if (sizeMatch && sizeMatch[1]) {
         const rawContent = sizeMatch[1].trim();
-        // Защита: если блок текста слишком длинный (больше 60 символов) — это просто описание, а не перечень модификаций
         if (rawContent.length > 60) return [];
         return rawContent.split(',').map(s => s.trim()).filter(Boolean);
     }
@@ -335,6 +333,9 @@ function showProductDetails(index) {
     const catLower = p.category.toLowerCase().trim();
     const parsedSizes = extractSizesFromDescription(p.description);
     
+    sizeSelect.onchange = updateModalPrice;
+    sizeSelect.oninput = updateModalPrice;
+    
     if (parsedSizes.length > 0) {
         sizeBlock.classList.remove('hidden');
         sizeSelect.innerHTML = parsedSizes.map(s => {
@@ -350,19 +351,23 @@ function showProductDetails(index) {
         sizeSelect.innerHTML = '';
     }
 
+    // РАЗБОР ЦВЕТОВ И СВЯЗЫВАНИЕ С КАРТИНКАМИ
     const colorMatch = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
     if (colorMatch && colorMatch[1]) {
         colorBlock.classList.remove('hidden');
         let colors = colorMatch[1].split(',').map(c => c.trim()).filter(Boolean);
+        // Каждому цвету даем data-index, соответствующий номеру картинки
         colorSelect.innerHTML = colors.map((c, idx) => `<option value="${c}" data-index="${idx}">${c}</option>`).join('');
     } else {
         colorBlock.classList.add('hidden');
         colorSelect.innerHTML = '';
     }
 
+    // Событие: когда пользователь сам МЕНЯЕТ ЦВЕТ в выпадающем списке
     colorSelect.onchange = function() {
         if (colorSelect.selectedOptions.length > 0) {
             let photoIdx = parseInt(colorSelect.selectedOptions[0].getAttribute('data-index'));
+            // Если для этого цвета есть картинка, переключаем на неё
             if (!isNaN(photoIdx) && currentPhotos[photoIdx]) {
                 currentPhotoIndex = photoIdx;
                 updateModalPhoto();
@@ -397,99 +402,4 @@ function updateModalPrice() {
     const sizeBlock = document.getElementById('size-selector-block');
     
     let activePrice = p.price;
-    if (!sizeBlock.classList.contains('hidden') && sizeSelect.selectedOptions.length > 0) {
-        activePrice = sizeSelect.selectedOptions[0].getAttribute('data-price');
-    }
-    
-    let cleanNum = parseFloat(activePrice.replace(',', '.'));
-    if (isNaN(cleanNum)) cleanNum = 0;
-    
-    let totalPrice = cleanNum * currentModalQty;
-    
-    let formattedPrice = totalPrice.toFixed(2).replace('.', ',');
-    document.getElementById('modal-product-price').textContent = formattedPrice + ' грн';
-}
-
-function updateModalPhoto() {
-    document.getElementById('modal-product-image').src = currentPhotos[currentPhotoIndex];
-    const prevBtn = document.getElementById('prev-photo-btn');
-    const nextBtn = document.getElementById('next-photo-btn');
-    const counter = document.getElementById('photo-counter');
-    
-    if (currentPhotos.length > 1) {
-        prevBtn.classList.remove('hidden'); nextBtn.classList.remove('hidden'); counter.classList.remove('hidden');
-        counter.textContent = `${currentPhotoIndex + 1} із ${currentPhotos.length}`;
-    } else {
-        prevBtn.classList.add('hidden'); nextBtn.classList.add('hidden'); counter.classList.add('hidden');
-    }
-
-    const colorSelect = document.getElementById('modal-color-select');
-    if (colorSelect && colorSelect.options.length > 0) {
-        for (let i = 0; i < colorSelect.options.length; i++) {
-            if (parseInt(colorSelect.options[i].getAttribute('data-index')) === currentPhotoIndex) {
-                colorSelect.selectedIndex = i;
-                break;
-            }
-        }
-    }
-}
-
-function openFullscreenPhoto() {
-    document.getElementById('fullscreen-lightbox').classList.remove('hidden');
-    history.pushState({modal: "lightbox"}, null, null);
-    updateLightboxImage();
-}
-
-function updateLightboxImage() {
-    const contentArea = document.getElementById('lightbox-content-area');
-    const uniqueId = "pz_" + new Date().getTime();
-    
-    contentArea.innerHTML = `
-        <div id="${uniqueId}" class="pinch-zoom-container" onclick="event.stopPropagation()">
-            <img src="${currentPhotos[currentPhotoIndex]}" class="zoomable-img rounded shadow-2xl">
-        </div>
-    `;
-
-    const prevLbox = document.getElementById('lightbox-prev-btn');
-    const nextLbox = document.getElementById('lightbox-next-btn');
-    if (currentPhotos.length > 1) {
-        prevLbox.classList.remove('hidden'); nextLbox.classList.remove('hidden');
-    } else {
-        prevLbox.classList.add('hidden'); nextLbox.classList.add('hidden');
-    }
-
-    setTimeout(() => {
-        const el = document.getElementById(uniqueId);
-        if (el && typeof PinchZoom !== 'undefined') {
-            new PinchZoom.default(el, {
-                draggableUnzoomed: false,
-                minZoom: 1,
-                maxZoom: 4
-            });
-        }
-    }, 50);
-}
-
-function closeFullscreenPhoto() {
-    document.getElementById('fullscreen-lightbox').classList.add('hidden');
-    document.getElementById('lightbox-content-area').innerHTML = ''; 
-    updateModalPhoto();
-}
-
-function changePhoto(direction) {
-    currentPhotoIndex += direction;
-    if (currentPhotoIndex < 0) currentPhotoIndex = currentPhotos.length - 1;
-    else if (currentPhotoIndex >= currentPhotos.length) currentPhotoIndex = 0;
-    updateModalPhoto();
-}
-
-function changeModalQty(amount) {
-    currentModalQty += amount;
-    if (currentModalQty < 1) currentModalQty = 1;
-    document.getElementById('modal-qty').textContent = currentModalQty;
-    
-    updateModalPrice();
-}
-
-function hideProductModal(fromPopState = false) {
-
+    if (!sizeBlock.classList.contains('hidden') && sizeSelect.selectedOptions.length >
