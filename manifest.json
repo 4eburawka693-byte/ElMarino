@@ -1,17 +1,15 @@
 {
-  "name": "ElMarino Магазин",
-  "short_name": "ElMarino",
-  "description": "Широкий вибір товарів, гнучка система знижок, безкоштовна доставка",
-  "start_url": "./index.html",
+  "name": "ЕльМарино",
+  "short_name": "ЕльМарино",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#7e22ce",
   "theme_color": "#7e22ce",
-  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://i.postimg.cc/KvynpRrT/1782584017691.jpg",
+      "src": "https://cdn-icons-png.flaticon.com/512/3082/3082015.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
