@@ -1,0 +1,19 @@
+{
+  "name": "ElMarino Магазин",
+  "short_name": "ElMarino",
+  "description": "Широкий вибір товарів, гнучка система знижок, безкоштовна доставка",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#7e22ce",
+  "theme_color": "#7e22ce",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/KvynpRrT/1782584017691.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
