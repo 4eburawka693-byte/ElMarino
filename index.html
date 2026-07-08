@@ -6,22 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ЕльМарино</title>
     
-    <!-- Подключение манифеста PWA -->
     <link rel="manifest" href="./manifest.json">
     
-    <!-- Скрипты -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/pinch-zoom-js@2.3.4/dist/pinch-zoom.umd.min.js"></script>
     
-    <!-- Автоматическая регистрация Service Worker для активации установки -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('data:text/javascript;base64,' + btoa(`
-            self.addEventListener('fetch', (e) => {
-              e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-            });
-          `));
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker зарегистрирован!', reg))
+            .catch(err => console.error('Ошибка SW:', err));
         });
       }
     </script>
@@ -83,7 +78,6 @@
         <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
     </div>
 
-    <!-- Модальное окно товара -->
     <div id="product-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-3">
         <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative max-h-[85vh] flex flex-col">
             <button onclick="hideProductModal()" class="absolute top-4 right-4 bg-black/60 text-white w-9 h-9 rounded-full flex items-center justify-center z-50 hover:bg-black/80 transition text-xl font-bold">&times;</button>
@@ -119,7 +113,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно кошика -->
     <div id="cart-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-3">
         <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative max-h-[85vh] flex flex-col">
             <header class="p-4 border-b flex justify-between items-center bg-gray-50">
@@ -141,7 +134,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно увеличения фото -->
     <div id="zoom-modal" class="hidden fixed inset-0 bg-black z-[60] flex items-center justify-center">
         <button onclick="closeZoomModal()" class="absolute top-6 right-6 bg-white/20 text-white w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold hover:bg-white/30 transition z-50">&times;</button>
         <div class="pinch-zoom-container">
@@ -149,9 +141,8 @@
         </div>
     </div>
 
-    <!-- ОСНОВНОЙ СКРИПТ МАГАЗИНА -->
     <script>
-        const SHEET_ID = '1X58m63-6G-b8wO21kXv79M4o7G6zV974P3WJ45H7y9o'; // Твоя рабочая таблица
+        const SHEET_ID = '1X58m63-6G-b8wO21kXv79M4o7G6zV974P3WJ45H7y9o'; 
         const TAB_NAME = 'Products';
         const SCRIPT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${TAB_NAME}`;
 
@@ -354,6 +345,7 @@
             }
         }
 
+        // Модифицированная функция вывода корзины (сумма в грн/₴)
         function showCart() {
             const modal = document.getElementById('cart-modal');
             const itemsDiv = document.getElementById('cart-items');
@@ -449,3 +441,4 @@
     </script>
 </body>
 </html>
+
