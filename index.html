@@ -65,7 +65,6 @@ class="w-full p-4 rounded-2xl border focus:border-[#c29d4c] outline-none shadow-
 onkeyup="filterProducts()">
 <button onclick="resetFilters()" class="bg-zinc-200 text-zinc-700 px-4 rounded-2xl text-sm font-medium hover:bg-zinc-300 transition-colors">Всі</button>
 
-
 <div class="relative">
 <button onclick="toggleSortMenu()" class="h-full bg-zinc-200 text-zinc-700 px-4 rounded-2xl text-sm font-medium hover:bg-zinc-300 transition-colors flex items-center justify-center shadow-sm" title="Сортування за ціною">
 📊
@@ -150,20 +149,42 @@ onkeyup="filterProducts()">
 <button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage(); event.stopPropagation();" class="fixed right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＞</button>
 </div>
 
-<div id="cart-modal" class="hidden fixed inset-0 bg-black/70 flex items-end z-50">
-<div class="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-auto p-5">
-<div class="flex justify-between mb-6">
+<div id="cart-modal" class="hidden fixed inset-0 bg-black/70 flex items-end z-50" onclick="hideCart()">
+<div class="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-auto p-5 flex flex-col" onclick="event.stopPropagation()">
+<div class="flex justify-between mb-4">
 <h2 class="text-2xl font-bold text-zinc-800">Кошик</h2>
 <button onclick="hideCart()" class="text-3xl text-zinc-500">✕</button>
 </div>
-<div id="cart-items" class="space-y-4"></div>
-<div class="mt-8 border-t pt-6">
+<div id="cart-items" class="space-y-4 overflow-y-auto flex-1"></div>
+<div class="mt-4 border-t pt-4">
 <div class="flex justify-between text-xl font-bold text-zinc-800">
 <span>Разом:</span>
 <span id="cart-total">0 грн</span>
 </div>
-<button onclick="placeOrder()" class="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-5 rounded-3xl text-lg font-bold transition-colors">
+<button onclick="showCheckoutModal()" class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold transition-colors shadow-lg">
 Оформити замовлення
+</button>
+</div>
+</div>
+</div>
+
+<div id="checkout-modal" class="hidden fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-[55]" onclick="hideCheckoutModal()">
+<div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative animate-slide-up" onclick="event.stopPropagation()">
+<button onclick="hideCheckoutModal()" class="absolute top-4 right-4 text-zinc-400 text-2xl">✕</button>
+<h3 class="text-xl font-bold text-zinc-800 mb-2 flex items-center gap-2">📝 Оформлення замовлення</h3>
+<p class="text-zinc-500 text-sm mb-4">Будь ласка, вкажіть ваші контакти, щоб менеджер міг підтвердити покупку.</p>
+
+<div class="space-y-4">
+<div>
+<label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Ваше Ім'я:</label>
+<input id="customer-name" type="text" placeholder="Наприклад: Іван" class="w-full p-3.5 rounded-xl border outline-none focus:border-green-600 shadow-sm text-zinc-800 font-medium">
+</div>
+<div>
+<label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Номер телефону або Telegram:</label>
+<input id="customer-phone" type="text" placeholder="+380 або @username" class="w-full p-3.5 rounded-xl border outline-none focus:border-green-600 shadow-sm text-zinc-800 font-medium">
+</div>
+<button onclick="submitOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-bold text-base transition-all shadow-md mt-2">
+🚀 Надіслати замовлення менеджеру
 </button>
 </div>
 </div>
@@ -180,7 +201,6 @@ let currentPhotos = [];
 let currentPhotoIndex = 0;
 let currentProductIndex = null;
 
-// Фільтрація та сортування за ціною
 let selectedCategory = null;
 let currentSearchTerm = "";
 let currentSortOrder = "default"; 
@@ -189,10 +209,13 @@ window.addEventListener('popstate', function () {
 const modalOpen = !document.getElementById('product-modal').classList.contains('hidden');
 const cartOpen = !document.getElementById('cart-modal').classList.contains('hidden');
 const lightboxOpen = !document.getElementById('fullscreen-lightbox').classList.contains('hidden');
+const checkoutOpen = !document.getElementById('checkout-modal').classList.contains('hidden');
 
 if (lightboxOpen) {
 closeFullscreenPhoto();
 history.pushState(null, null, window.location.pathname);
+} else if (checkoutOpen) {
+hideCheckoutModal(true);
 } else if (modalOpen) {
 hideProductModal(true);
 } else if (cartOpen) {
@@ -200,13 +223,23 @@ hideCart(true);
 }
 });
 
-// Закриття меню сортування при тапі в іншому місці
 document.addEventListener('click', function(e) {
 const menu = document.getElementById('sort-menu');
 if (menu && !menu.classList.contains('hidden') && !e.target.closest('.relative')) {
 menu.classList.add('hidden');
 }
 });
+
+// Функція показу красивих кастомних повідомлень замість alert
+function showToast(message, type = 'success') {
+const toast = document.createElement('div');
+toast.className = 'notranslate';
+const bg = type === 'success' ? '#10b981' : '#ef4444';
+toast.style.cssText = `position:fixed;top:20px;left:50%;transform:translateX(-50%);background:${bg};color:white;padding:14px 28px;border-radius:20px;box-shadow:0 10px 25px -5px rgba(0,0,0,0.2);z-index:100;font-weight:600;text-align:center;max-width:90%;font-size:15px;transition:all 0.3s ease;`;
+toast.textContent = message;
+document.body.appendChild(toast);
+setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+}
 
 async function loadProductsFromSheet() {
 try {
@@ -256,8 +289,8 @@ document.getElementById('loading-status').classList.add('hidden');
 renderCategories();
 applyFilterAndSort();
 } catch (error) {
-console.error('Помилка завантаження файлу:', error);
-document.getElementById('loading-status').innerHTML = '❌ Не вдалося завантажити товари з таблиці.';
+console.error(error);
+document.getElementById('loading-status').innerHTML = '❌ Не вдалося завантажити дані з таблиці.';
 }
 }
 
@@ -271,14 +304,12 @@ cats.push(p.category);
 
 let html = '';
 cats.forEach(cat => {
-// Виділяємо активну категорію рамкою або міняємо фон для кращої видимості
-const activeStyle = (cat === selectedCategory) ? 'border-amber-500 bg-amber-50 font-bold' : 'bg-white';
+const activeStyle = (cat === selectedCategory) ? 'border-amber-500 bg-amber-50 font-bold text-zinc-950 scale-[1.02]' : 'bg-white text-zinc-700';
 html += `<div onclick="filterByCategory('${cat}')" class="${activeStyle} p-3 rounded-2xl shadow-sm text-center text-xs font-semibold cursor-pointer active:bg-zinc-100 border hover:border-zinc-400 transition-all">${cat}</div>`;
 });
 document.getElementById('categories').innerHTML = html;
 }
 
-// Потужна комбінована обробка фільтрації та сортування
 function applyFilterAndSort() {
 let filtered = [...allProducts];
 
@@ -293,7 +324,6 @@ p.name.toLowerCase().includes(currentSearchTerm) ||
 );
 }
 
-// Сортування (правильно перетворює рядок з комою типу "145,00" в число)
 if (currentSortOrder === 'low-to-high') {
 filtered.sort((a, b) => {
 const priceA = parseFloat(a.price.replace(/\s/g, '').replace(',', '.'));
@@ -309,7 +339,7 @@ return priceB - priceA;
 }
 
 updateFilterIndicator();
-renderCategories(); // Оновлюємо кнопки, щоб бачити підсвічування обраної
+renderCategories();
 renderProducts(filtered);
 }
 
@@ -365,7 +395,6 @@ currentSearchTerm = "";
 applyFilterAndSort();
 }
 
-// 🏠 ФУНКЦІЯ ПОВНОГО СКИНУ ПРИ КЛІКУ НА БУДИНОЧОК
 function goHome() {
 selectedCategory = null;
 currentSearchTerm = "";
@@ -494,16 +523,6 @@ colorBlock.classList.add('hidden');
 colorSelect.innerHTML = '';
 }
 
-colorSelect.onchange = function() {
-if (colorSelect.selectedOptions.length > 0) {
-let photoIdx = parseInt(colorSelect.selectedOptions[0].getAttribute('data-index'));
-if (!isNaN(photoIdx) && currentPhotos[photoIdx]) {
-currentPhotoIndex = photoIdx;
-updateModalPhoto();
-}
-}
-};
-
 updateModalPrice();
 
 document.getElementById('modal-product-btn').onclick = function() {
@@ -579,11 +598,7 @@ prevLbox.classList.add('hidden'); nextLbox.classList.add('hidden');
 setTimeout(() => {
 const el = document.getElementById(uniqueId);
 if (el && typeof PinchZoom !== 'undefined') {
-new PinchZoom.default(el, {
-draggableUnzoomed: false,
-minZoom: 1,
-maxZoom: 4
-});
+new PinchZoom.default(el, { draggableUnzoomed: false, minZoom: 1, maxZoom: 4 });
 }
 }, 50);
 }
@@ -641,21 +656,13 @@ cartPrice: finalPrice
 }
 
 updateCartCount();
-
-const toast = document.createElement('div');
-toast.className = 'notranslate';
-toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:9999px;box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1);z-index:100;font-weight:500;';
-
 let infoText = '';
 if (size) infoText += ` (Розмір: ${size})`; if (color) infoText += ` (Колір: ${color})`;
-toast.textContent = `✅ Додано: ${qty} шт.${infoText}!`;
-
-document.body.appendChild(toast);
-setTimeout(() => toast.remove(), 1200);
+showToast(`✅ Додано в кошик: ${qty} шт.${infoText}!`);
 }
 
 function showCart() {
-if (cart.length === 0) { alert("Кошик порожній"); return; }
+if (cart.length === 0) { showToast("🛒 Кошик порожній!", "error"); return; }
 let html = '';
 let total = 0;
 
@@ -674,7 +681,7 @@ html += `<div class="flex gap-4 border-b pb-4 items-center justify-between notra
 <div class="flex gap-3 items-center flex-1">
 <img src="${imgUrl}" class="w-14 h-14 object-cover rounded-xl" onerror="this.src='https://images.unsplash.com/photo-1594035910387-fea47794261f?w=80'">
 <div>
-<div class="text-sm font-medium text-zinc-800 leading-tight" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${item.product.name}</div>
+<div class="text-sm font-medium text-zinc-800 leading-tight line-clamp-2">${item.product.name}</div>
 <div class="flex flex-wrap">${metaText}</div>
 <div class="text-zinc-800 font-bold mt-1 text-sm">${item.cartPrice} грн</div>
 </div>
@@ -718,76 +725,5 @@ history.back();
 function removeFromCart(i) {
 cart.splice(i, 1);
 updateCartCount();
-if (cart.length === 0) hideCart();
-else showCart();
-}
-
-function placeOrder() {
-if (cart.length === 0) { alert("Кошик порожній"); return; }
-
-const BOT_TOKEN = '8775134268:AAE9lKCPpZWs4E94uwAbMR26O2GPaJ8osDw';
-const CHAT_ID = '5263239405';
-
-let customerContacts = prompt("Будь ласка, введіть ваше Ім'я та Номер телефону (або @юзернейм) для зв'язку:");
-
-if (customerContacts === null) return;
-if (customerContacts.trim() === "") {
-alert("Для оформлення замовлення необхідно вказати контактні дані!");
-return;
-}
-
-let text = "🔔 НОВЕ ЗАМОВЛЕННЯ ElMarino!\n";
-text += "━━━━━━━━━━━━━━━━━━━━\n\n";
-text += `👤 *Покупець:* ${customerContacts}\n`;
-text += "━━━━━━━━━━━━━━━━━━━━\n\n";
-
-let total = 0;
-
-cart.forEach((item, index) => {
-const price = parseFloat(item.cartPrice.replace(',', '.'));
-const itemTotal = price * item.quantity;
-total += itemTotal;
-
-let variantInfo = '';
-if (item.size) variantInfo += ` (розм.${item.size})`; if (item.color) variantInfo += ` (колір: ${item.color})`;
-
-text += `${index + 1}. 📦 *${item.product.name}*${variantInfo}\n`; 
-text += `↳ ${item.quantity} шт. х ${item.cartPrice} грн (= ${itemTotal.toFixed(2).replace('.', ',')} грн)\n\n`;
-});
-
-text += "━━━━━━━━━━━━━━━━━━━━\n";
-text += `💰 *РАЗОМ ДО ОПЛАТИ:* ${total.toFixed(2).replace('.', ',')} грн\n\n`;
-text += "📅 Дата: " + new Date().toLocaleString('uk-UA') + "\n";
-
-const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-
-fetch(telegramApiUrl, {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({
-chat_id: CHAT_ID,
-text: text,
-parse_mode: 'Markdown'
-})
-})
-.then(response => {
-if (response.ok) {
-cart = [];
-updateCartCount();
-hideCart();
-alert("🎉 Дякуємо! Ваше замовлення успішно відправлено менеджереві. Ми зв'яжемося з вами найближчим часом!");
-} else {
-alert("Помилка при відправці замовлення. Спробуйте ще раз.");
-}
-})
-.catch(error => {
-console.error('Помилка:', error);
-alert("Сталася помилка мережі. Перевірте з'єднання.");
-});
-}
-
-loadProductsFromSheet();
-</script>
-</body>
-</html>
+if (cart.length === 0
 
