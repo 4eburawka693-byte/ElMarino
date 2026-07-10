@@ -30,9 +30,6 @@ max-width: 100%;
 max-height: 80vh;
 object-fit: contain;
 }
-.bg-gold-gradient {
-background: linear-gradient(135deg, #dfba6b 0%, #c29d4c 100%);
-}
 </style>
 </head>
 <body class="bg-gray-100 notranslate">
@@ -113,12 +110,12 @@ onkeyup="filterProducts()">
 
 <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-zinc-50 p-2 rounded-xl justify-between">
 <span class="text-zinc-600 font-medium text-sm pl-2">Оберіть розмір:</span>
-<select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-zinc-700 outline-none focus:border-[#c29d4c] min-w-[140px]"></select>
+<select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-zinc-700 outline-none focus:border-zinc-500 min-w-[140px]"></select>
 </div>
 
 <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-zinc-50 p-2 rounded-xl justify-between">
 <span class="text-zinc-600 font-medium text-sm pl-2">Оберіть колір:</span>
-<select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-zinc-700 outline-none focus:border-[#c29d4c] min-w-[140px]"></select>
+<select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-zinc-700 outline-none focus:border-zinc-500 min-w-[140px]"></select>
 </div>
 
 <div class="mt-4 flex items-center gap-3 bg-zinc-50 p-2 rounded-xl justify-between">
@@ -144,4 +141,533 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
-<div id="fullscreen-lightbox" class="hidden fixed inset
+<div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col items-center justify-center p-4" onclick="closeFullscreenPhoto()">
+<button onclick="closeFullscreenPhoto()" class="fixed top-6 right-6 text-white text-3xl font-light hover:text-zinc-300 z-[70] bg-black/40 w-12 h-12 rounded-full flex items-center justify-center">✕</button>
+<div id="lightbox-content-area" class="w-full flex items-center justify-center"></div>
+<button id="lightbox-prev-btn" onclick="changePhoto(-1); updateLightboxImage(); event.stopPropagation();" class="fixed left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＜</button>
+<button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage(); event.stopPropagation();" class="fixed right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＞</button>
+</div>
+
+<div id="cart-modal" class="hidden fixed inset-0 bg-black/70 flex items-end z-50" onclick="hideCart()">
+<div class="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-auto p-5 flex flex-col animate-slide-up" onclick="event.stopPropagation()">
+<div class="flex justify-between mb-4 items-center">
+<h2 class="text-2xl font-bold text-zinc-800">Кошик</h2>
+<button onclick="hideCart()" class="text-3xl text-zinc-400 p-1">✕</button>
+</div>
+<div id="cart-items" class="space-y-4 overflow-y-auto flex-1"></div>
+<div class="mt-4 border-t pt-4">
+<div class="flex justify-between text-xl font-bold text-zinc-800">
+<span>Разом:</span>
+<span id="cart-total">0 грн</span>
+</div>
+<button onclick="showCheckoutModal()" class="mt-4 w-full bg-green-600 active:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold transition-colors shadow-lg">
+Оформити замовлення
+</button>
+</div>
+</div>
+</div>
+
+<div id="checkout-modal" class="hidden fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-[55]" onclick="hideCheckoutModal()">
+<div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative" onclick="event.stopPropagation()">
+<button onclick="hideCheckoutModal()" class="absolute top-4 right-4 text-zinc-400 text-2xl p-1">✕</button>
+<h3 class="text-xl font-bold text-zinc-800 mb-1 flex items-center gap-2">📝 Оформлення замовлення</h3>
+<p class="text-zinc-500 text-sm mb-5">Будь ласка, вкажіть ваші дані, щоб ми надіслали замовлення у Telegram.</p>
+
+<div class="space-y-4">
+<div>
+<label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Ваше Ім'я:</label>
+<input id="customer-name" type="text" placeholder="Наприклад: Олександр" class="w-full p-3.5 rounded-xl border outline-none focus:border-green-600 shadow-sm text-zinc-800 font-medium">
+</div>
+<div>
+<label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Номер телефону або Telegram:</label>
+<input id="customer-phone" type="text" placeholder="Номер телефону або @username" class="w-full p-3.5 rounded-xl border outline-none focus:border-green-600 shadow-sm text-zinc-800 font-medium">
+</div>
+<button onclick="submitOrder()" class="w-full bg-green-600 active:bg-green-700 text-white py-4 rounded-xl font-bold text-base transition-all shadow-md mt-2">
+🚀 Надіслати замовлення
+</button>
+</div>
+</div>
+</div>
+
+<script>
+const SHEET_ID = '1SyxBE2iwqqt-JtEZ8N9vkdrtxUUcxtv_goVA878TMog';
+const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+
+let allProducts = [];
+let cart = [];
+let currentModalQty = 1;
+let currentPhotos = [];
+let currentPhotoIndex = 0;
+let currentProductIndex = null;
+
+let selectedCategory = null;
+let currentSearchTerm = "";
+let currentSortOrder = "default"; 
+
+// Допоміжні функції парсингу опису (Розміри та Кольори)
+function extractSizesFromDescription(description) {
+if (!description) return [];
+const sizeMatch = description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r.]+)/i);
+if (sizeMatch && sizeMatch[1]) {
+return sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+}
+return [];
+}
+
+function parseSizePrice(sizeStr, defaultPrice) {
+let priceMatch = sizeStr.match(/\(([^)]+)\)/);
+let sizeName = sizeStr.replace(/\s*\([^)]+\)\s*/g, '').trim();
+let price = defaultPrice.replace(/\s/g, '').replace(',', '.');
+
+if (priceMatch && priceMatch[1]) {
+let cleanPrice = priceMatch[1].replace(/[^\d.,]/g, '').replace(',', '.').trim();
+if (cleanPrice && !isNaN(parseFloat(cleanPrice))) {
+price = parseFloat(cleanPrice).toFixed(2);
+}
+}
+return { sizeName, price: parseFloat(price).toFixed(2).replace('.', ',') };
+}
+
+window.addEventListener('popstate', function () {
+const modalOpen = !document.getElementById('product-modal').classList.contains('hidden');
+const cartOpen = !document.getElementById('cart-modal').classList.contains('hidden');
+const lightboxOpen = !document.getElementById('fullscreen-lightbox').classList.contains('hidden');
+const checkoutOpen = !document.getElementById('checkout-modal').classList.contains('hidden');
+
+if (lightboxOpen) {
+closeFullscreenPhoto();
+history.pushState(null, null, window.location.pathname);
+} else if (checkoutOpen) {
+hideCheckoutModal(true);
+} else if (modalOpen) {
+hideProductModal(true);
+} else if (cartOpen) {
+hideCart(true);
+}
+});
+
+document.addEventListener('click', function(e) {
+const menu = document.getElementById('sort-menu');
+if (menu && !menu.classList.contains('hidden') && !e.target.closest('.relative')) {
+menu.classList.add('hidden');
+}
+});
+
+function showToast(message, type = 'success') {
+const toast = document.createElement('div');
+toast.className = 'notranslate';
+const bg = type === 'success' ? '#10b981' : '#ef4444';
+toast.style.cssText = `position:fixed;top:20px;left:50%;transform:translateX(-50%);background:${bg};color:white;padding:14px 24px;border-radius:20px;box-shadow:0 10px 25px -5px rgba(0,0,0,0.2);z-index:100;font-weight:600;text-align:center;max-width:90%;font-size:14px;transition:all 0.3s ease;`;
+toast.textContent = message;
+document.body.appendChild(toast);
+setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+}
+
+async function loadProductsFromSheet() {
+try {
+const response = await fetch(SPREADSHEET_URL);
+const csvText = await response.text();
+
+const parseCSV = (text) => {
+let p = '', r = [];
+let q = false;
+let row = [''];
+for (let i=0; i<text.length; i++) {
+let c = text[i];
+if (c === '"') { q = !q; continue; }
+if (c === ',' && !q) { row.push(''); continue; }
+if ((c === '\n' || c === '\r') && !q) {
+if (c === '\n' && text[i-1] === '\r') continue;
+r.push(row); row = ['']; continue;
+}
+row[row.length-1] += c;
+}
+if (row.length > 1 || row[0] !== '') r.push(row);
+return r;
+};
+
+const rows = parseCSV(csvText);
+allProducts = [];
+
+for (let i = 1; i < rows.length; i++) {
+const row = rows[i];
+if (row && row[0]) {
+let imagesArray = [];
+if (row[4]) {
+imagesArray = row[4].split(',').map(url => url.trim()).filter(Boolean);
+}
+
+allProducts.push({
+name: row[0].trim(),
+category: row[1] ? row[1].trim() : 'Інше',
+price: row[2] ? row[2].trim() : '0,00',
+description: row[3] ? row[3].trim() : '',
+images: imagesArray
+});
+}
+}
+
+document.getElementById('loading-status').classList.add('hidden');
+renderCategories();
+applyFilterAndSort();
+} catch (error) {
+console.error(error);
+document.getElementById('loading-status').innerHTML = '❌ Не вдалося завантажити дані з таблиці.';
+}
+}
+
+function renderCategories() {
+const cats = [];
+allProducts.forEach(p => {
+if (p.category && !cats.includes(p.category)) {
+cats.push(p.category);
+}
+});
+
+let html = '';
+cats.forEach(cat => {
+const activeStyle = (cat === selectedCategory) ? 'border-zinc-800 bg-zinc-800 font-bold text-white scale-[1.02]' : 'bg-white text-zinc-700';
+html += `<div onclick="filterByCategory('${cat}')" class="${activeStyle} p-3 rounded-2xl shadow-sm text-center text-xs font-semibold cursor-pointer active:opacity-90 border hover:border-zinc-400 transition-all">${cat}</div>`;
+});
+document.getElementById('categories').innerHTML = html;
+}
+
+function applyFilterAndSort() {
+let filtered = [...allProducts];
+
+if (selectedCategory) {
+filtered = filtered.filter(p => p.category === selectedCategory);
+}
+
+if (currentSearchTerm) {
+filtered = filtered.filter(p =>
+p.name.toLowerCase().includes(currentSearchTerm) || 
+(p.description && p.description.toLowerCase().includes(currentSearchTerm))
+);
+}
+
+if (currentSortOrder === 'low-to-high') {
+filtered.sort((a, b) => {
+const priceA = parseFloat(a.price.replace(/\s/g, '').replace(',', '.'));
+const priceB = parseFloat(b.price.replace(/\s/g, '').replace(',', '.'));
+return priceA - priceB;
+});
+} else if (currentSortOrder === 'high-to-low') {
+filtered.sort((a, b) => {
+const priceA = parseFloat(a.price.replace(/\s/g, '').replace(',', '.'));
+const priceB = parseFloat(b.price.replace(/\s/g, '').replace(',', '.'));
+return priceB - priceA;
+});
+}
+
+updateFilterIndicator();
+renderProducts(filtered);
+}
+
+function renderProducts(products) {
+let html = '';
+products.forEach((p) => {
+const realIndex = allProducts.findIndex(item => item.name === p.name);
+const mainImage = p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=60';
+
+html += `<div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border flex flex-col justify-between">
+<div>
+<div class="w-full h-40 bg-zinc-50 flex items-center justify-center overflow-hidden">
+<img src="${mainImage}" class="max-w-full max-h-full object-contain">
+</div>
+<div class="p-3">
+<h3 class="text-sm font-bold text-zinc-800 leading-tight line-clamp-2 min-h-[40px]">${p.name}</h3>
+<p class="text-zinc-500 text-xs mt-1 min-h-[32px] clamp-desc">${p.description}</p>
+</div>
+</div>
+<div class="p-3 pt-0">
+<p class="text-zinc-800 font-black text-base">${p.price} грн</p>
+<button onclick="addToCartFromList(${realIndex}); event.stopPropagation();" class="mt-2 w-full bg-zinc-800 text-white py-2.5 rounded-xl text-sm font-bold transition-all active:bg-zinc-700">В кошик</button>
+</div>
+</div>`;
+});
+document.getElementById('products').innerHTML = html || '<p class="col-span-2 text-center py-10 text-zinc-500">Упс, товарів не знайдено</p>';
+}
+
+function toggleSortMenu() {
+document.getElementById('sort-menu').classList.toggle('hidden');
+}
+
+function setSortOrder(order) {
+currentSortOrder = order;
+document.getElementById('sort-menu').classList.add('hidden');
+applyFilterAndSort();
+}
+
+function filterByCategory(cat) {
+selectedCategory = cat;
+applyFilterAndSort();
+}
+
+function filterProducts() {
+currentSearchTerm = document.getElementById('search').value.toLowerCase();
+applyFilterAndSort();
+}
+
+function resetFilters() {
+selectedCategory = null;
+document.getElementById('search').value = '';
+currentSearchTerm = "";
+applyFilterAndSort();
+}
+
+function goHome() {
+selectedCategory = null;
+currentSearchTerm = "";
+currentSortOrder = "default";
+document.getElementById('search').value = '';
+applyFilterAndSort();
+window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateFilterIndicator() {
+const indicator = document.getElementById('filter-indicator');
+const textEl = document.getElementById('filter-indicator-text');
+let parts = [];
+
+if (selectedCategory) parts.push(`Категорія: <b>${selectedCategory}</b>`);
+if (currentSearchTerm) parts.push(`Пошук: "${currentSearchTerm}"`);
+if (currentSortOrder === 'low-to-high') parts.push(`Ціна: <b>від дешевих 📈</b>`);
+if (currentSortOrder === 'high-to-low') parts.push(`Ціна: <b>від дорогих 📉</b>`);
+
+if (parts.length > 0) {
+indicator.classList.remove('hidden');
+indicator.classList.add('flex');
+textEl.innerHTML = parts.join(' | ');
+} else {
+indicator.classList.add('hidden');
+indicator.classList.remove('flex');
+}
+}
+
+function addToCartFromList(index) {
+const p = allProducts[index];
+const catLower = p.category.toLowerCase().trim();
+const parsedSizes = extractSizesFromDescription(p.description);
+
+let defaultSize = null;
+let basePrice = p.price;
+
+if (parsedSizes.length > 0) {
+let parsed = parseSizePrice(parsedSizes[0], p.price);
+defaultSize = parsed.sizeName;
+basePrice = parsed.price;
+} else if (catLower === 'взуття') {
+defaultSize = '36';
+}
+
+const colorMatch = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
+let defaultColor = null;
+if (colorMatch && colorMatch[1]) {
+let colors = colorMatch[1].split(',').map(c => c.trim()).filter(Boolean);
+if (colors.length > 0) defaultColor = colors[0];
+}
+
+addToCart(index, 1, defaultSize, defaultColor, basePrice);
+}
+
+function showProductDetails(index) {
+currentProductIndex = index;
+const p = allProducts[index];
+currentModalQty = 1;
+document.getElementById('modal-qty').textContent = currentModalQty;
+
+currentPhotos = p.images.length > 0 ? p.images : ['https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=60'];
+currentPhotoIndex = 0;
+updateModalPhoto();
+
+document.getElementById('modal-product-category').textContent = p.category;
+document.getElementById('modal-product-name').textContent = p.name;
+document.getElementById('modal-product-description').textContent = p.description || 'Опис відсутній';
+
+const sizeSelect = document.getElementById('modal-size-select');
+const sizeBlock = document.getElementById('size-selector-block');
+const colorSelect = document.getElementById('modal-color-select');
+const colorBlock = document.getElementById('color-selector-block');
+
+const catLower = p.category.toLowerCase().trim();
+const parsedSizes = extractSizesFromDescription(p.description);
+
+sizeSelect.onchange = updateModalPrice;
+sizeSelect.oninput = updateModalPrice;
+
+if (parsedSizes.length > 0) {
+sizeBlock.classList.remove('hidden');
+sizeSelect.innerHTML = parsedSizes.map(s => {
+let parsed = parseSizePrice(s, p.price);
+return `<option value="${parsed.sizeName}" data-price="${parsed.price}">${s}</option>`;
+}).join('');
+} else if (catLower === 'взуття') {
+sizeBlock.classList.remove('hidden');
+let defaultSizes = ['36', '37', '38', '39', '40', '41'];
+sizeSelect.innerHTML = defaultSizes.map(s => `<option value="${s}" data-price="${p.price}">${s}</option>`).join('');
+} else {
+sizeBlock.classList.add('hidden');
+sizeSelect.innerHTML = '';
+}
+
+const colorMatch = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
+if (colorMatch && colorMatch[1]) {
+colorBlock.classList.remove('hidden');
+let colors = colorMatch[1].split(',').map(c => c.trim()).filter(Boolean);
+colorSelect.innerHTML = colors.map((c, idx) => `<option value="${c}" data-index="${idx}">${c}</option>`).join('');
+} else {
+colorBlock.classList.add('hidden');
+colorSelect.innerHTML = '';
+}
+
+updateModalPrice();
+
+document.getElementById('modal-product-btn').onclick = function() {
+let chosenSize = (!sizeBlock.classList.contains('hidden')) ? sizeSelect.value : null;
+let chosenColor = (!colorBlock.classList.contains('hidden')) ? colorSelect.value : null;
+
+let activePrice = p.price;
+if (chosenSize && sizeSelect.selectedOptions.length > 0) {
+activePrice = sizeSelect.selectedOptions[0].getAttribute('data-price');
+}
+
+addToCart(index, currentModalQty, chosenSize, chosenColor, activePrice);
+hideProductModal();
+};
+
+history.pushState({modal: "product"}, null, null);
+document.getElementById('product-modal').classList.remove('hidden');
+}
+
+function updateModalPrice() {
+if (currentProductIndex === null) return;
+const p = allProducts[currentProductIndex];
+const sizeSelect = document.getElementById('modal-size-select');
+const sizeBlock = document.getElementById('size-selector-block');
+
+let activePrice = p.price;
+if (!sizeBlock.classList.contains('hidden') && sizeSelect.selectedOptions.length > 0) {
+activePrice = sizeSelect.selectedOptions[0].getAttribute('data-price');
+}
+
+let cleanNum = parseFloat(activePrice.replace(/\s/g, '').replace(',', '.'));
+if (isNaN(cleanNum)) cleanNum = 0;
+
+let totalPrice = cleanNum * currentModalQty;
+let formattedPrice = totalPrice.toFixed(2).replace('.', ',');
+document.getElementById('modal-product-price').textContent = formattedPrice + ' грн';
+}
+
+function updateModalPhoto() {
+document.getElementById('modal-product-image').src = currentPhotos[currentPhotoIndex];
+const prevBtn = document.getElementById('prev-photo-btn');
+const nextBtn = document.getElementById('next-photo-btn');
+const counter = document.getElementById('photo-counter');
+
+if (currentPhotos.length > 1) {
+prevBtn.classList.remove('hidden'); nextBtn.classList.remove('hidden'); counter.classList.remove('hidden');
+counter.textContent = `${currentPhotoIndex + 1} із ${currentPhotos.length}`;
+} else {
+prevBtn.classList.add('hidden'); nextBtn.classList.add('hidden'); counter.classList.add('hidden');
+}
+}
+
+function openFullscreenPhoto() {
+document.getElementById('fullscreen-lightbox').classList.remove('hidden');
+history.pushState({modal: "lightbox"}, null, null);
+updateLightboxImage();
+}
+
+function updateLightboxImage() {
+const contentArea = document.getElementById('lightbox-content-area');
+const uniqueId = "pz_" + new Date().getTime();
+
+contentArea.innerHTML = `<div id="${uniqueId}" class="pinch-zoom-container" onclick="event.stopPropagation()"><img src="${currentPhotos[currentPhotoIndex]}" class="zoomable-img rounded shadow-2xl"></div>`;
+
+const prevLbox = document.getElementById('lightbox-prev-btn');
+const nextLbox = document.getElementById('lightbox-next-btn');
+if (currentPhotos.length > 1) {
+prevLbox.classList.remove('hidden'); nextLbox.classList.remove('hidden');
+} else {
+prevLbox.classList.add('hidden'); nextLbox.classList.add('hidden');
+}
+
+setTimeout(() => {
+const el = document.getElementById(uniqueId);
+if (el && typeof PinchZoom !== 'undefined') {
+new PinchZoom.default(el, { draggableUnzoomed: false, minZoom: 1, maxZoom: 4 });
+}
+}, 50);
+}
+
+function closeFullscreenPhoto() {
+document.getElementById('fullscreen-lightbox').classList.add('hidden');
+document.getElementById('lightbox-content-area').innerHTML = '';
+updateModalPhoto();
+}
+
+function changePhoto(direction) {
+currentPhotoIndex += direction;
+if (currentPhotoIndex < 0) currentPhotoIndex = currentPhotos.length - 1;
+else if (currentPhotoIndex >= currentPhotos.length) currentPhotoIndex = 0;
+updateModalPhoto();
+}
+
+function changeModalQty(amount) {
+currentModalQty += amount;
+if (currentModalQty < 1) currentModalQty = 1;
+document.getElementById('modal-qty').textContent = currentModalQty;
+updateModalPrice();
+}
+
+function hideProductModal(fromPopState = false) {
+document.getElementById('product-modal').classList.add('hidden');
+currentProductIndex = null;
+closeFullscreenPhoto();
+if (!fromPopState && window.history.state?.modal === "product") {
+history.back();
+}
+}
+
+function addToCart(index, qty, size = null, color = null, customPrice = null) {
+const product = allProducts[index];
+const finalPrice = customPrice || product.price;
+
+const existingItem = cart.find(item =>
+item.product.name === product.name &&
+item.size === size &&
+item.color === color &&
+item.cartPrice === finalPrice
+);
+
+if (existingItem) {
+existingItem.quantity += qty;
+} else {
+cart.push({
+product: product,
+quantity: qty,
+size: size,
+color: color,
+cartPrice: finalPrice
+});
+}
+
+updateCartCount();
+let infoText = '';
+if (size) infoText += ` (Розмір: ${size})`; if (color) infoText += ` (Колір: ${color})`;
+showToast(`✅ Додано в кошик: ${qty} шт.${infoText}!`);
+}
+
+function showCart() {
+if (cart.length === 0) { showToast("🛒 Кошик порожній!", "error"); return; }
+let html = '';
+let total = 0;
+
+cart.forEach((item, i) => {
+const price = parseFloat(item.cartPrice.replace(/\s/g, '').replace(',', '.'));
+const itemTotal = price * item.quantity;
+total += itemTotal;
+
+let metaText = '';
+if (item.size) metaText += `<span class="inline-block text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded mt-1 mr-1">Розмір: ${item.size
