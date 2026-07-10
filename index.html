@@ -30,15 +30,8 @@ max-width: 100%;
 max-height: 80vh;
 object-fit: contain;
 }
-/* Золотий градієнт для кнопок та акцентів */
 .bg-gold-gradient {
 background: linear-gradient(135deg, #dfba6b 0%, #c29d4c 100%);
-}
-.text-gold {
-color: #c29d4c;
-}
-.border-gold:focus {
-border-color: #c29d4c;
 }
 </style>
 </head>
@@ -71,20 +64,23 @@ ElMarino <span class="text-[#dfba6b] font-medium">Магазин</span>
 class="w-full p-4 rounded-2xl border focus:border-[#c29d4c] outline-none shadow-sm"
 onkeyup="filterProducts()">
 <button onclick="resetFilters()" class="bg-zinc-200 text-zinc-700 px-4 rounded-2xl text-sm font-medium hover:bg-zinc-300 transition-colors">Всі</button>
+
+
 <div class="relative">
-<button onclick="toggleSortMenu()" class="h-full bg-zinc-200 text-zinc-700 px-4 rounded-2xl text-sm font-medium hover:bg-zinc-300 transition-colors flex items-center justify-center" title="Сортування">
+<button onclick="toggleSortMenu()" class="h-full bg-zinc-200 text-zinc-700 px-4 rounded-2xl text-sm font-medium hover:bg-zinc-300 transition-colors flex items-center justify-center shadow-sm" title="Сортування за ціною">
 📊
 </button>
-<div id="sort-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border z-50 overflow-hidden">
-<button onclick="setSortOrder('default')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 border-b">Без сортування</button>
-<button onclick="setSortOrder('low-to-high')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 border-b">Від дешевих до дорогих</button>
-<button onclick="setSortOrder('high-to-low')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50">Від дорогих до дешевих</button>
+<div id="sort-menu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border z-50 overflow-hidden">
+<button onclick="setSortOrder('default')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 border-b block">Без сортування</button>
+<button onclick="setSortOrder('low-to-high')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 border-b block">💰 Від дешевих до дорогих</button>
+<button onclick="setSortOrder('high-to-low')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 block">💵 Від дорогих до дешевих</button>
 </div>
 </div>
 </div>
-<div id="filter-indicator" class="text-xs text-zinc-500 px-1 hidden flex justify-between items-center bg-zinc-50 p-2 rounded-xl border">
+
+<div id="filter-indicator" class="text-xs text-zinc-600 px-3 py-2 hidden flex justify-between items-center bg-zinc-50 rounded-xl border">
 <span id="filter-indicator-text"></span>
-<button onclick="goHome()" class="text-amber-600 font-bold">Скинути ✕</button>
+<button onclick="goHome()" class="text-amber-600 font-bold ml-2">Скинути ✕</button>
 </div>
 </div>
 
@@ -93,12 +89,12 @@ onkeyup="filterProducts()">
 </div>
 
 <div id="categories" class="px-4 mb-6 grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+
 <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
 </div>
 
 <div id="product-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-3" onclick="hideProductModal()">
 <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
-
 <button onclick="hideProductModal()" class="absolute top-4 right-4 bg-black/60 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold z-50 shadow-lg border border-white/20">✕</button>
 
 <div class="overflow-y-auto p-0 flex-1 pb-24">
@@ -140,7 +136,7 @@ onkeyup="filterProducts()">
 <span class="text-zinc-400 text-xs block">Ціна</span>
 <span id="modal-product-price" class="text-xl font-black text-zinc-800"></span>
 </div>
-<button id="modal-product-btn" class="flex-1 bg-gold-gradient hover:opacity-95 text-zinc-900 py-3.5 rounded-2xl font-bold transition-all shadow-lg shadow-amber-500/10 text-center">
+<button id="modal-product-btn" class="flex-1 bg-gold-gradient hover:opacity-95 text-zinc-900 py-3.5 rounded-2xl font-bold transition-all shadow-lg text-center">
 Додати в кошик
 </button>
 </div>
@@ -184,10 +180,10 @@ let currentPhotos = [];
 let currentPhotoIndex = 0;
 let currentProductIndex = null;
 
-// Стан фільтрації та сортування
+// Фільтрація та сортування за ціною
 let selectedCategory = null;
 let currentSearchTerm = "";
-let currentSortOrder = "default"; // default, low-to-high, high-to-low
+let currentSortOrder = "default"; 
 
 window.addEventListener('popstate', function () {
 const modalOpen = !document.getElementById('product-modal').classList.contains('hidden');
@@ -204,7 +200,7 @@ hideCart(true);
 }
 });
 
-// Закриття меню сортування при кліку в будь-якому іншому місці екрана
+// Закриття меню сортування при тапі в іншому місці
 document.addEventListener('click', function(e) {
 const menu = document.getElementById('sort-menu');
 if (menu && !menu.classList.contains('hidden') && !e.target.closest('.relative')) {
@@ -260,8 +256,8 @@ document.getElementById('loading-status').classList.add('hidden');
 renderCategories();
 applyFilterAndSort();
 } catch (error) {
-console.error('Помилка завантаження:', error);
-document.getElementById('loading-status').innerHTML = '❌ Не вдалося завантажити товари.';
+console.error('Помилка завантаження файлу:', error);
+document.getElementById('loading-status').innerHTML = '❌ Не вдалося завантажити товари з таблиці.';
 }
 }
 
@@ -275,21 +271,21 @@ cats.push(p.category);
 
 let html = '';
 cats.forEach(cat => {
-html += `<div onclick="filterByCategory('${cat}')" class="bg-white p-3 rounded-2xl shadow-sm text-center text-xs font-semibold cursor-pointer active:bg-zinc-100 border hover:border-zinc-400 transition-all">${cat}</div>`;
+// Виділяємо активну категорію рамкою або міняємо фон для кращої видимості
+const activeStyle = (cat === selectedCategory) ? 'border-amber-500 bg-amber-50 font-bold' : 'bg-white';
+html += `<div onclick="filterByCategory('${cat}')" class="${activeStyle} p-3 rounded-2xl shadow-sm text-center text-xs font-semibold cursor-pointer active:bg-zinc-100 border hover:border-zinc-400 transition-all">${cat}</div>`;
 });
 document.getElementById('categories').innerHTML = html;
 }
 
-// Головна функція, яка одночасно фільтрує і сортує масив
+// Потужна комбінована обробка фільтрації та сортування
 function applyFilterAndSort() {
 let filtered = [...allProducts];
 
-// 1. Фільтрація за категорією
 if (selectedCategory) {
 filtered = filtered.filter(p => p.category === selectedCategory);
 }
 
-// 2. Фільтрація за пошуковим запитом
 if (currentSearchTerm) {
 filtered = filtered.filter(p =>
 p.name.toLowerCase().includes(currentSearchTerm) || 
@@ -297,22 +293,23 @@ p.name.toLowerCase().includes(currentSearchTerm) ||
 );
 }
 
-// 3. Сортування за ціною
+// Сортування (правильно перетворює рядок з комою типу "145,00" в число)
 if (currentSortOrder === 'low-to-high') {
 filtered.sort((a, b) => {
-const priceA = parseFloat(a.price.replace(',', '.'));
-const priceB = parseFloat(b.price.replace(',', '.'));
+const priceA = parseFloat(a.price.replace(/\s/g, '').replace(',', '.'));
+const priceB = parseFloat(b.price.replace(/\s/g, '').replace(',', '.'));
 return priceA - priceB;
 });
 } else if (currentSortOrder === 'high-to-low') {
 filtered.sort((a, b) => {
-const priceA = parseFloat(a.price.replace(',', '.'));
-const priceB = parseFloat(b.price.replace(',', '.'));
+const priceA = parseFloat(a.price.replace(/\s/g, '').replace(',', '.'));
+const priceB = parseFloat(b.price.replace(/\s/g, '').replace(',', '.'));
 return priceB - priceA;
 });
 }
 
 updateFilterIndicator();
+renderCategories(); // Оновлюємо кнопки, щоб бачити підсвічування обраної
 renderProducts(filtered);
 }
 
@@ -338,7 +335,7 @@ html += `<div onclick="showProductDetails(${realIndex})" class="product-card bg-
 </div>
 </div>`;
 });
-document.getElementById('products').innerHTML = html || '<p class="col-span-2 text-center py-10 text-zinc-500">Нічого не знайдено</p>';
+document.getElementById('products').innerHTML = html || '<p class="col-span-2 text-center py-10 text-zinc-500">Упс, товарів не знайдено</p>';
 }
 
 function toggleSortMenu() {
@@ -353,8 +350,6 @@ applyFilterAndSort();
 
 function filterByCategory(cat) {
 selectedCategory = cat;
-document.getElementById('search').value = '';
-currentSearchTerm = "";
 applyFilterAndSort();
 }
 
@@ -370,7 +365,7 @@ currentSearchTerm = "";
 applyFilterAndSort();
 }
 
-// Повне повернення на головну при натисканні на іконку Будиночка 🏠
+// 🏠 ФУНКЦІЯ ПОВНОГО СКИНУ ПРИ КЛІКУ НА БУДИНОЧОК
 function goHome() {
 selectedCategory = null;
 currentSearchTerm = "";
@@ -387,14 +382,16 @@ let parts = [];
 
 if (selectedCategory) parts.push(`Категорія: <b>${selectedCategory}</b>`);
 if (currentSearchTerm) parts.push(`Пошук: "${currentSearchTerm}"`);
-if (currentSortOrder === 'low-to-high') parts.push(`Ціна: <b>від дешевих</b>`);
-if (currentSortOrder === 'high-to-low') parts.push(`Ціна: <b>від дорогих</b>`);
+if (currentSortOrder === 'low-to-high') parts.push(`Ціна: <b>від дешевих 📈</b>`);
+if (currentSortOrder === 'high-to-low') parts.push(`Ціна: <b>від дорогих 📉</b>`);
 
 if (parts.length > 0) {
 indicator.classList.remove('hidden');
+indicator.classList.add('flex');
 textEl.innerHTML = parts.join(' | ');
 } else {
 indicator.classList.add('hidden');
+indicator.classList.remove('flex');
 }
 }
 
@@ -541,7 +538,6 @@ let cleanNum = parseFloat(activePrice.replace(',', '.'));
 if (isNaN(cleanNum)) cleanNum = 0;
 
 let totalPrice = cleanNum * currentModalQty;
-
 let formattedPrice = totalPrice.toFixed(2).replace('.', ',');
 document.getElementById('modal-product-price').textContent = formattedPrice + ' грн';
 }
@@ -557,16 +553,6 @@ prevBtn.classList.remove('hidden'); nextBtn.classList.remove('hidden'); counter.
 counter.textContent = `${currentPhotoIndex + 1} із ${currentPhotos.length}`;
 } else {
 prevBtn.classList.add('hidden'); nextBtn.classList.add('hidden'); counter.classList.add('hidden');
-}
-
-const colorSelect = document.getElementById('modal-color-select');
-if (colorSelect && colorSelect.options.length > 0) {
-for (let i = 0; i < colorSelect.options.length; i++) {
-if (parseInt(colorSelect.options[i].getAttribute('data-index')) === currentPhotoIndex) {
-colorSelect.selectedIndex = i;
-break;
-}
-}
 }
 }
 
@@ -619,7 +605,6 @@ function changeModalQty(amount) {
 currentModalQty += amount;
 if (currentModalQty < 1) currentModalQty = 1;
 document.getElementById('modal-qty').textContent = currentModalQty;
-
 updateModalPrice();
 }
 
@@ -627,4 +612,182 @@ function hideProductModal(fromPopState = false) {
 document.getElementById('product-modal').classList.add('hidden');
 currentProductIndex = null;
 closeFullscreenPhoto();
+if (!fromPopState && window.history.state?.modal === "product") {
+history.back();
+}
+}
+
+function addToCart(index, qty, size = null, color = null, customPrice = null) {
+const product = allProducts[index];
+const finalPrice = customPrice || product.price;
+
+const existingItem = cart.find(item =>
+item.product.name === product.name &&
+item.size === size &&
+item.color === color &&
+item.cartPrice === finalPrice
+);
+
+if (existingItem) {
+existingItem.quantity += qty;
+} else {
+cart.push({
+product: product,
+quantity: qty,
+size: size,
+color: color,
+cartPrice: finalPrice
+});
+}
+
+updateCartCount();
+
+const toast = document.createElement('div');
+toast.className = 'notranslate';
+toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:9999px;box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1);z-index:100;font-weight:500;';
+
+let infoText = '';
+if (size) infoText += ` (Розмір: ${size})`; if (color) infoText += ` (Колір: ${color})`;
+toast.textContent = `✅ Додано: ${qty} шт.${infoText}!`;
+
+document.body.appendChild(toast);
+setTimeout(() => toast.remove(), 1200);
+}
+
+function showCart() {
+if (cart.length === 0) { alert("Кошик порожній"); return; }
+let html = '';
+let total = 0;
+
+cart.forEach((item, i) => {
+const price = parseFloat(item.cartPrice.replace(',', '.'));
+const itemTotal = price * item.quantity;
+total += itemTotal;
+
+let metaText = '';
+if (item.size) metaText += `<span class="inline-block text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded mt-1 mr-1">Розмір: ${item.size}</span>`; 
+if (item.color) metaText += `<span class="inline-block text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded mt-1">Колір: ${item.color}</span>`;
+
+const imgUrl = item.product.images.length > 0 ? item.product.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=80';
+
+html += `<div class="flex gap-4 border-b pb-4 items-center justify-between notranslate">
+<div class="flex gap-3 items-center flex-1">
+<img src="${imgUrl}" class="w-14 h-14 object-cover rounded-xl" onerror="this.src='https://images.unsplash.com/photo-1594035910387-fea47794261f?w=80'">
+<div>
+<div class="text-sm font-medium text-zinc-800 leading-tight" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${item.product.name}</div>
+<div class="flex flex-wrap">${metaText}</div>
+<div class="text-zinc-800 font-bold mt-1 text-sm">${item.cartPrice} грн</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center bg-zinc-50 rounded-lg overflow-hidden border">
+<button onclick="updateCartItemQty(${i}, -1)" class="px-2 py-1 bg-zinc-100 font-bold text-sm hover:bg-zinc-200">-</button>
+<span class="px-3 font-medium text-sm">${item.quantity}</span>
+<button onclick="updateCartItemQty(${i}, 1)" class="px-2 py-1 bg-zinc-100 font-bold text-sm hover:bg-zinc-200">+</button>
+</div>
+<button onclick="removeFromCart(${i}); event.stopPropagation();" class="text-red-500 p-2 text-lg">🗑</button>
+</div>
+</div>`;
+});
+
+document.getElementById('cart-items').innerHTML = html;
+document.getElementById('cart-total').textContent = total.toFixed(2).replace('.', ',') + ' грн';
+
+history.pushState({modal: "cart"}, null, null);
+document.getElementById('cart-modal').classList.remove('hidden');
+}
+
+function updateCartCount() {
+const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+document.getElementById('cart-count').textContent = totalQty;
+}
+
+function updateCartItemQty(index, delta) {
+cart[index].quantity += delta;
+if (cart[index].quantity <= 0) removeFromCart(index);
+else { updateCartCount(); showCart(); }
+}
+
+function hideCart(fromPopState = false) {
+document.getElementById('cart-modal').classList.add('hidden');
+if (!fromPopState && window.history.state?.modal === "cart") {
+history.back();
+}
+}
+
+function removeFromCart(i) {
+cart.splice(i, 1);
+updateCartCount();
+if (cart.length === 0) hideCart();
+else showCart();
+}
+
+function placeOrder() {
+if (cart.length === 0) { alert("Кошик порожній"); return; }
+
+const BOT_TOKEN = '8775134268:AAE9lKCPpZWs4E94uwAbMR26O2GPaJ8osDw';
+const CHAT_ID = '5263239405';
+
+let customerContacts = prompt("Будь ласка, введіть ваше Ім'я та Номер телефону (або @юзернейм) для зв'язку:");
+
+if (customerContacts === null) return;
+if (customerContacts.trim() === "") {
+alert("Для оформлення замовлення необхідно вказати контактні дані!");
+return;
+}
+
+let text = "🔔 НОВЕ ЗАМОВЛЕННЯ ElMarino!\n";
+text += "━━━━━━━━━━━━━━━━━━━━\n\n";
+text += `👤 *Покупець:* ${customerContacts}\n`;
+text += "━━━━━━━━━━━━━━━━━━━━\n\n";
+
+let total = 0;
+
+cart.forEach((item, index) => {
+const price = parseFloat(item.cartPrice.replace(',', '.'));
+const itemTotal = price * item.quantity;
+total += itemTotal;
+
+let variantInfo = '';
+if (item.size) variantInfo += ` (розм.${item.size})`; if (item.color) variantInfo += ` (колір: ${item.color})`;
+
+text += `${index + 1}. 📦 *${item.product.name}*${variantInfo}\n`; 
+text += `↳ ${item.quantity} шт. х ${item.cartPrice} грн (= ${itemTotal.toFixed(2).replace('.', ',')} грн)\n\n`;
+});
+
+text += "━━━━━━━━━━━━━━━━━━━━\n";
+text += `💰 *РАЗОМ ДО ОПЛАТИ:* ${total.toFixed(2).replace('.', ',')} грн\n\n`;
+text += "📅 Дата: " + new Date().toLocaleString('uk-UA') + "\n";
+
+const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+
+fetch(telegramApiUrl, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+chat_id: CHAT_ID,
+text: text,
+parse_mode: 'Markdown'
+})
+})
+.then(response => {
+if (response.ok) {
+cart = [];
+updateCartCount();
+hideCart();
+alert("🎉 Дякуємо! Ваше замовлення успішно відправлено менеджереві. Ми зв'яжемося з вами найближчим часом!");
+} else {
+alert("Помилка при відправці замовлення. Спробуйте ще раз.");
+}
+})
+.catch(error => {
+console.error('Помилка:', error);
+alert("Сталася помилка мережі. Перевірте з'єднання.");
+});
+}
+
+loadProductsFromSheet();
+</script>
+</body>
+</html>
 
