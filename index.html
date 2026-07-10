@@ -30,33 +30,49 @@ max-width: 100%;
 max-height: 80vh;
 object-fit: contain;
 }
+/* Золотий градієнт для кнопок та акцентів */
+.bg-gold-gradient {
+background: linear-gradient(135deg, #dfba6b 0%, #c29d4c 100%);
+}
+.text-gold {
+color: #c29d4c;
+}
+.border-gold:focus {
+border-color: #c29d4c;
+}
 </style>
 </head>
 <body class="bg-gray-100 notranslate">
 
 <div class="max-w-4xl mx-auto pb-20">
 <div class="w-full overflow-hidden shadow-sm">
-<!-- ТУТ ЗАМІНЕНО БАНЕР НА НОВИЙ РОБОЧИЙ -->
-<img src="https://i.postimg.cc/pV4c5VsB/1782584017691.jpg" alt="ElMarino Banner" class="w-full h-auto object-cover block" loading="eager">
+<img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Banner" class="w-full h-auto object-cover block" loading="eager">
 </div>
 
-<header class="bg-purple-700 text-white p-4 sticky top-0 z-40 shadow">
+<header class="bg-zinc-800 text-white p-4 sticky top-0 z-40 shadow-md">
 <div class="flex justify-between items-center">
-<h1 class="text-2xl font-bold">🛍️ ElMarino Магазин</h1>
-<button onclick="showCart()" class="flex items-center gap-2 bg-white text-purple-700 px-5 py-2 rounded-2xl font-medium">
-🛒 <span id="cart-count" class="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">0</span>
+<div class="flex items-center gap-3">
+<button onclick="resetFilters()" class="flex items-center justify-center w-10 h-10 bg-zinc-700 active:bg-zinc-600 rounded-2xl border border-zinc-600 shadow-inner transition-colors" title="На головну">
+🏠
+</button>
+<h1 class="text-xl font-bold tracking-wide flex items-center gap-1">
+ElMarino <span class="text-[#dfba6b] font-medium">Магазин</span>
+</h1>
+</div>
+<button onclick="showCart()" class="flex items-center gap-2 bg-zinc-700 active:bg-zinc-600 border border-zinc-600 px-4 py-2 rounded-2xl font-medium transition-colors">
+🛒 <span id="cart-count" class="bg-amber-500 text-zinc-900 text-xs rounded-full px-2 py-0.5 font-bold">0</span>
 </button>
 </div>
 </header>
 
 <div class="p-4 flex gap-2">
 <input id="search" type="text" placeholder="🔍 Пошук товарів..."
-class="w-full p-4 rounded-2xl border focus:border-purple-600 outline-none shadow-sm"
+class="w-full p-4 rounded-2xl border focus:border-[#c29d4c] outline-none shadow-sm"
 onkeyup="filterProducts()">
-<button onclick="resetFilters()" class="bg-gray-200 text-gray-700 px-4 rounded-2xl text-sm font-medium hover:bg-gray-300">Всі</button>
+<button onclick="resetFilters()" class="bg-zinc-200 text-zinc-700 px-5 rounded-2xl text-sm font-medium hover:bg-zinc-300 transition-colors">Всі</button>
 </div>
 
-<div id="loading-status" class="text-center py-10 text-gray-500 font-medium">
+<div id="loading-status" class="text-center py-10 text-zinc-500 font-medium">
 ⏳ Завантаження товарів та актуальних цін...
 </div>
 
@@ -70,7 +86,7 @@ onkeyup="filterProducts()">
 <button onclick="hideProductModal()" class="absolute top-4 right-4 bg-black/60 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold z-50 shadow-lg border border-white/20">✕</button>
 
 <div class="overflow-y-auto p-0 flex-1 pb-24">
-<div class="w-full h-64 bg-gray-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in" onclick="openFullscreenPhoto()">
+<div class="w-full h-64 bg-zinc-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in" onclick="openFullscreenPhoto()">
 <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" onerror="this.src='https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=60'">
 <button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＜</button>
 <button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＞</button>
@@ -78,26 +94,26 @@ onkeyup="filterProducts()">
 </div>
 
 <div class="p-4">
-<span id="modal-product-category" class="text-xs font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md"></span>
-<h2 id="modal-product-name" class="text-xl font-bold text-gray-800 mt-3 leading-tight"></h2>
-<p id="modal-product-description" class="text-gray-600 text-sm mt-2 whitespace-pre-line"></p>
+<span id="modal-product-category" class="text-xs font-bold uppercase tracking-wider text-zinc-700 bg-amber-100/70 text-[#8a6d29] px-2.5 py-1 rounded-md"></span>
+<h2 id="modal-product-name" class="text-xl font-bold text-zinc-800 mt-3 leading-tight"></h2>
+<p id="modal-product-description" class="text-zinc-600 text-sm mt-2 whitespace-pre-line"></p>
 
-<div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
-<span class="text-gray-600 font-medium text-sm pl-2">Оберіть розмір:</span>
-<select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[140px]"></select>
+<div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-zinc-50 p-2 rounded-xl justify-between">
+<span class="text-zinc-600 font-medium text-sm pl-2">Оберіть розмір:</span>
+<select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-zinc-700 outline-none focus:border-[#c29d4c] min-w-[140px]"></select>
 </div>
 
-<div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
-<span class="text-gray-600 font-medium text-sm pl-2">Оберіть колір:</span>
-<select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-gray-700 outline-none focus:border-purple-600 min-w-[140px]"></select>
+<div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-zinc-50 p-2 rounded-xl justify-between">
+<span class="text-zinc-600 font-medium text-sm pl-2">Оберіть колір:</span>
+<select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-zinc-700 outline-none focus:border-[#c29d4c] min-w-[140px]"></select>
 </div>
 
-<div class="mt-4 flex items-center gap-3 bg-gray-50 p-2 rounded-xl justify-between">
-<span class="text-gray-600 font-medium text-sm pl-2">Кількість:</span>
+<div class="mt-4 flex items-center gap-3 bg-zinc-50 p-2 rounded-xl justify-between">
+<span class="text-zinc-600 font-medium text-sm pl-2">Кількість:</span>
 <div class="flex items-center gap-1">
-<button onclick="changeModalQty(-1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-gray-100 shadow-sm">-</button>
-<span id="modal-qty" class="w-12 text-center font-bold text-lg">1</span>
-<button onclick="changeModalQty(1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-gray-100 shadow-sm">+</button>
+<button onclick="changeModalQty(-1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-zinc-100 shadow-sm">-</button>
+<span id="modal-qty" class="w-12 text-center font-bold text-zinc-800 text-lg">1</span>
+<button onclick="changeModalQty(1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-zinc-100 shadow-sm">+</button>
 </div>
 </div>
 </div>
@@ -105,10 +121,10 @@ onkeyup="filterProducts()">
 
 <div class="absolute bottom-0 left-0 right-0 bg-white border-t p-4 flex items-center justify-between gap-4 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-20">
 <div>
-<span class="text-gray-400 text-xs block">Ціна</span>
-<span id="modal-product-price" class="text-xl font-black text-purple-700"></span>
+<span class="text-zinc-400 text-xs block">Ціна</span>
+<span id="modal-product-price" class="text-xl font-black text-zinc-800"></span>
 </div>
-<button id="modal-product-btn" class="flex-1 bg-purple-700 hover:bg-purple-800 text-white py-3.5 rounded-2xl font-semibold transition-colors shadow-lg shadow-purple-700/20 text-center">
+<button id="modal-product-btn" class="flex-1 bg-gold-gradient hover:opacity-95 text-zinc-900 py-3.5 rounded-2xl font-bold transition-all shadow-lg shadow-amber-500/10 text-center">
 Додати в кошик
 </button>
 </div>
@@ -116,7 +132,7 @@ onkeyup="filterProducts()">
 </div>
 
 <div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col items-center justify-center p-4" onclick="closeFullscreenPhoto()">
-<button onclick="closeFullscreenPhoto()" class="fixed top-6 right-6 text-white text-3xl font-light hover:text-gray-300 z-[70] bg-black/40 w-12 h-12 rounded-full flex items-center justify-center">✕</button>
+<button onclick="closeFullscreenPhoto()" class="fixed top-6 right-6 text-white text-3xl font-light hover:text-zinc-300 z-[70] bg-black/40 w-12 h-12 rounded-full flex items-center justify-center">✕</button>
 <div id="lightbox-content-area" class="w-full flex items-center justify-center"></div>
 <button id="lightbox-prev-btn" onclick="changePhoto(-1); updateLightboxImage(); event.stopPropagation();" class="fixed left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＜</button>
 <button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage(); event.stopPropagation();" class="fixed right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＞</button>
@@ -125,16 +141,16 @@ onkeyup="filterProducts()">
 <div id="cart-modal" class="hidden fixed inset-0 bg-black/70 flex items-end z-50">
 <div class="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-auto p-5">
 <div class="flex justify-between mb-6">
-<h2 class="text-2xl font-bold">Кошик</h2>
-<button onclick="hideCart()" class="text-3xl">✕</button>
+<h2 class="text-2xl font-bold text-zinc-800">Кошик</h2>
+<button onclick="hideCart()" class="text-3xl text-zinc-500">✕</button>
 </div>
 <div id="cart-items" class="space-y-4"></div>
 <div class="mt-8 border-t pt-6">
-<div class="flex justify-between text-xl font-bold">
+<div class="flex justify-between text-xl font-bold text-zinc-800">
 <span>Разом:</span>
 <span id="cart-total">0 грн</span>
 </div>
-<button onclick="placeOrder()" class="mt-6 w-full bg-green-600 text-white py-5 rounded-3xl text-lg font-medium">
+<button onclick="placeOrder()" class="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-5 rounded-3xl text-lg font-bold transition-colors">
 Оформити замовлення
 </button>
 </div>
@@ -230,7 +246,7 @@ cats.push(p.category);
 
 let html = '';
 cats.forEach(cat => {
-html += `<div onclick="filterByCategory('${cat}')" class="bg-white p-3 rounded-2xl shadow-sm text-center text-xs font-semibold cursor-pointer active:bg-purple-100 border hover:border-purple-300 transition-colors">${cat}</div>`;
+html += `<div onclick="filterByCategory('${cat}')" class="bg-white p-3 rounded-2xl shadow-sm text-center text-xs font-semibold cursor-pointer active:bg-zinc-100 border hover:border-zinc-400 transition-all">${cat}</div>`;
 });
 document.getElementById('categories').innerHTML = html;
 }
@@ -243,21 +259,21 @@ const mainImage = p.images.length > 0 ? p.images[0] : 'https://images.unsplash.c
 
 html += `<div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border flex flex-col justify-between">
 <div>
-<div class="w-full h-40 bg-gray-50 flex items-center justify-center overflow-hidden">
+<div class="w-full h-40 bg-zinc-50 flex items-center justify-center overflow-hidden">
 <img src="${mainImage}" class="max-w-full max-h-full object-contain">
 </div>
 <div class="p-3">
-<h3 class="text-sm font-bold text-gray-800 leading-tight line-clamp-2 min-h-[40px]">${p.name}</h3>
-<p class="text-gray-500 text-xs mt-1 min-h-[32px] clamp-desc">${p.description}</p>
+<h3 class="text-sm font-bold text-zinc-800 leading-tight line-clamp-2 min-h-[40px]">${p.name}</h3>
+<p class="text-zinc-500 text-xs mt-1 min-h-[32px] clamp-desc">${p.description}</p>
 </div>
 </div>
 <div class="p-3 pt-0">
-<p class="text-purple-700 font-black text-base">${p.price} грн</p>
-<button onclick="addToCartFromList(${realIndex}); event.stopPropagation();" class="mt-2 w-full bg-purple-700 active:bg-purple-800 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">В кошик</button>
+<p class="text-zinc-800 font-black text-base">${p.price} грн</p>
+<button onclick="addToCartFromList(${realIndex}); event.stopPropagation();" class="mt-2 w-full bg-gold-gradient text-zinc-900 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-95">В кошик</button>
 </div>
 </div>`;
 });
-document.getElementById('products').innerHTML = html || '<p class="col-span-2 text-center py-10 text-gray-500">Нічого не знайдено</p>';
+document.getElementById('products').innerHTML = html || '<p class="col-span-2 text-center py-10 text-zinc-500">Нічого не знайдено</p>';
 }
 
 function parseSizePrice(sizeStr, defaultPrice) {
@@ -561,8 +577,8 @@ const itemTotal = price * item.quantity;
 total += itemTotal;
 
 let metaText = '';
-if (item.size) metaText += `<span class="inline-block text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded mt-1 mr-1">Розмір: ${item.size}</span>`; 
-if (item.color) metaText += `<span class="inline-block text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded mt-1">Колір: ${item.color}</span>`;
+if (item.size) metaText += `<span class="inline-block text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded mt-1 mr-1">Розмір: ${item.size}</span>`; 
+if (item.color) metaText += `<span class="inline-block text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded mt-1">Колір: ${item.color}</span>`;
 
 const imgUrl = item.product.images.length > 0 ? item.product.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=80';
 
@@ -570,16 +586,16 @@ html += `<div class="flex gap-4 border-b pb-4 items-center justify-between notra
 <div class="flex gap-3 items-center flex-1">
 <img src="${imgUrl}" class="w-14 h-14 object-cover rounded-xl" onerror="this.src='https://images.unsplash.com/photo-1594035910387-fea47794261f?w=80'">
 <div>
-<div class="text-sm font-medium text-gray-800 leading-tight" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${item.product.name}</div>
+<div class="text-sm font-medium text-zinc-800 leading-tight" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${item.product.name}</div>
 <div class="flex flex-wrap">${metaText}</div>
-<div class="text-purple-700 font-bold mt-1 text-sm">${item.cartPrice} грн</div>
+<div class="text-zinc-800 font-bold mt-1 text-sm">${item.cartPrice} грн</div>
 </div>
 </div>
 <div class="flex items-center gap-3">
-<div class="flex items-center bg-gray-100 rounded-lg overflow-hidden border">
-<button onclick="updateCartItemQty(${i}, -1)" class="px-2 py-1 bg-gray-200 font-bold text-sm hover:bg-gray-300">-</button>
+<div class="flex items-center bg-zinc-50 rounded-lg overflow-hidden border">
+<button onclick="updateCartItemQty(${i}, -1)" class="px-2 py-1 bg-zinc-100 font-bold text-sm hover:bg-zinc-200">-</button>
 <span class="px-3 font-medium text-sm">${item.quantity}</span>
-<button onclick="updateCartItemQty(${i}, 1)" class="px-2 py-1 bg-gray-200 font-bold text-sm hover:bg-gray-300">+</button>
+<button onclick="updateCartItemQty(${i}, 1)" class="px-2 py-1 bg-zinc-100 font-bold text-sm hover:bg-zinc-200">+</button>
 </div>
 <button onclick="removeFromCart(${i}); event.stopPropagation();" class="text-red-500 p-2 text-lg">🗑</button>
 </div>
@@ -686,3 +702,4 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
+
