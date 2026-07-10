@@ -306,7 +306,7 @@ images: imagesArray
 
 renderCategories();
 applyFilterAndSort();
-initSwipeListeners(); // Ініціалізуємо безпечні слухачі свайпів після завантаження
+initSwipeListeners();
 } catch (error) {
 console.error(error);
 }
@@ -483,6 +483,7 @@ prevBtn.classList.add('hidden'); nextBtn.classList.add('hidden'); counter.classL
 }
 }
 
+// ПРАВИЛЬНА СИНХРОНІЗАЦІЯ: Гортаємо фото вперед -> колір вибирається наступний
 function syncColorByPhoto() {
 const colorSelect = document.getElementById('modal-color-select');
 const colorBlock = document.getElementById('color-selector-block');
@@ -493,12 +494,13 @@ colorSelect.selectedIndex = currentPhotoIndex;
 }
 }
 
+// Ручний вибір кольору -> показує відповідне за номером фото
 function syncPhotoByColor() {
 const colorSelect = document.getElementById('modal-color-select');
 if (!colorSelect.options.length) return;
 
 let selectedIdx = colorSelect.selectedIndex;
-if (selectedIdx < currentPhotos.length) {
+if (selectedIdx >= 0 && selectedIdx < currentPhotos.length) {
 currentPhotoIndex = selectedIdx;
 updateModalPhoto();
 if (!document.getElementById('fullscreen-lightbox').classList.contains('hidden')) {
@@ -512,19 +514,18 @@ currentPhotoIndex += direction;
 if (currentPhotoIndex < 0) currentPhotoIndex = currentPhotos.length - 1;
 else if (currentPhotoIndex >= currentPhotos.length) currentPhotoIndex = 0;
 updateModalPhoto();
-syncColorByPhoto();
+syncColorByPhoto(); // Синхронізуємо колір у правильному напрямку
 }
 
 function handleSwipeGesture(onSwipeLeft, onSwipeRight) {
 const threshold = 40;
 if (touchStartX - touchEndX > threshold) {
-onSwipeLeft();
+onSwipeLeft(); // Свайп ліворуч (наступне фото)
 } else if (touchEndX - touchStartX > threshold) {
-onSwipeRight();
+onSwipeRight(); // Свайп праворуч (попереднє фото)
 }
 }
 
-// Безпечна ініціалізація слухачів свайпу
 function initSwipeListeners() {
 const swipeZone = document.getElementById('modal-swipe-zone');
 if (swipeZone) {
@@ -676,8 +677,9 @@ if (cart.length === 0) hideCart();
 else showCart();
 }
 
+// Виправлено для коректного переходу без залишків модалок
 function showCheckoutModal() {
-hideCart(true); 
+document.getElementById('cart-modal').classList.add('hidden');
 document.getElementById('checkout-modal').classList.remove('hidden');
 history.pushState({modal: "checkout"}, null, null);
 }
@@ -732,7 +734,7 @@ if (response.ok) {
 cart = [];
 updateCartCount();
 hideCheckoutModal();
-showToast("🎉 Замовлення успешно відправлено!");
+showToast("🎉 Замовлення успішно відправлено!");
 }
 });
 }
