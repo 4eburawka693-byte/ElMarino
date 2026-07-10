@@ -204,7 +204,6 @@ let selectedCategory = null;
 let currentSearchTerm = "";
 let currentSortOrder = "default"; 
 
-// Допоміжні функції парсингу опису (Розміри та Кольори)
 function extractSizesFromDescription(description) {
 if (!description) return [];
 const sizeMatch = description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r.]+)/i);
@@ -217,7 +216,7 @@ return [];
 function parseSizePrice(sizeStr, defaultPrice) {
 let priceMatch = sizeStr.match(/\(([^)]+)\)/);
 let sizeName = sizeStr.replace(/\s*\([^)]+\)\s*/g, '').trim();
-let price = defaultPrice.replace(/\s/g, '').replace(',', '.');
+let price = String(defaultPrice).replace(/\s/g, '').replace(',', '.');
 
 if (priceMatch && priceMatch[1]) {
 let cleanPrice = priceMatch[1].replace(/[^\d.,]/g, '').replace(',', '.').trim();
@@ -291,19 +290,26 @@ allProducts = [];
 
 for (let i = 1; i < rows.length; i++) {
 const row = rows[i];
-if (row && row[0]) {
+if (row && row[0] && row[0].trim() !== '') {
+try {
 let imagesArray = [];
 if (row[4]) {
 imagesArray = row[4].split(',').map(url => url.trim()).filter(Boolean);
 }
 
+let safePrice = row[2] ? row[2].trim() : '0,00';
+if(!safePrice || safePrice === '') safePrice = '0,00';
+
 allProducts.push({
 name: row[0].trim(),
 category: row[1] ? row[1].trim() : 'Інше',
-price: row[2] ? row[2].trim() : '0,00',
+price: safePrice,
 description: row[3] ? row[3].trim() : '',
 images: imagesArray
 });
+} catch (rowError) {
+console.error("Помилка обробки рядка таблиці:", rowError);
+}
 }
 }
 
@@ -348,15 +354,15 @@ p.name.toLowerCase().includes(currentSearchTerm) ||
 
 if (currentSortOrder === 'low-to-high') {
 filtered.sort((a, b) => {
-const priceA = parseFloat(a.price.replace(/\s/g, '').replace(',', '.'));
-const priceB = parseFloat(b.price.replace(/\s/g, '').replace(',', '.'));
-return priceA - priceB;
+const priceA = parseFloat(String(a.price).replace(/\s/g, '').replace(',', '.'));
+const priceB = parseFloat(String(b.price).replace(/\s/g, '').replace(',', '.'));
+return (isNaN(priceA) ? 0 : priceA) - (isNaN(priceB) ? 0 : priceB);
 });
 } else if (currentSortOrder === 'high-to-low') {
 filtered.sort((a, b) => {
-const priceA = parseFloat(a.price.replace(/\s/g, '').replace(',', '.'));
-const priceB = parseFloat(b.price.replace(/\s/g, '').replace(',', '.'));
-return priceB - priceA;
+const priceA = parseFloat(String(a.price).replace(/\s/g, '').replace(',', '.'));
+const priceB = parseFloat(String(b.price).replace(/\s/g, '').replace(',', '.'));
+return (isNaN(priceB) ? 0 : priceB) - (isNaN(priceA) ? 0 : priceA);
 });
 }
 
@@ -400,7 +406,7 @@ applyFilterAndSort();
 }
 
 function filterByCategory(cat) {
-selectedCategory = cat;
+selectedCategory = (selectedCategory === cat) ? null : cat;
 applyFilterAndSort();
 }
 
@@ -551,7 +557,7 @@ if (!sizeBlock.classList.contains('hidden') && sizeSelect.selectedOptions.length
 activePrice = sizeSelect.selectedOptions[0].getAttribute('data-price');
 }
 
-let cleanNum = parseFloat(activePrice.replace(/\s/g, '').replace(',', '.'));
+let cleanNum = parseFloat(String(activePrice).replace(/\s/g, '').replace(',', '.'));
 if (isNaN(cleanNum)) cleanNum = 0;
 
 let totalPrice = cleanNum * currentModalQty;
@@ -665,9 +671,143 @@ let html = '';
 let total = 0;
 
 cart.forEach((item, i) => {
-const price = parseFloat(item.cartPrice.replace(/\s/g, '').replace(',', '.'));
-const itemTotal = price * item.quantity;
+const price = parseFloat(String(item.cartPrice).replace(/\s/g, '').replace(',', '.'));
+const itemTotal = (isNaN(price) ? 0 : price) * item.quantity;
 total += itemTotal;
 
 let metaText = '';
-if (item.size) metaText += `<span class="inline-block text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded mt-1 mr-1">Розмір: ${item.size
+if (item.size) metaText += `<span class="inline-block text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded mt-1 mr-1">Розмір: ${item.size}</span>`; 
+if (item.color) metaText += `<span class="inline-block text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded mt-1">Колір: ${item.color}</span>`;
+
+const imgUrl = item.product.images.length > 0 ? item.product.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=80';
+
+html += `<div class="flex gap-4 border-b pb-4 items-center justify-between notranslate">
+<div class="flex gap-3 items-center flex-1">
+<img src="${imgUrl}" class="w-14 h-14 object-cover rounded-xl" onerror="this.src='https://images.unsplash.com/photo-1594035910387-fea47794261f?w=80'">
+<div>
+<div class="text-sm font-medium text-zinc-800 leading-tight line-clamp-2">${item.product.name}</div>
+<div class="flex flex-wrap">${metaText}</div>
+<div class="text-zinc-800 font-bold mt-1 text-sm">${item.cartPrice} грн</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center bg-zinc-50 rounded-lg overflow-hidden border">
+<button onclick="updateCartItemQty(${i}, -1)" class="px-2 py-1 bg-zinc-100 font-bold text-sm hover:bg-zinc-200">-</button>
+<span class="px-3 font-medium text-sm">${item.quantity}</span>
+<button onclick="updateCartItemQty(${i}, 1)" class="px-2 py-1 bg-zinc-100 font-bold text-sm hover:bg-zinc-200">+</button>
+</div>
+<button onclick="removeFromCart(${i}); event.stopPropagation();" class="text-red-500 p-2 text-lg">🗑</button>
+</div>
+</div>`;
+});
+
+document.getElementById('cart-items').innerHTML = html;
+document.getElementById('cart-total').textContent = total.toFixed(2).replace('.', ',') + ' грн';
+
+history.pushState({modal: "cart"}, null, null);
+document.getElementById('cart-modal').classList.remove('hidden');
+}
+
+function updateCartCount() {
+const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+document.getElementById('cart-count').textContent = totalQty;
+}
+
+function updateCartItemQty(index, delta) {
+cart[index].quantity += delta;
+if (cart[index].quantity <= 0) removeFromCart(index);
+else { updateCartCount(); showCart(); }
+}
+
+function hideCart(fromPopState = false) {
+document.getElementById('cart-modal').classList.add('hidden');
+if (!fromPopState && window.history.state?.modal === "cart") {
+history.back();
+}
+}
+
+function removeFromCart(i) {
+cart.splice(i, 1);
+updateCartCount();
+if (cart.length === 0) hideCart();
+else showCart();
+}
+
+function showCheckoutModal() {
+if (cart.length === 0) { showToast("Кошик порожній!", "error"); return; }
+hideCart(true); 
+document.getElementById('checkout-modal').classList.remove('hidden');
+history.pushState({modal: "checkout"}, null, null);
+}
+
+function hideCheckoutModal(fromPopState = false) {
+document.getElementById('checkout-modal').classList.add('hidden');
+if (!fromPopState && window.history.state?.modal === "checkout") {
+history.back();
+}
+}
+
+function submitOrder() {
+const nameInput = document.getElementById('customer-name').value.trim();
+const phoneInput = document.getElementById('customer-phone').value.trim();
+
+if (!nameInput || !phoneInput) {
+showToast("❌ Будь ласка, заповніть обидва поля!", "error");
+return;
+}
+
+const BOT_TOKEN = '8775134268:AAE9lKCPpZWs4E94uwAbMR26O2GPaJ8osDw';
+const CHAT_ID = '5263239405';
+
+let text = "🔔 НОВЕ ЗАМОВЛЕННЯ ElMarino!\n";
+text += "━━━━━━━━━━━━━━━━━━━━\n\n";
+text += `👤 *Покупець:* ${nameInput}\n`;
+text += `📞 *Зв'язок:* ${phoneInput}\n`;
+text += "━━━━━━━━━━━━━━━━━━━━\n\n";
+
+let total = 0;
+cart.forEach((item, index) => {
+const price = parseFloat(String(item.cartPrice).replace(/\s/g, '').replace(',', '.'));
+const itemTotal = (isNaN(price) ? 0 : price) * item.quantity;
+total += itemTotal;
+
+let variantInfo = '';
+if (item.size) variantInfo += ` (розм.${item.size})`;
+if (item.color) variantInfo += ` (колір: ${item.color})`;
+
+text += `${index + 1}. 📦 *${item.product.name}*${variantInfo}\n`; 
+text += `↳ ${item.quantity} шт. х ${item.cartPrice} грн (= ${itemTotal.toFixed(2).replace('.', ',')} грн)\n\n`;
+});
+
+text += "━━━━━━━━━━━━━━━━━━━━\n";
+text += `💰 *РАЗОМ ДО ОПЛАТИ:* ${total.toFixed(2).replace('.', ',')} грн\n\n`;
+text += "📅 Дата: " + new Date().toLocaleString('uk-UA') + "\n";
+
+const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+
+fetch(telegramApiUrl, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ chat_id: CHAT_ID, text: text, parse_mode: 'Markdown' })
+})
+.then(response => {
+if (response.ok) {
+cart = [];
+updateCartCount();
+hideCheckoutModal();
+showToast("🎉 Дякуємо! Замовлення успішно відправлено!");
+} else {
+showToast("❌ Ой, сталася помилка відправки.", "error");
+}
+})
+.catch(error => {
+console.error(error);
+showToast("❌ Помилка мережі. Перевірте інтернет.", "error");
+});
+}
+
+loadProductsFromSheet();
+</script>
+</body>
+</html>
+
