@@ -203,7 +203,6 @@ let touchEndX = 0;
 
 function extractSizesFromDescription(description) {
 if (!description) return [];
-// Розширена перевірка: шукаємо розміри, моделі, кількості, пачки чи упаковки
 const sizeMatch = description.match(/(?:розмір|розміри|размер|размеры|модель|моделі|кількість|количество|пачка|пачки|упаковка|упаковки)\s*:\s*([^\n\r.]+)/i);
 if (sizeMatch && sizeMatch[1]) {
 return sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
@@ -421,10 +420,11 @@ sizeSelect.onchange = updateModalPrice;
 
 if (parsedSizes.length > 0) {
 sizeBlock.classList.remove('hidden');
-let sizeOptions = `<option value="" disabled selected hidden>Оберіть розмір / пачку</option>`;
-sizeOptions += parsedSizes.map(s => {
+// Замість підказки одразу рендеримо та вибираємо перший елемент
+let sizeOptions = parsedSizes.map((s, idx) => {
 let parsed = parseSizePrice(s, p.price);
-return `<option value="${parsed.sizeName}" data-price="${parsed.price}">${s}</option>`;
+let isSelected = idx === 0 ? 'selected' : '';
+return `<option value="${parsed.sizeName}" data-price="${parsed.price}" ${isSelected}>${s}</option>`;
 }).join('');
 sizeSelect.innerHTML = sizeOptions;
 } else {
@@ -436,8 +436,11 @@ const colorMatch = p.description.match(/(?:колір|кольори|цвет|ц
 if (colorMatch && colorMatch[1]) {
 colorBlock.classList.remove('hidden');
 let colors = colorMatch[1].split(',').map(c => c.trim()).filter(Boolean);
-let colorOptions = `<option value="" disabled selected hidden>Оберіть колір</option>`;
-colorOptions += colors.map((c, idx) => `<option value="${c}" data-index="${idx}">${c}</option>`).join('');
+// Також для кольору прибираємо підказку й вибираємо перший автоматично
+let colorOptions = colors.map((c, idx) => {
+let isSelected = idx === 0 ? 'selected' : '';
+return `<option value="${c}" data-index="${idx}" ${isSelected}>${c}</option>`;
+}).join('');
 colorSelect.innerHTML = colorOptions;
 } else {
 colorBlock.classList.add('hidden');
@@ -445,7 +448,6 @@ colorSelect.innerHTML = '';
 }
 
 updateModalPrice();
-// Безпечна синхронізація кольору після повного рендерингу
 setTimeout(() => { syncColorByPhoto(); }, 10);
 
 document.getElementById('modal-product-btn').onclick = function() {
@@ -504,7 +506,7 @@ const colorSelect = document.getElementById('modal-color-select');
 const colorBlock = document.getElementById('color-selector-block');
 if (!colorSelect || colorBlock.classList.contains('hidden') || !colorSelect.options.length) return;
 
-let expectedSelectedIndex = currentPhotoIndex + 1;
+let expectedSelectedIndex = currentPhotoIndex;
 if (expectedSelectedIndex < colorSelect.options.length) {
 colorSelect.selectedIndex = expectedSelectedIndex;
 }
@@ -515,9 +517,8 @@ const colorSelect = document.getElementById('modal-color-select');
 if (!colorSelect || !colorSelect.options.length) return;
 
 let selectedIdx = colorSelect.selectedIndex;
-let realImageIdx = selectedIdx - 1; 
-if (realImageIdx >= 0 && realImageIdx < currentPhotos.length) {
-currentPhotoIndex = realImageIdx;
+if (selectedIdx >= 0 && selectedIdx < currentPhotos.length) {
+currentPhotoIndex = selectedIdx;
 updateModalPhoto();
 if (!document.getElementById('fullscreen-lightbox').classList.contains('hidden')) {
 updateLightboxImage();
@@ -595,7 +596,6 @@ new PinchZoom.default(el, { draggableUnzoomed: false, minZoom: 1, maxZoom: 4 });
 }, 50);
 }
 
-// Повністю закриває лайтбокс
 function closeFullscreenPhoto() {
 document.getElementById('fullscreen-lightbox').classList.add('hidden');
 document.getElementById('lightbox-content-area').innerHTML = '';
@@ -759,3 +759,4 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
+
