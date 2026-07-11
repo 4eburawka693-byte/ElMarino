@@ -104,7 +104,7 @@ onkeyup="filterProducts()">
 <p id="modal-product-description" class="text-zinc-600 text-sm mt-2 whitespace-pre-line"></p>
 
 <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-zinc-50 p-2 rounded-xl justify-between">
-<span class="text-zinc-600 font-medium text-sm pl-2">Оберіть кількість / розмір:</span>
+<span class="text-zinc-600 font-medium text-sm pl-2">Оберіть розмір:</span>
 <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-zinc-700 outline-none focus:border-zinc-500 min-w-[140px]"></select>
 </div>
 
@@ -203,7 +203,8 @@ let touchEndX = 0;
 
 function extractSizesFromDescription(description) {
 if (!description) return [];
-const sizeMatch = description.match(/(?:розмір|розміри|размер|размеры|модель|моделі)\s*:\s*([^\n\r.]+)/i);
+// Розширена перевірка: шукаємо розміри, моделі, кількості, пачки чи упаковки
+const sizeMatch = description.match(/(?:розмір|розміри|размер|размеры|модель|моделі|кількість|количество|пачка|пачки|упаковка|упаковки)\s*:\s*([^\n\r.]+)/i);
 if (sizeMatch && sizeMatch[1]) {
 return sizeMatch[1].split(',').map(s => s.trim()).filter(Boolean);
 }
@@ -420,7 +421,7 @@ sizeSelect.onchange = updateModalPrice;
 
 if (parsedSizes.length > 0) {
 sizeBlock.classList.remove('hidden');
-let sizeOptions = `<option value="" disabled selected hidden>Оберіть кількість / розмір</option>`;
+let sizeOptions = `<option value="" disabled selected hidden>Оберіть розмір / пачку</option>`;
 sizeOptions += parsedSizes.map(s => {
 let parsed = parseSizePrice(s, p.price);
 return `<option value="${parsed.sizeName}" data-price="${parsed.price}">${s}</option>`;
@@ -444,14 +445,15 @@ colorSelect.innerHTML = '';
 }
 
 updateModalPrice();
-syncColorByPhoto();
+// Безпечна синхронізація кольору після повного рендерингу
+setTimeout(() => { syncColorByPhoto(); }, 10);
 
 document.getElementById('modal-product-btn').onclick = function() {
 let chosenSize = (!sizeBlock.classList.contains('hidden')) ? sizeSelect.value : null;
 let chosenColor = (!colorBlock.classList.contains('hidden')) ? colorSelect.value : null;
 
 if (!sizeBlock.classList.contains('hidden') && !chosenSize) {
-showToast("❌ Будь ласка, оберіть кількість/розмір!", "error");
+showToast("❌ Будь ласка, оберіть потрібний розмір чи пачку!", "error");
 return;
 }
 if (!colorBlock.classList.contains('hidden') && !chosenColor) {
@@ -475,7 +477,7 @@ const sizeSelect = document.getElementById('modal-size-select');
 const sizeBlock = document.getElementById('size-selector-block');
 
 let activePrice = p.price;
-if (!sizeBlock.classList.contains('hidden') && sizeSelect.selectedOptions.length > 0) {
+if (!sizeBlock.classList.contains('hidden') && sizeSelect.value && sizeSelect.selectedOptions.length > 0) {
 activePrice = sizeSelect.selectedOptions[0].getAttribute('data-price');
 }
 let cleanNum = parseFloat(String(activePrice).replace(/\s/g, '').replace(',', '.'));
@@ -502,7 +504,6 @@ const colorSelect = document.getElementById('modal-color-select');
 const colorBlock = document.getElementById('color-selector-block');
 if (!colorSelect || colorBlock.classList.contains('hidden') || !colorSelect.options.length) return;
 
-// Індекс + 1, бо перша опція — це прихована підказка "Оберіть колір"
 let expectedSelectedIndex = currentPhotoIndex + 1;
 if (expectedSelectedIndex < colorSelect.options.length) {
 colorSelect.selectedIndex = expectedSelectedIndex;
@@ -594,6 +595,7 @@ new PinchZoom.default(el, { draggableUnzoomed: false, minZoom: 1, maxZoom: 4 });
 }, 50);
 }
 
+// Повністю закриває лайтбокс
 function closeFullscreenPhoto() {
 document.getElementById('fullscreen-lightbox').classList.add('hidden');
 document.getElementById('lightbox-content-area').innerHTML = '';
@@ -637,7 +639,7 @@ const price = parseFloat(String(item.cartPrice).replace(/\s/g, '').replace(',', 
 total += price * item.quantity;
 
 let metaText = '';
-if (item.size) metaText += `<span class="inline-block text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded mt-1 mr-1">Конфігурація: ${item.size}</span>`; 
+if (item.size) metaText += `<span class="inline-block text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded mt-1 mr-1">Розмір/Тип: ${item.size}</span>`; 
 if (item.color) metaText += `<span class="inline-block text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded mt-1">Колір: ${item.color}</span>`;
 
 const imgUrl = item.product.images.length > 0 ? item.product.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=80';
@@ -757,4 +759,3 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
-
