@@ -71,7 +71,7 @@ onkeyup="filterProducts()">
 <div id="sort-menu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border z-50 overflow-hidden">
 <button onclick="setSortOrder('default')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 border-b block">Без сортування</button>
 <button onclick="setSortOrder('low-to-high')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 border-b block">💰 Від дешевих до дорогих</button>
-<button onclick="setSortOrder('high-to-low')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 block">💵 Від дорогих до дешевих</button>
+<button onclick="setSortOrder('high-to-low')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 block">💵 Від дорогих до demeвих</button>
 </div>
 </div>
 </div>
@@ -201,36 +201,27 @@ let currentSortOrder = "default";
 let touchStartX = 0;
 let touchEndX = 0;
 
-// ВИПРАВЛЕНО: Функція тепер автоматично витягує саме те слово, яке ти написав перед двократкою (Розмір, Кількість, Пачка тощо)
-function extractSizesFromDescription(description) {
-if (!description) return { label: 'Оберіть розмір:', list: [] };
-const match = description.match(/([^\n\r]+?)\s*:\s*([^\n\r.]+)/);
-if (match && match[1] && match[2]) {
+// Функція тепер читає виключно дані з нової окремої колонки параметрів
+function parseOptionsField(optionsStr) {
+  let result = { sizeLabel: 'Оберіть розмір:', sizes: [], colors: [] };
+  if (!optionsStr || optionsStr.trim() === "") return result;
+
+  const match = optionsStr.match(/([^\n\r]+?)\s*:\s*([^\n\r]+)/);
+  if (match && match[1] && match[2]) {
     let rawLabel = match[1].trim();
-    // Виключаємо колір, бо для нього окреме поле
+    let rawValues = match[2].trim();
+
+    // Якщо поле містить інформацію про колір
     if (/колір|кольори|цвет|цвета/i.test(rawLabel)) {
-        // Якщо перший рядок колір, шукаємо далі наступні рядки
-        const lines = description.split('\n');
-        for (let line of lines) {
-            const subMatch = line.match(/([^\n\r]+?)\s*:\s*([^\n\r.]+)/);
-            if (subMatch && !/колір|кольори|цвет|цвета/i.test(subMatch[1])) {
-                let cleanLabel = subMatch[1].trim();
-                cleanLabel = cleanLabel.charAt(0).toUpperCase() + cleanLabel.slice(1);
-                return {
-                    label: `Оберіть ${cleanLabel.toLowerCase()}:`,
-                    list: subMatch[2].split(',').map(s => s.trim()).filter(Boolean)
-                };
-            }
-        }
-        return { label: 'Оберіть розмір:', list: [] };
+      result.colors = rawValues.split(',').map(c => c.trim()).filter(Boolean);
+    } else {
+      // Для всіх інших параметрів (Розмір, Кількість, Пачка тощо)
+      let cleanLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
+      result.sizeLabel = `Оберіть ${cleanLabel.toLowerCase()}:`;
+      result.sizes = rawValues.split(',').map(s => s.trim()).filter(Boolean);
     }
-    let cleanLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
-    return {
-        label: `Оберіть ${cleanLabel.toLowerCase()}:`,
-        list: match[2].split(',').map(s => s.trim()).filter(Boolean)
-    };
-}
-return { label: 'Оберіть розмір:', list: [] };
+  }
+  return result;
 }
 
 function parseSizePrice(sizeStr, defaultPrice) {
@@ -322,7 +313,8 @@ name: row[0].trim(),
 category: row[1] ? row[1].trim() : 'Інше',
 price: safePrice,
 description: row[3] ? row[3].trim() : '',
-images: imagesArray
+images: imagesArray,
+optionsField: row[5] ? row[5].trim() : '' // Нова Колонка F
 });
 }
 }
@@ -423,16 +415,11 @@ else { indicator.classList.add('hidden'); indicator.classList.remove('flex'); }
 
 function addToCartFromList(index) {
 const p = allProducts[index];
-const parsedData = extractSizesFromDescription(p.description);
-let defaultSize = parsedData.list.length > 0 ? parseSizePrice(parsedData.list[0], p.price).sizeName : null;
-let basePrice = parsedData.list.length > 0 ? parseSizePrice(parsedData.list[0], p.price).price : p.price;
+const parsedData = parseOptionsField(p.optionsField);
+let defaultSize = parsedData.sizes.length > 0 ? parseSizePrice(parsedData.sizes[0], p.price).sizeName : null;
+let basePrice = parsedData.sizes.length > 0 ? parseSizePrice(parsedData.sizes[0], p.price).price : p.price;
+let defaultColor = parsedData.colors.length > 0 ? parsedData.colors[0] : null;
 
-const colorMatch = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
-let defaultColor = null;
-if (colorMatch && colorMatch[1]) {
-let colors = colorMatch[1].split(',').map(c => c.trim()).filter(Boolean);
-if (colors.length > 0) defaultColor = colors[0];
-}
 addToCart(index, 1, defaultSize, defaultColor, basePrice);
 }
 
@@ -456,14 +443,14 @@ const sizeLabel = document.getElementById('modal-size-label');
 const colorSelect = document.getElementById('modal-color-select');
 const colorBlock = document.getElementById('color-selector-block');
 
-const parsedData = extractSizesFromDescription(p.description);
+const parsedData = parseOptionsField(p.optionsField);
 sizeSelect.onchange = updateModalPrice;
 
-// ВИПРАВЛЕНО: Текст підпису тепер динамічно змінюється на основі даних з таблиці
-if (parsedData.list.length > 0) {
+// Обробка розмірів / кількості
+if (parsedData.sizes.length > 0) {
 sizeBlock.classList.remove('hidden');
-sizeLabel.textContent = parsedData.label; 
-let sizeOptions = parsedData.list.map((s, idx) => {
+sizeLabel.textContent = parsedData.sizeLabel; 
+let sizeOptions = parsedData.sizes.map((s, idx) => {
 let parsed = parseSizePrice(s, p.price);
 let isSelected = idx === 0 ? 'selected' : '';
 return `<option value="${parsed.sizeName}" data-price="${parsed.price}" ${isSelected}>${s}</option>`;
@@ -474,11 +461,10 @@ sizeBlock.classList.add('hidden');
 sizeSelect.innerHTML = '';
 }
 
-const colorMatch = p.description.match(/(?:колір|кольори|цвет|цвета)\s*:\s*([^\n\r.]+)/i);
-if (colorMatch && colorMatch[1]) {
+// Обробка кольорів
+if (parsedData.colors.length > 0) {
 colorBlock.classList.remove('hidden');
-let colors = colorMatch[1].split(',').map(c => c.trim()).filter(Boolean);
-let colorOptions = colors.map((c, idx) => {
+let colorOptions = parsedData.colors.map((c, idx) => {
 let isSelected = idx === 0 ? 'selected' : '';
 return `<option value="${c}" data-index="${idx}" ${isSelected}>${c}</option>`;
 }).join('');
