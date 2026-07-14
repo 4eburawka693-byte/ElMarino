@@ -71,7 +71,7 @@ onkeyup="filterProducts()">
 <div id="sort-menu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border z-50 overflow-hidden">
 <button onclick="setSortOrder('default')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 border-b block">Без сортування</button>
 <button onclick="setSortOrder('low-to-high')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 border-b block">💰 Від дешевих до дорогих</button>
-<button onclick="setSortOrder('high-to-low')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 block">💵 Від дорогих до demeвих</button>
+<button onclick="setSortOrder('high-to-low')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 block">💵 Від дорогих до дешевих</button>
 </div>
 </div>
 </div>
@@ -82,7 +82,11 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
-<div id="categories" class="px-4 mb-6 grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+<div class="px-4 mb-3 flex flex-col gap-3">
+  <div id="categories" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+  <div id="subcategories" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2 bg-zinc-50 p-3 rounded-2xl border"></div>
+</div>
+
 <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
 </div>
 
@@ -195,13 +199,13 @@ let currentPhotoIndex = 0;
 let currentProductIndex = null;
 
 let selectedCategory = null;
+let selectedSubcategory = null; // Нова змінна для підкатегорії
 let currentSearchTerm = "";
 let currentSortOrder = "default"; 
 
 let touchStartX = 0;
 let touchEndX = 0;
 
-// Функція тепер читає виключно дані з нової окремої колонки параметрів
 function parseOptionsField(optionsStr) {
   let result = { sizeLabel: 'Оберіть розмір:', sizes: [], colors: [] };
   if (!optionsStr || optionsStr.trim() === "") return result;
@@ -211,11 +215,9 @@ function parseOptionsField(optionsStr) {
     let rawLabel = match[1].trim();
     let rawValues = match[2].trim();
 
-    // Якщо поле містить інформацію про колір
     if (/колір|кольори|цвет|цвета/i.test(rawLabel)) {
       result.colors = rawValues.split(',').map(c => c.trim()).filter(Boolean);
     } else {
-      // Для всіх інших параметрів (Розмір, Кількість, Пачка тощо)
       let cleanLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
       result.sizeLabel = `Оберіть ${cleanLabel.toLowerCase()}:`;
       result.sizes = rawValues.split(',').map(s => s.trim()).filter(Boolean);
@@ -308,13 +310,26 @@ if (row[4]) {
 imagesArray = row[4].split(',').map(url => url.trim()).filter(Boolean);
 }
 let safePrice = row[2] ? row[2].trim() : '0,00';
+
+// Розбираємо Колонку B на Головну категорію та Підкатегорію
+let rawCategory = row[1] ? row[1].trim() : 'Інше';
+let categoryPart = rawCategory;
+let subcategoryPart = null;
+
+if (rawCategory.includes('/')) {
+  let parts = rawCategory.split('/');
+  categoryPart = parts[0].trim();
+  subcategoryPart = parts[1].trim();
+}
+
 allProducts.push({
 name: row[0].trim(),
-category: row[1] ? row[1].trim() : 'Інше',
+category: categoryPart,
+subcategory: subcategoryPart,
 price: safePrice,
 description: row[3] ? row[3].trim() : '',
 images: imagesArray,
-optionsField: row[5] ? row[5].trim() : '' // Нова Колонка F
+optionsField: row[5] ? row[5].trim() : ''
 });
 }
 }
@@ -327,22 +342,65 @@ console.error(error);
 }
 }
 
+// Функція малювання головних категорій
 function renderCategories() {
 const cats = [];
 allProducts.forEach(p => {
 if (p.category && !cats.includes(p.category)) cats.push(p.category);
 });
+
 let html = '';
 cats.forEach(cat => {
 const activeStyle = (cat === selectedCategory) ? 'border-zinc-800 bg-zinc-800 font-bold text-white scale-[1.02]' : 'bg-white text-zinc-700';
 html += `<div onclick="filterByCategory('${cat}')" class="${activeStyle} p-3 rounded-2xl shadow-sm text-center text-xs font-semibold cursor-pointer border hover:border-zinc-400 transition-all">${cat}</div>`;
 });
 document.getElementById('categories').innerHTML = html;
+
+renderSubcategories();
+}
+
+// Функція малювання підкатегорій (показується тільки тоді, коли обрано головну категорію)
+function renderSubcategories() {
+const subContainer = document.getElementById('subcategories');
+if (!selectedCategory) {
+subContainer.classList.add('hidden');
+return;
+}
+
+// Збираємо підкатегорії для обраної головної категорії
+const subcats = [];
+allProducts.forEach(p => {
+if (p.category === selectedCategory && p.subcategory && !subcats.includes(p.subcategory)) {
+subcats.push(p.subcategory);
+}
+});
+
+if (subcats.length === 0) {
+subContainer.classList.add('hidden');
+return;
+}
+
+subContainer.classList.remove('hidden');
+let html = '';
+subcats.forEach(sub => {
+const activeStyle = (sub === selectedSubcategory) ? 'border-amber-500 bg-amber-500 font-bold text-white' : 'bg-white text-zinc-600';
+html += `<div onclick="filterBySubcategory('${sub}')" class="${activeStyle} p-2 rounded-xl text-center text-xs font-medium cursor-pointer border shadow-sm transition-all">${sub}</div>`;
+});
+subContainer.innerHTML = html;
 }
 
 function applyFilterAndSort() {
 let filtered = [...allProducts];
-if (selectedCategory) filtered = filtered.filter(p => p.category === selectedCategory);
+
+// Фільтр по категорії
+if (selectedCategory) {
+filtered = filtered.filter(p => p.category === selectedCategory);
+}
+// Фільтр по підкатегорії
+if (selectedSubcategory) {
+filtered = filtered.filter(p => p.subcategory === selectedSubcategory);
+}
+
 if (currentSearchTerm) {
 filtered = filtered.filter(p => p.name.toLowerCase().includes(currentSearchTerm) || (p.description && p.description.toLowerCase().includes(currentSearchTerm)));
 }
@@ -383,7 +441,14 @@ function toggleSortMenu() { document.getElementById('sort-menu').classList.toggl
 function setSortOrder(order) { currentSortOrder = order; document.getElementById('sort-menu').classList.add('hidden'); applyFilterAndSort(); }
 
 function filterByCategory(cat) { 
-selectedCategory = (selectedCategory === cat) ? null : cat; 
+if (selectedCategory === cat) {
+selectedCategory = null;
+selectedSubcategory = null;
+} else {
+selectedCategory = cat;
+selectedSubcategory = null; // Скидаємо підкатегорію при зміні категорії
+}
+renderCategories();
 applyFilterAndSort(); 
 
 if (selectedCategory) {
@@ -399,15 +464,23 @@ window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
 }
 }
 
+// Нова функція фільтрації підкатегорії
+function filterBySubcategory(sub) {
+selectedSubcategory = (selectedSubcategory === sub) ? null : sub;
+renderSubcategories();
+applyFilterAndSort();
+}
+
 function filterProducts() { currentSearchTerm = document.getElementById('search').value.toLowerCase(); applyFilterAndSort(); }
-function resetFilters() { selectedCategory = null; document.getElementById('search').value = ''; currentSearchTerm = ""; applyFilterAndSort(); }
-function goHome() { selectedCategory = null; currentSearchTerm = ""; currentSortOrder = "default"; document.getElementById('search').value = ''; applyFilterAndSort(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function resetFilters() { selectedCategory = null; selectedSubcategory = null; document.getElementById('search').value = ''; currentSearchTerm = ""; renderCategories(); applyFilterAndSort(); }
+function goHome() { selectedCategory = null; selectedSubcategory = null; currentSearchTerm = ""; currentSortOrder = "default"; document.getElementById('search').value = ''; renderCategories(); applyFilterAndSort(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 function updateFilterIndicator() {
 const indicator = document.getElementById('filter-indicator');
 const textEl = document.getElementById('filter-indicator-text');
 let parts = [];
 if (selectedCategory) parts.push(`Категорія: <b>${selectedCategory}</b>`);
+if (selectedSubcategory) parts.push(`Підкатегорія: <b>${selectedSubcategory}</b>`);
 if (currentSearchTerm) parts.push(`Пошук: "${currentSearchTerm}"`);
 if (parts.length > 0) { indicator.classList.remove('hidden'); indicator.classList.add('flex'); textEl.innerHTML = parts.join(' | '); }
 else { indicator.classList.add('hidden'); indicator.classList.remove('flex'); }
@@ -433,7 +506,10 @@ currentPhotos = p.images.length > 0 ? p.images : ['https://images.unsplash.com/p
 currentPhotoIndex = 0;
 updateModalPhoto();
 
-document.getElementById('modal-product-category').textContent = p.category;
+let displayCategoryName = p.category;
+if (p.subcategory) displayCategoryName += ` / ${p.subcategory}`;
+document.getElementById('modal-product-category').textContent = displayCategoryName;
+
 document.getElementById('modal-product-name').textContent = p.name;
 document.getElementById('modal-product-description').textContent = p.description || 'Опис відсутній';
 
@@ -446,7 +522,6 @@ const colorBlock = document.getElementById('color-selector-block');
 const parsedData = parseOptionsField(p.optionsField);
 sizeSelect.onchange = updateModalPrice;
 
-// Обробка розмірів / кількості
 if (parsedData.sizes.length > 0) {
 sizeBlock.classList.remove('hidden');
 sizeLabel.textContent = parsedData.sizeLabel; 
@@ -461,7 +536,6 @@ sizeBlock.classList.add('hidden');
 sizeSelect.innerHTML = '';
 }
 
-// Обробка кольорів
 if (parsedData.colors.length > 0) {
 colorBlock.classList.remove('hidden');
 let colorOptions = parsedData.colors.map((c, idx) => {
@@ -786,4 +860,3 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
-
