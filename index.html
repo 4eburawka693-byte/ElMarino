@@ -82,9 +82,11 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
+<div id="subcat-anchor" class="scroll-mt-20"></div>
+
 <div class="px-4 mb-3 flex flex-col gap-3">
   <div id="categories" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
-  <div id="subcategories" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2 bg-zinc-50 p-3 rounded-2xl border"></div>
+  <div id="subcategories" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2 bg-zinc-50 p-3 rounded-2xl border-2 border-zinc-800/20 shadow-inner"></div>
 </div>
 
 <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
@@ -199,7 +201,7 @@ let currentPhotoIndex = 0;
 let currentProductIndex = null;
 
 let selectedCategory = null;
-let selectedSubcategory = null; // Нова змінна для підкатегорії
+let selectedSubcategory = null; 
 let currentSearchTerm = "";
 let currentSortOrder = "default"; 
 
@@ -311,7 +313,6 @@ imagesArray = row[4].split(',').map(url => url.trim()).filter(Boolean);
 }
 let safePrice = row[2] ? row[2].trim() : '0,00';
 
-// Розбираємо Колонку B на Головну категорію та Підкатегорію
 let rawCategory = row[1] ? row[1].trim() : 'Інше';
 let categoryPart = rawCategory;
 let subcategoryPart = null;
@@ -342,7 +343,6 @@ console.error(error);
 }
 }
 
-// Функція малювання головних категорій
 function renderCategories() {
 const cats = [];
 allProducts.forEach(p => {
@@ -359,7 +359,7 @@ document.getElementById('categories').innerHTML = html;
 renderSubcategories();
 }
 
-// Функція малювання підкатегорій (показується тільки тоді, коли обрано головну категорію)
+// Изменено: Нажатая кнопка подкатегории теперь красится в фирменный желтый цвет магазина (bg-amber-400)
 function renderSubcategories() {
 const subContainer = document.getElementById('subcategories');
 if (!selectedCategory) {
@@ -367,7 +367,6 @@ subContainer.classList.add('hidden');
 return;
 }
 
-// Збираємо підкатегорії для обраної головної категорії
 const subcats = [];
 allProducts.forEach(p => {
 if (p.category === selectedCategory && p.subcategory && !subcats.includes(p.subcategory)) {
@@ -383,8 +382,8 @@ return;
 subContainer.classList.remove('hidden');
 let html = '';
 subcats.forEach(sub => {
-const activeStyle = (sub === selectedSubcategory) ? 'border-amber-500 bg-amber-500 font-bold text-white' : 'bg-white text-zinc-600';
-html += `<div onclick="filterBySubcategory('${sub}')" class="${activeStyle} p-2 rounded-xl text-center text-xs font-medium cursor-pointer border shadow-sm transition-all">${sub}</div>`;
+const activeStyle = (sub === selectedSubcategory) ? 'border-amber-400 bg-amber-400 font-bold text-zinc-900 shadow-md scale-[1.01]' : 'bg-white text-zinc-600 border-zinc-200';
+html += `<div onclick="filterBySubcategory('${sub}')" class="${activeStyle} p-2.5 rounded-xl text-center text-xs font-semibold cursor-pointer border shadow-sm transition-all active:scale-95">${sub}</div>`;
 });
 subContainer.innerHTML = html;
 }
@@ -392,11 +391,9 @@ subContainer.innerHTML = html;
 function applyFilterAndSort() {
 let filtered = [...allProducts];
 
-// Фільтр по категорії
 if (selectedCategory) {
 filtered = filtered.filter(p => p.category === selectedCategory);
 }
-// Фільтр по підкатегорії
 if (selectedSubcategory) {
 filtered = filtered.filter(p => p.subcategory === selectedSubcategory);
 }
@@ -446,29 +443,35 @@ selectedCategory = null;
 selectedSubcategory = null;
 } else {
 selectedCategory = cat;
-selectedSubcategory = null; // Скидаємо підкатегорію при зміні категорії
+selectedSubcategory = null; 
 }
 renderCategories();
 applyFilterAndSort(); 
 
 if (selectedCategory) {
 setTimeout(() => {
-const productsEl = document.getElementById('products');
-if (productsEl) {
-const headerOffset = 85; 
-const elementPosition = productsEl.getBoundingClientRect().top;
-const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+const anchorEl = document.getElementById('subcat-anchor');
+if (anchorEl) {
+anchorEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 }, 80); 
 }
 }
 
-// Нова функція фільтрації підкатегорії
+// Изменено: При выборе подкатегории происходит автоскролл к контейнеру подкатегорий
 function filterBySubcategory(sub) {
 selectedSubcategory = (selectedSubcategory === sub) ? null : sub;
 renderSubcategories();
 applyFilterAndSort();
+
+if (selectedSubcategory) {
+setTimeout(() => {
+const anchorEl = document.getElementById('subcat-anchor');
+if (anchorEl) {
+anchorEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+}, 50);
+}
 }
 
 function filterProducts() { currentSearchTerm = document.getElementById('search').value.toLowerCase(); applyFilterAndSort(); }
@@ -679,7 +682,7 @@ function updateLightboxImage() {
 const contentArea = document.getElementById('lightbox-content-area');
 const uniqueId = "pz_" + new Date().getTime();
 
-contentArea.innerHTML = `<div id="${uniqueId}" class="pinch-zoom-container" onclick="event.stopPropagation()"><img src="${currentPhotos[currentPhotoIndex]}" class="zoomable-img rounded shadow-2xl"></div>`;
+contentArea.innerHTML = `<div id="${uniqueId}" class="pinch-zoom-container" onclick="event.stopPropagation()"><img src="${currentPhotos[currentPhotos[currentPhotoIndex]]}" class="zoomable-img rounded shadow-2xl"></div>`;
 
 const prevLbox = document.getElementById('lightbox-prev-btn');
 const nextLbox = document.getElementById('lightbox-next-btn');
@@ -851,7 +854,7 @@ if (response.ok) {
 cart = [];
 updateCartCount();
 hideCheckoutModal();
-showToast("🎉 Замовлення успішно відправлено!");
+showToast("🎉 Замовлення успешно відправлено!");
 }
 });
 }
