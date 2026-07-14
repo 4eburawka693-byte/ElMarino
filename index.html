@@ -309,7 +309,10 @@ const row = rows[i];
 if (row && row[0] && row[0].trim() !== '') {
 let imagesArray = [];
 if (row[4]) {
-imagesArray = row[4].split(',').map(url => url.trim()).filter(Boolean);
+// НАДІЙНА ОЧИСТКА: Видаляємо пробіли та символи переносу рядків з посилань на фото
+imagesArray = row[4].split(',')
+  .map(url => url.trim().replace(/[\r\n]/g, ''))
+  .filter(Boolean);
 }
 let safePrice = row[2] ? row[2].trim() : '0,00';
 
@@ -359,7 +362,6 @@ document.getElementById('categories').innerHTML = html;
 renderSubcategories();
 }
 
-// Вибрана підкатегорія тепер підсвічується вашим фірмовим жовтим кольором (bg-amber-400)
 function renderSubcategories() {
 const subContainer = document.getElementById('subcategories');
 if (!selectedCategory) {
@@ -388,26 +390,22 @@ html += `<div onclick="filterBySubcategory('${sub}')" class="${activeStyle} p-2.
 subContainer.innerHTML = html;
 }
 
-// Повністю перероблена та залізобетонна логіка суворої фільтрації
+// Залізобетонна сувора фільтрація категорій та підкатегорій
 function applyFilterAndSort() {
 let filtered = [...allProducts];
 
-// 1. Спочатку фільтруємо за основною категорією (якщо обрано)
 if (selectedCategory) {
 filtered = filtered.filter(p => p.category === selectedCategory);
 }
 
-// 2. Строгий фільтр підкатегорій: показуємо тільки товари з цією підкатегорією
 if (selectedSubcategory) {
 filtered = filtered.filter(p => p.subcategory === selectedSubcategory);
 }
 
-// 3. Пошук
 if (currentSearchTerm) {
 filtered = filtered.filter(p => p.name.toLowerCase().includes(currentSearchTerm) || (p.description && p.description.toLowerCase().includes(currentSearchTerm)));
 }
 
-// 4. Сортування
 if (currentSortOrder === 'low-to-high') {
 filtered.sort((a, b) => parseFloat(a.price.replace(',', '.')) - parseFloat(b.price.replace(',', '.')));
 } else if (currentSortOrder === 'high-to-low') {
@@ -471,7 +469,6 @@ selectedSubcategory = (selectedSubcategory === sub) ? null : sub;
 renderSubcategories();
 applyFilterAndSort();
 
-// Плавно підтягуємо екран до якірної точки, щоб користувачу було зручно бачити список
 if (selectedSubcategory) {
 setTimeout(() => {
 const anchorEl = document.getElementById('subcat-anchor');
@@ -507,13 +504,20 @@ let defaultColor = parsedData.colors.length > 0 ? parsedData.colors[0] : null;
 addToCart(index, 1, defaultSize, defaultColor, basePrice);
 }
 
+// Виправлена функція відображення деталей та завантаження фото
 function showProductDetails(index) {
 currentProductIndex = index;
 const p = allProducts[index];
 currentModalQty = 1;
 document.getElementById('modal-qty').textContent = currentModalQty;
 
-currentPhotos = p.images.length > 0 ? p.images : ['https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=60'];
+// НАДІЙНА ФІЛЬТРАЦІЯ КАРТИНOК
+let validImages = [];
+if (p.images && p.images.length > 0) {
+  validImages = p.images.map(url => url.trim()).filter(url => url.startsWith('http'));
+}
+
+currentPhotos = validImages.length > 0 ? validImages : ['https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=60'];
 currentPhotoIndex = 0;
 updateModalPhoto();
 
@@ -600,6 +604,7 @@ document.getElementById('modal-product-price').textContent = totalPrice.toFixed(
 }
 
 function updateModalPhoto() {
+if (currentPhotos.length === 0) return;
 document.getElementById('modal-product-image').src = currentPhotos[currentPhotoIndex];
 const prevBtn = document.getElementById('prev-photo-btn');
 const nextBtn = document.getElementById('next-photo-btn');
@@ -639,6 +644,7 @@ updateLightboxImage();
 }
 
 function changePhoto(direction) {
+if (currentPhotos.length === 0) return;
 currentPhotoIndex += direction;
 if (currentPhotoIndex < 0) currentPhotoIndex = currentPhotos.length - 1;
 else if (currentPhotoIndex >= currentPhotos.length) currentPhotoIndex = 0;
@@ -681,6 +687,7 @@ handleSwipeGesture(
 }
 
 function openFullscreenPhoto() {
+if (currentPhotos.length === 0) return;
 document.getElementById('fullscreen-lightbox').classList.remove('hidden');
 history.pushState({modal: "lightbox"}, null, null);
 updateLightboxImage();
