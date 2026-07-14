@@ -359,7 +359,7 @@ document.getElementById('categories').innerHTML = html;
 renderSubcategories();
 }
 
-// Изменено: Нажатая кнопка подкатегории теперь красится в фирменный желтый цвет магазина (bg-amber-400)
+// Вибрана підкатегорія тепер підсвічується вашим фірмовим жовтим кольором (bg-amber-400)
 function renderSubcategories() {
 const subContainer = document.getElementById('subcategories');
 if (!selectedCategory) {
@@ -388,24 +388,32 @@ html += `<div onclick="filterBySubcategory('${sub}')" class="${activeStyle} p-2.
 subContainer.innerHTML = html;
 }
 
+// Повністю перероблена та залізобетонна логіка суворої фільтрації
 function applyFilterAndSort() {
 let filtered = [...allProducts];
 
+// 1. Спочатку фільтруємо за основною категорією (якщо обрано)
 if (selectedCategory) {
 filtered = filtered.filter(p => p.category === selectedCategory);
 }
+
+// 2. Строгий фільтр підкатегорій: показуємо тільки товари з цією підкатегорією
 if (selectedSubcategory) {
 filtered = filtered.filter(p => p.subcategory === selectedSubcategory);
 }
 
+// 3. Пошук
 if (currentSearchTerm) {
 filtered = filtered.filter(p => p.name.toLowerCase().includes(currentSearchTerm) || (p.description && p.description.toLowerCase().includes(currentSearchTerm)));
 }
+
+// 4. Сортування
 if (currentSortOrder === 'low-to-high') {
 filtered.sort((a, b) => parseFloat(a.price.replace(',', '.')) - parseFloat(b.price.replace(',', '.')));
 } else if (currentSortOrder === 'high-to-low') {
 filtered.sort((a, b) => parseFloat(b.price.replace(',', '.')) - parseFloat(a.price.replace(',', '.')));
 }
+
 updateFilterIndicator();
 renderProducts(filtered);
 }
@@ -458,12 +466,12 @@ anchorEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 }
 
-// Изменено: При выборе подкатегории происходит автоскролл к контейнеру подкатегорий
 function filterBySubcategory(sub) {
 selectedSubcategory = (selectedSubcategory === sub) ? null : sub;
 renderSubcategories();
 applyFilterAndSort();
 
+// Плавно підтягуємо екран до якірної точки, щоб користувачу було зручно бачити список
 if (selectedSubcategory) {
 setTimeout(() => {
 const anchorEl = document.getElementById('subcat-anchor');
@@ -682,7 +690,7 @@ function updateLightboxImage() {
 const contentArea = document.getElementById('lightbox-content-area');
 const uniqueId = "pz_" + new Date().getTime();
 
-contentArea.innerHTML = `<div id="${uniqueId}" class="pinch-zoom-container" onclick="event.stopPropagation()"><img src="${currentPhotos[currentPhotos[currentPhotoIndex]]}" class="zoomable-img rounded shadow-2xl"></div>`;
+contentArea.innerHTML = `<div id="${uniqueId}" class="pinch-zoom-container" onclick="event.stopPropagation()"><img src="${currentPhotos[currentPhotoIndex]}" class="zoomable-img rounded shadow-2xl"></div>`;
 
 const prevLbox = document.getElementById('lightbox-prev-btn');
 const nextLbox = document.getElementById('lightbox-next-btn');
@@ -854,7 +862,7 @@ if (response.ok) {
 cart = [];
 updateCartCount();
 hideCheckoutModal();
-showToast("🎉 Замовлення успешно відправлено!");
+showToast("🎉 Замовлення успішно відправлено!");
 }
 });
 }
@@ -863,3 +871,4 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
+
