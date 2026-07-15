@@ -32,25 +32,25 @@ object-fit: contain;
 }
 </style>
 </head>
-<body class="bg-gray-100 notranslate">
+<body class="bg-slate-50 notranslate">
 
 <div class="max-w-4xl mx-auto pb-20">
 <div class="w-full overflow-hidden shadow-sm">
 <img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Banner" class="w-full h-auto object-cover block" loading="eager">
 </div>
 
-<header class="bg-zinc-800 text-white p-4 sticky top-0 z-40 shadow-md">
+<header class="bg-cyan-900 text-white p-4 sticky top-0 z-40 shadow-md">
 <div class="flex justify-between items-center">
 <div class="flex items-center gap-2">
-<button onclick="goHome()" class="flex items-center justify-center w-10 h-10 bg-zinc-700 active:bg-zinc-600 rounded-2xl border border-zinc-600 shadow-inner transition-colors">
+<button onclick="goHome()" class="flex items-center justify-center w-10 h-10 bg-cyan-800 active:bg-cyan-750 rounded-2xl border border-cyan-700 shadow-inner transition-colors">
 🏠
 </button>
 <h1 class="text-xl font-bold tracking-wide flex items-center gap-1 ml-1">
-ElMarino <span class="text-amber-400 font-medium">Магазин</span>
+ElMarino <span class="text-cyan-300 font-medium">Магазин</span>
 </h1>
 </div>
-<button onclick="showCart()" class="flex items-center gap-2 bg-zinc-700 active:bg-zinc-600 border border-zinc-600 px-4 py-2 rounded-2xl font-medium transition-colors">
-🛒 <span id="cart-count" class="bg-amber-500 text-zinc-900 text-xs rounded-full px-2 py-0.5 font-bold">0</span>
+<button onclick="showCart()" class="flex items-center gap-2 bg-cyan-800 active:bg-cyan-750 border border-cyan-700 px-4 py-2 rounded-2xl font-medium transition-colors">
+🛒 <span id="cart-count" class="bg-amber-400 text-cyan-950 text-xs rounded-full px-2 py-0.5 font-bold">0</span>
 </button>
 </div>
 </header>
@@ -59,26 +59,26 @@ ElMarino <span class="text-amber-400 font-medium">Магазин</span>
 <div class="flex gap-2 items-center">
 <div class="relative flex-1">
 <input id="search" type="text" placeholder="🔍 Пошук товарів..."
-class="w-full p-3.5 pl-4 rounded-2xl border focus:border-zinc-500 outline-none shadow-sm text-sm"
+class="w-full p-3.5 pl-4 rounded-2xl border border-slate-200 focus:border-cyan-600 outline-none shadow-sm text-sm"
 onkeyup="filterProducts()">
 </div>
-<button onclick="resetFilters()" class="bg-zinc-200 text-zinc-700 h-12 px-4 rounded-2xl text-sm font-medium hover:bg-zinc-300 transition-colors">Всі</button>
+<button onclick="resetFilters()" class="bg-slate-200 text-slate-700 h-12 px-4 rounded-2xl text-sm font-medium hover:bg-slate-300 transition-colors">Всі</button>
 
 <div class="relative">
-<button onclick="toggleSortMenu()" class="w-12 h-12 bg-zinc-200 text-zinc-700 rounded-2xl text-base font-medium hover:bg-zinc-300 transition-colors flex items-center justify-center shadow-sm">
+<button onclick="toggleSortMenu()" class="w-12 h-12 bg-slate-200 text-slate-700 rounded-2xl text-base font-medium hover:bg-slate-300 transition-colors flex items-center justify-center shadow-sm">
 📊
 </button>
 <div id="sort-menu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border z-50 overflow-hidden">
-<button onclick="setSortOrder('default')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 border-b block">Без сортування</button>
-<button onclick="setSortOrder('low-to-high')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 border-b block">💰 Від дешевих до дорогих</button>
-<button onclick="setSortOrder('high-to-low')" class="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 block">💵 Від дорогих до дешевих</button>
+<button onclick="setSortOrder('default')" class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 border-b block">Без сортування</button>
+<button onclick="setSortOrder('low-to-high')" class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 border-b block">💰 Від дешевих до дорогих</button>
+<button onclick="setSortOrder('high-to-low')" class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 block">💵 Від дорогих до дешевих</button>
 </div>
 </div>
 </div>
 
-<div id="filter-indicator" class="text-xs text-zinc-600 px-3 py-2 hidden flex justify-between items-center bg-zinc-50 rounded-xl border">
+<div id="filter-indicator" class="text-xs text-cyan-900 px-3 py-2 hidden flex justify-between items-center bg-cyan-50 rounded-xl border border-cyan-100">
 <span id="filter-indicator-text"></span>
-<button onclick="goHome()" class="text-amber-600 font-bold ml-2">Скинути ✕</button>
+<button onclick="goHome()" class="text-cyan-700 font-bold ml-2">Скинути ✕</button>
 </div>
 </div>
 
@@ -87,45 +87,45 @@ onkeyup="filterProducts()">
 <div class="px-4 mb-3 flex flex-col gap-3">
   <div id="categories" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
   
-  <div id="subcategories" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2 bg-amber-50 p-3.5 rounded-2xl border-2 border-amber-200 shadow-sm"></div>
+  <div id="subcategories" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2 bg-cyan-50 p-3.5 rounded-2xl border-2 border-cyan-100 shadow-sm"></div>
 </div>
 
 <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
 </div>
 
-<div id="product-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-3" onclick="hideProductModal()">
+<div id="product-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onclick="hideProductModal()">
 <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
-<button onclick="hideProductModal()" class="absolute top-4 right-4 bg-black/60 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold z-50 shadow-lg border border-white/20">✕</button>
+<button onclick="hideProductModal()" class="absolute top-4 right-4 bg-cyan-950/60 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold z-50 shadow-lg border border-white/20">✕</button>
 
 <div class="overflow-y-auto p-0 flex-1 pb-24">
-<div id="modal-swipe-zone" class="w-full h-64 bg-zinc-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in">
+<div id="modal-swipe-zone" class="w-full h-64 bg-slate-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in">
 <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" onclick="openFullscreenPhoto()">
-<button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＜</button>
-<button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-black/60 select-none">＞</button>
-<span id="photo-counter" class="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full font-medium"></span>
+<button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-cyan-950/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-cyan-950/60 select-none">＜</button>
+<button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-cyan-950/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-cyan-950/60 select-none">＞</button>
+<span id="photo-counter" class="absolute bottom-3 right-3 bg-cyan-950/60 text-white text-xs px-2.5 py-1 rounded-full font-medium"></span>
 </div>
 
 <div class="p-4">
-<span id="modal-product-category" class="text-xs font-bold uppercase tracking-wider text-zinc-700 bg-amber-100/70 text-[#8a6d29] px-2.5 py-1 rounded-md"></span>
-<h2 id="modal-product-name" class="text-xl font-bold text-zinc-800 mt-3 leading-tight"></h2>
-<p id="modal-product-description" class="text-zinc-600 text-sm mt-2 whitespace-pre-line"></p>
+<span id="modal-product-category" class="text-xs font-bold uppercase tracking-wider text-cyan-800 bg-cyan-50 px-2.5 py-1 rounded-md border border-cyan-100"></span>
+<h2 id="modal-product-name" class="text-xl font-bold text-slate-800 mt-3 leading-tight"></h2>
+<p id="modal-product-description" class="text-slate-600 text-sm mt-2 whitespace-pre-line"></p>
 
-<div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-zinc-50 p-2 rounded-xl justify-between">
-<span id="modal-size-label" class="text-zinc-600 font-medium text-sm pl-2">Оберіть варіант:</span>
-<select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-zinc-700 outline-none focus:border-zinc-500 min-w-[140px]"></select>
+<div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
+<span id="modal-size-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть варіант:</span>
+<select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-cyan-500 min-w-[140px]"></select>
 </div>
 
-<div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-zinc-50 p-2 rounded-xl justify-between">
-<span class="text-zinc-600 font-medium text-sm pl-2">Оберіть колір:</span>
-<select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-zinc-700 outline-none focus:border-zinc-500 min-w-[140px]" onchange="syncPhotoByColor()"></select>
+<div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
+<span class="text-slate-600 font-medium text-sm pl-2">Оберіть колір:</span>
+<select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-cyan-500 min-w-[140px]" onchange="syncPhotoByColor()"></select>
 </div>
 
-<div class="mt-4 flex items-center gap-3 bg-zinc-50 p-2 rounded-xl justify-between">
-<span class="text-zinc-600 font-medium text-sm pl-2">Кількість:</span>
+<div class="mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
+<span class="text-slate-600 font-medium text-sm pl-2">Кількість:</span>
 <div class="flex items-center gap-1">
-<button onclick="changeModalQty(-1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-zinc-100 shadow-sm">-</button>
-<span id="modal-qty" class="w-12 text-center font-bold text-zinc-800 text-lg">1</span>
-<button onclick="changeModalQty(1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-zinc-100 shadow-sm">+</button>
+<button onclick="changeModalQty(-1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-slate-100 shadow-sm">-</button>
+<span id="modal-qty" class="w-12 text-center font-bold text-slate-800 text-lg">1</span>
+<button onclick="changeModalQty(1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-slate-100 shadow-sm">+</button>
 </div>
 </div>
 </div>
@@ -133,57 +133,57 @@ onkeyup="filterProducts()">
 
 <div class="absolute bottom-0 left-0 right-0 bg-white border-t p-4 flex items-center justify-between gap-4 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-20">
 <div>
-<span class="text-zinc-400 text-xs block">Ціна</span>
-<span id="modal-product-price" class="text-xl font-black text-zinc-800"></span>
+<span class="text-slate-400 text-xs block">Ціна</span>
+<span id="modal-product-price" class="text-xl font-black text-slate-800"></span>
 </div>
-<button id="modal-product-btn" class="flex-1 bg-zinc-800 active:bg-zinc-700 text-white py-3.5 rounded-2xl font-bold transition-all shadow-lg text-center">
+<button id="modal-product-btn" class="flex-1 bg-cyan-750 bg-cyan-700 hover:bg-cyan-800 text-white py-3.5 rounded-2xl font-bold transition-all shadow-lg text-center">
 Додати в кошик
 </button>
 </div>
 </div>
 </div>
 
-<div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col items-center justify-center p-4" onclick="closeFullscreenPhoto()">
-<button onclick="closeFullscreenPhoto()" class="fixed top-6 right-6 text-white text-3xl font-light hover:text-zinc-300 z-[70] bg-black/40 w-12 h-12 rounded-full flex items-center justify-center">✕</button>
+<div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-slate-950/95 z-[60] flex flex-col items-center justify-center p-4" onclick="closeFullscreenPhoto()">
+<button onclick="closeFullscreenPhoto()" class="fixed top-6 right-6 text-white text-3xl font-light hover:text-slate-300 z-[70] bg-black/40 w-12 h-12 rounded-full flex items-center justify-center">✕</button>
 <div id="lightbox-content-area" class="w-full flex items-center justify-center"></div>
 <button id="lightbox-prev-btn" onclick="changePhoto(-1); updateLightboxImage(); event.stopPropagation();" class="fixed left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＜</button>
 <button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage(); event.stopPropagation();" class="fixed right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＞</button>
 </div>
 
-<div id="cart-modal" class="hidden fixed inset-0 bg-black/70 flex items-end z-50" onclick="hideCart()">
+<div id="cart-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end z-50" onclick="hideCart()">
 <div class="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-auto p-5 flex flex-col" onclick="event.stopPropagation()">
 <div class="flex justify-between mb-4 items-center">
-<h2 class="text-2xl font-bold text-zinc-800">Кошик</h2>
-<button onclick="hideCart()" class="text-3xl text-zinc-400 p-1">✕</button>
+<h2 class="text-2xl font-bold text-slate-800">Кошик</h2>
+<button onclick="hideCart()" class="text-3xl text-slate-400 p-1">✕</button>
 </div>
 <div id="cart-items" class="space-y-4 overflow-y-auto flex-1"></div>
 <div class="mt-4 border-t pt-4">
-<div class="flex justify-between text-xl font-bold text-zinc-800">
+<div class="flex justify-between text-xl font-bold text-slate-800">
 <span>Разом:</span>
 <span id="cart-total">0 грн</span>
 </div>
-<button onclick="showCheckoutModal()" class="mt-4 w-full bg-green-600 active:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold transition-colors shadow-lg">
+<button onclick="showCheckoutModal()" class="mt-4 w-full bg-emerald-600 active:bg-emerald-700 text-white py-4 rounded-2xl text-lg font-bold transition-colors shadow-lg">
 Оформити замовлення
 </button>
 </div>
 </div>
 </div>
 
-<div id="checkout-modal" class="hidden fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-[55]" onclick="hideCheckoutModal()">
+<div id="checkout-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[55]" onclick="hideCheckoutModal()">
 <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative" onclick="event.stopPropagation()">
-<button onclick="hideCheckoutModal()" class="absolute top-4 right-4 text-zinc-400 text-2xl p-1">✕</button>
-<h3 class="text-xl font-bold text-zinc-800 mb-6 flex items-center gap-2">📝 Оформити замовлення</h3>
+<button onclick="hideCheckoutModal()" class="absolute top-4 right-4 text-slate-400 text-2xl p-1">✕</button>
+<h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">📝 Оформити замовлення</h3>
 
 <div class="space-y-4">
 <div>
-<label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 ml-1">Ваше Ім'я:</label>
-<input id="customer-name" type="text" placeholder="Наприклад: Олександр" class="w-full p-4 rounded-xl border outline-none focus:border-green-600 shadow-sm text-zinc-800 font-medium text-sm">
+<label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Ваше Ім'я:</label>
+<input id="customer-name" type="text" placeholder="Наприклад: Олександр" class="w-full p-4 rounded-xl border outline-none focus:border-cyan-600 shadow-sm text-slate-800 font-medium text-sm">
 </div>
 <div>
-<label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 ml-1">Номер телефону:</label>
-<input id="customer-phone" type="text" placeholder="Наприклад: +380960000000" class="w-full p-4 rounded-xl border outline-none focus:border-green-600 shadow-sm text-zinc-800 font-medium text-sm">
+<label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Номер телефону:</label>
+<input id="customer-phone" type="text" placeholder="Наприклад: +380960000000" class="w-full p-4 rounded-xl border outline-none focus:border-cyan-600 shadow-sm text-slate-800 font-medium text-sm">
 </div>
-<button onclick="submitOrder()" class="w-full bg-green-600 active:bg-green-700 text-white py-4 rounded-xl font-bold text-base transition-all shadow-md mt-4">
+<button onclick="submitOrder()" class="w-full bg-emerald-600 active:bg-emerald-700 text-white py-4 rounded-xl font-bold text-base transition-all shadow-md mt-4">
 🚀 Надіслати замовлення
 </button>
 </div>
@@ -271,7 +271,7 @@ menu.classList.add('hidden');
 function showToast(message, type = 'success') {
 const toast = document.createElement('div');
 toast.className = 'notranslate';
-const bg = type === 'success' ? '#10b981' : '#ef4444';
+const bg = type === 'success' ? '#0e7490' : '#ef4444'; // Тост у бірюзовому стилі
 toast.style.cssText = `position:fixed;top:20px;left:50%;transform:translateX(-50%);background:${bg};color:white;padding:14px 24px;border-radius:20px;box-shadow:0 10px 25px -5px rgba(0,0,0,0.2);z-index:100;font-weight:600;text-align:center;max-width:90%;font-size:14px;transition:all 0.3s ease;`;
 toast.textContent = message;
 document.body.appendChild(toast);
@@ -346,6 +346,7 @@ console.error(error);
 }
 }
 
+// КАТЕГОРІЇ: Активна стає благородною темно-бірюзовою, неактивні — білі з м'яким сірим бортиком
 function renderCategories() {
 const cats = [];
 allProducts.forEach(p => {
@@ -354,15 +355,15 @@ if (p.category && !cats.includes(p.category)) cats.push(p.category);
 
 let html = '';
 cats.forEach(cat => {
-const activeStyle = (cat === selectedCategory) ? 'border-zinc-800 bg-zinc-800 font-bold text-white scale-[1.02]' : 'bg-white text-zinc-700';
-html += `<div onclick="filterByCategory('${cat}')" class="${activeStyle} p-3 rounded-2xl shadow-sm text-center text-xs font-semibold cursor-pointer border hover:border-zinc-400 transition-all">${cat}</div>`;
+const activeStyle = (cat === selectedCategory) ? 'border-cyan-900 bg-cyan-900 font-bold text-white scale-[1.02]' : 'bg-white text-slate-700 border-slate-200';
+html += `<div onclick="filterByCategory('${cat}')" class="${activeStyle} p-3 rounded-2xl shadow-sm text-center text-xs font-semibold cursor-pointer border hover:border-cyan-400 transition-all">${cat}</div>`;
 });
 document.getElementById('categories').innerHTML = html;
 
 renderSubcategories();
 }
 
-// ОНОВЛЕНА СТИЛІЗАЦІЯ КНОПОК ПІДКАТЕГОРІЙ: активна стає темно-сірою (як шапка), неактивні — білі з сірим текстом
+// ПІДКАТЕГОРІЇ: Коли активована — стає красивого кольору морської хвилі (cyan-700), неактивна — біла з акуратним легким бірюзовим контуром
 function renderSubcategories() {
 const subContainer = document.getElementById('subcategories');
 if (!selectedCategory) {
@@ -385,7 +386,7 @@ return;
 subContainer.classList.remove('hidden');
 let html = '';
 subcats.forEach(sub => {
-const activeStyle = (sub === selectedSubcategory) ? 'border-zinc-800 bg-zinc-800 font-bold text-white shadow-md scale-[1.01]' : 'bg-white text-zinc-600 border-amber-200/60';
+const activeStyle = (sub === selectedSubcategory) ? 'border-cyan-700 bg-cyan-700 font-bold text-white shadow-md scale-[1.01]' : 'bg-white text-cyan-900 border-cyan-200/60';
 html += `<div onclick="filterBySubcategory('${sub}')" class="${activeStyle} p-2.5 rounded-xl text-center text-xs font-semibold cursor-pointer border shadow-sm transition-all active:scale-95">${sub}</div>`;
 });
 subContainer.innerHTML = html;
@@ -416,28 +417,29 @@ updateFilterIndicator();
 renderProducts(filtered);
 }
 
+// КАРТКИ ТОВАРІВ: Кнопка «В кошик» виконана в глибокому стриманому бірюзовому тоні (bg-cyan-850 / bg-cyan-800)
 function renderProducts(products) {
 let html = '';
 products.forEach((p) => {
 const realIndex = allProducts.findIndex(item => item.name === p.name);
 const mainImage = p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=60';
-html += `<div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border flex flex-col justify-between">
+html += `<div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col justify-between">
 <div>
-<div class="w-full h-40 bg-zinc-50 flex items-center justify-center overflow-hidden">
+<div class="w-full h-40 bg-slate-50 flex items-center justify-center overflow-hidden">
 <img src="${mainImage}" class="max-w-full max-h-full object-contain">
 </div>
 <div class="p-3">
-<h3 class="text-sm font-bold text-zinc-800 leading-tight line-clamp-2 min-h-[40px]">${p.name}</h3>
-<p class="text-zinc-500 text-xs mt-1 min-h-[32px] clamp-desc">${p.description}</p>
+<h3 class="text-sm font-bold text-slate-800 leading-tight line-clamp-2 min-h-[40px]">${p.name}</h3>
+<p class="text-slate-500 text-xs mt-1 min-h-[32px] clamp-desc">${p.description}</p>
 </div>
 </div>
 <div class="p-3 pt-0">
-<p class="text-zinc-800 font-black text-base">${p.price} грн</p>
-<button onclick="addToCartFromList(${realIndex}); event.stopPropagation();" class="mt-2 w-full bg-zinc-800 text-white py-2.5 rounded-xl text-sm font-bold transition-all active:bg-zinc-700">В кошик</button>
+<p class="text-slate-800 font-black text-base">${p.price} грн</p>
+<button onclick="addToCartFromList(${realIndex}); event.stopPropagation();" class="mt-2 w-full bg-cyan-800 text-white py-2.5 rounded-xl text-sm font-bold transition-all active:bg-cyan-900 shadow-sm">В кошик</button>
 </div>
 </div>`;
 });
-document.getElementById('products').innerHTML = html || '<p class="col-span-2 text-center py-10 text-zinc-500">Товарів не знайдено</p>';
+document.getElementById('products').innerHTML = html || '<p class="col-span-2 text-center py-10 text-slate-500">Товарів не знайдено</p>';
 }
 
 function toggleSortMenu() { document.getElementById('sort-menu').classList.toggle('hidden'); }
@@ -756,8 +758,8 @@ const price = parseFloat(String(item.cartPrice).replace(/\s/g, '').replace(',', 
 total += price * item.quantity;
 
 let metaText = '';
-if (item.size) metaText += `<span class="inline-block text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded mt-1 mr-1">Параметр: ${item.size}</span>`; 
-if (item.color) metaText += `<span class="inline-block text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded mt-1">Колір: ${item.color}</span>`;
+if (item.size) metaText += `<span class="inline-block text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded mt-1 mr-1">Параметр: ${item.size}</span>`; 
+if (item.color) metaText += `<span class="inline-block text-xs bg-cyan-50 text-cyan-800 border border-cyan-100 px-2 py-0.5 rounded mt-1">Колір: ${item.color}</span>`;
 
 const imgUrl = item.product.images.length > 0 ? item.product.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=80';
 
@@ -765,16 +767,16 @@ html += `<div class="flex gap-4 border-b pb-4 items-center justify-between notra
 <div class="flex gap-3 items-center flex-1">
 <img src="${imgUrl}" class="w-14 h-14 object-cover rounded-xl">
 <div>
-<div class="text-sm font-medium text-zinc-800 leading-tight line-clamp-2">${item.product.name}</div>
+<div class="text-sm font-medium text-slate-800 leading-tight line-clamp-2">${item.product.name}</div>
 <div class="flex flex-wrap">${metaText}</div>
-<div class="text-zinc-800 font-bold mt-1 text-sm">${item.cartPrice} грн</div>
+<div class="text-slate-800 font-bold mt-1 text-sm">${item.cartPrice} грн</div>
 </div>
 </div>
 <div class="flex items-center gap-3">
-<div class="flex items-center bg-zinc-50 rounded-lg overflow-hidden border">
-<button onclick="updateCartItemQty(${i}, -1)" class="px-2 py-1 bg-zinc-100 font-bold text-sm">-</button>
+<div class="flex items-center bg-slate-50 rounded-lg overflow-hidden border">
+<button onclick="updateCartItemQty(${i}, -1)" class="px-2 py-1 bg-slate-100 font-bold text-sm">-</button>
 <span class="px-3 font-medium text-sm">${item.quantity}</span>
-<button onclick="updateCartItemQty(${i}, 1)" class="px-2 py-1 bg-zinc-100 font-bold text-sm">+</button>
+<button onclick="updateCartItemQty(${i}, 1)" class="px-2 py-1 bg-slate-100 font-bold text-sm">+</button>
 </div>
 <button onclick="removeFromCart(${i}); event.stopPropagation();" class="text-red-500 p-2 text-lg">🗑</button>
 </div>
