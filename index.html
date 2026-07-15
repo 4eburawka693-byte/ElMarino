@@ -87,7 +87,7 @@ onkeyup="filterProducts()">
 <div class="px-4 mb-3 flex flex-col gap-3">
   <div id="categories" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
   
-  <div id="subcategories" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-100 p-3.5 rounded-2xl border border-slate-200 shadow-sm"></div>
+  <div id="subcategories" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2 bg-[#f2e6dc] p-4 rounded-2xl border-2 border-[#dfc3b0] shadow-inner"></div>
 </div>
 
 <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
@@ -241,6 +241,8 @@ let currentSortOrder = "default";
 
 let touchStartX = 0;
 let touchEndX = 0;
+let ignoreSwipe = false; 
+let pzInstance = null;   
 
 let deferredInstallPrompt = null;
 
@@ -434,6 +436,7 @@ document.getElementById('categories').innerHTML = html;
 renderSubcategories();
 }
 
+// ОБНОВЛЕННЫЕ СТИЛИ ВНУТРИ ФУНКЦИИ ГЕНЕРАЦИИ ПОДКАТЕГОРИЙ
 function renderSubcategories() {
 const subContainer = document.getElementById('subcategories');
 if (!selectedCategory) {
@@ -456,7 +459,9 @@ return;
 subContainer.classList.remove('hidden');
 let html = '';
 subcats.forEach(sub => {
-const activeStyle = (sub === selectedSubcategory) ? 'border-[#4a4a4d] bg-[#323235] font-bold text-amber-400 shadow-md scale-[1.01]' : 'bg-white text-slate-700 border-slate-200';
+// Активная подкатегория: насыщенная темно-кофейная с янтарным текстом
+// Неактивная подкатегория: молочно-белая с кофейным контуром и плавным наведением
+const activeStyle = (sub === selectedSubcategory) ? 'border-[#3b2d2c] bg-[#4a3e3d] font-bold text-amber-400 shadow-md scale-[1.01]' : 'bg-white text-[#5c4a44] border-[#dfc3b0] hover:border-[#cbb09d]';
 html += `<div onclick="filterBySubcategory('${sub}')" class="${activeStyle} p-2.5 rounded-xl text-center text-xs font-semibold cursor-pointer border shadow-sm transition-all active:scale-95">${sub}</div>`;
 });
 subContainer.innerHTML = html;
@@ -730,27 +735,70 @@ onSwipeRight();
 }
 }
 
+function isLightboxZoomed() {
+  if (!pzInstance) return false;
+  const zoomFactor = pzInstance.zoomFactor || pzInstance.scale || 1;
+  if (zoomFactor > 1.05) return true;
+  
+  const img = document.querySelector('.zoomable-img');
+  if (img) {
+    const transform = window.getComputedStyle(img).transform;
+    if (transform && transform !== 'none') {
+      const values = transform.split('(')[1].split(')')[0].split(',');
+      const scaleX = parseFloat(values[0]);
+      if (scaleX > 1.05) return true;
+    }
+  }
+  return false;
+}
+
 function initSwipeListeners() {
 const swipeZone = document.getElementById('modal-swipe-zone');
 if (swipeZone) {
-swipeZone.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
+swipeZone.addEventListener('touchstart', e => { 
+  if (e.touches.length > 1) {
+    ignoreSwipe = true;
+  } else {
+    ignoreSwipe = false;
+    touchStartX = e.changedTouches[0].screenX; 
+  }
+}, {passive: true});
+
+swipeZone.addEventListener('touchmove', e => {
+  if (e.touches.length > 1) ignoreSwipe = true;
+}, {passive: true});
+
 swipeZone.addEventListener('touchend', e => {
-touchEndX = e.changedTouches[0].screenX;
-handleSwipeGesture(() => changePhoto(1), () => changePhoto(-1));
+  if (ignoreSwipe) return;
+  touchEndX = e.changedTouches[0].screenX;
+  handleSwipeGesture(() => changePhoto(1), () => changePhoto(-1));
 }, {passive: true});
 }
 
 const lightboxZone = document.getElementById('fullscreen-lightbox');
 if (lightboxZone) {
-lightboxZone.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
+lightboxZone.addEventListener('touchstart', e => { 
+  if (e.touches.length > 1 || isLightboxZoomed()) {
+    ignoreSwipe = true;
+  } else {
+    ignoreSwipe = false;
+    touchStartX = e.changedTouches[0].screenX; 
+  }
+}, {passive: true});
+
+lightboxZone.addEventListener('touchmove', e => {
+  if (e.touches.length > 1 || isLightboxZoomed()) ignoreSwipe = true;
+}, {passive: true});
+
 lightboxZone.addEventListener('touchend', e => {
-touchEndX = e.changedTouches[0].screenX;
-if (currentPhotos.length > 1) {
-handleSwipeGesture(
-() => { changePhoto(1); updateLightboxImage(); },
-() => { changePhoto(-1); updateLightboxImage(); }
-);
-}
+  if (ignoreSwipe || isLightboxZoomed()) return;
+  touchEndX = e.changedTouches[0].screenX;
+  if (currentPhotos.length > 1) {
+    handleSwipeGesture(
+      () => { changePhoto(1); updateLightboxImage(); },
+      () => { changePhoto(-1); updateLightboxImage(); }
+    );
+  }
 }, {passive: true});
 }
 }
@@ -779,7 +827,7 @@ prevLbox.classList.add('hidden'); nextLbox.classList.add('hidden');
 setTimeout(() => {
 const el = document.getElementById(uniqueId);
 if (el && typeof PinchZoom !== 'undefined') {
-new PinchZoom.default(el, { draggableUnzoomed: false, minZoom: 1, maxZoom: 4 });
+pzInstance = new PinchZoom.default(el, { draggableUnzoomed: false, minZoom: 1, maxZoom: 4 });
 }
 }, 50);
 }
@@ -787,6 +835,7 @@ new PinchZoom.default(el, { draggableUnzoomed: false, minZoom: 1, maxZoom: 4 });
 function closeFullscreenPhoto() {
 document.getElementById('fullscreen-lightbox').classList.add('hidden');
 document.getElementById('lightbox-content-area').innerHTML = '';
+pzInstance = null; 
 updateModalPhoto();
 }
 
