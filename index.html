@@ -298,18 +298,33 @@ function parseOptionsField(optionsStr) {
   return result;
 }
 
+// Покращена і надійна функція для пошуку ціни варіанту (розпізнає і дужки, і дефіси)
 function parseSizePrice(sizeStr, defaultPrice) {
-let priceMatch = sizeStr.match(/\(([^)]+)\)/);
-let sizeName = sizeStr.replace(/\s*\([^)]+\)\s*/g, '').trim();
-let price = String(defaultPrice).replace(/\s/g, '').replace(',', '.');
+  let sizeName = sizeStr;
+  let price = String(defaultPrice).replace(/\s/g, '').replace(',', '.');
 
-if (priceMatch && priceMatch[1]) {
-let cleanPrice = priceMatch[1].replace(/[^\d.,]/g, '').replace(',', '.').trim();
-if (cleanPrice && !isNaN(parseFloat(cleanPrice))) {
-price = parseFloat(cleanPrice).toFixed(2);
-}
-}
-return { sizeName, price: parseFloat(price).toFixed(2) };
+  // Спочатку шукаємо наявність дефісу (наприклад: "500 г - 195 грн")
+  if (sizeStr.includes('-')) {
+    let parts = sizeStr.split('-');
+    sizeName = parts[0].trim();
+    let rawPricePart = parts[1].replace(/[^\d.,]/g, '').replace(',', '.').trim();
+    if (rawPricePart && !isNaN(parseFloat(rawPricePart))) {
+      price = parseFloat(rawPricePart).toFixed(2);
+    }
+  } 
+  // Якщо дефісу немає, шукаємо класичні дужки (наприклад: "30 см (125 грн)")
+  else {
+    let priceMatch = sizeStr.match(/\(([^)]+)\)/);
+    if (priceMatch && priceMatch[1]) {
+      sizeName = sizeStr.replace(/\s*\([^)]+\)\s*/g, '').trim();
+      let rawPricePart = priceMatch[1].replace(/[^\d.,]/g, '').replace(',', '.').trim();
+      if (rawPricePart && !isNaN(parseFloat(rawPricePart))) {
+        price = parseFloat(rawPricePart).toFixed(2);
+      }
+    }
+  }
+
+  return { sizeName, price: parseFloat(price).toFixed(2) };
 }
 
 window.addEventListener('popstate', function () {
