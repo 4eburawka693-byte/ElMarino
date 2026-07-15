@@ -149,7 +149,7 @@ onkeyup="filterProducts()">
 </div>
 
 <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
-<span class="text-slate-600 font-medium text-sm pl-2">Оберіть колір:</span>
+<span id="modal-color-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть колір:</span>
 <select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]" onchange="syncPhotoByColor()"></select>
 </div>
 
@@ -278,32 +278,45 @@ window.addEventListener('beforeinstallprompt', (e) => {
   deferredInstallPrompt = e;
 });
 
+// РОЗДІЛЕННЯ ХАРАКТЕРИСТИК (ПІДТРИМУЄ КІЛЬКА РЯДКІВ: КОЛІР ТА РОЗМІР ОДНОЧАСНО)
 function parseOptionsField(optionsStr) {
-  let result = { sizeLabel: 'Оберіть розмір:', sizes: [], colors: [] };
+  let result = { 
+    sizeLabel: 'Оберіть розмір:', 
+    sizes: [], 
+    colorLabel: 'Оберіть колір:', 
+    colors: [] 
+  };
   if (!optionsStr || optionsStr.trim() === "") return result;
 
-  const match = optionsStr.match(/([^\n\r]+?)\s*:\s*([^\n\r]+)/);
-  if (match && match[1] && match[2]) {
-    let rawLabel = match[1].trim();
-    let rawValues = match[2].trim();
+  // Розділяємо по рядках (для підтримки переносів у одній комірці)
+  const lines = optionsStr.split(/\r?\n/);
 
-    if (/колір|кольори|цвет|цвета/i.test(rawLabel)) {
-      result.colors = rawValues.split(',').map(c => c.trim()).filter(Boolean);
-    } else {
-      let cleanLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
-      result.sizeLabel = `Оберіть ${cleanLabel.toLowerCase()}:`;
-      result.sizes = rawValues.split(',').map(s => s.trim()).filter(Boolean);
+  lines.forEach(line => {
+    const match = line.match(/([^\n\r]+?)\s*:\s*([^\n\r]+)/);
+    if (match && match[1] && match[2]) {
+      let rawLabel = match[1].trim();
+      let rawValues = match[2].trim();
+
+      if (/колір|кольори|цвет|цвета/i.test(rawLabel)) {
+        let cleanLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
+        result.colorLabel = `${cleanLabel}:`;
+        result.colors = rawValues.split(',').map(c => c.trim()).filter(Boolean);
+      } else {
+        let cleanLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
+        result.sizeLabel = `${cleanLabel}:`;
+        result.sizes = rawValues.split(',').map(s => s.trim()).filter(Boolean);
+      }
     }
-  }
+  });
+
   return result;
 }
 
-// Покращена і надійна функція для пошуку ціни варіанту (розпізнає і дужки, і дефіси)
+// Функція для пошуку ціни варіанту
 function parseSizePrice(sizeStr, defaultPrice) {
   let sizeName = sizeStr;
   let price = String(defaultPrice).replace(/\s/g, '').replace(',', '.');
 
-  // Спочатку шукаємо наявність дефісу (наприклад: "500 г - 195 грн")
   if (sizeStr.includes('-')) {
     let parts = sizeStr.split('-');
     sizeName = parts[0].trim();
@@ -312,7 +325,6 @@ function parseSizePrice(sizeStr, defaultPrice) {
       price = parseFloat(rawPricePart).toFixed(2);
     }
   } 
-  // Якщо дефісу немає, шукаємо класичні дужки (наприклад: "30 см (125 грн)")
   else {
     let priceMatch = sizeStr.match(/\(([^)]+)\)/);
     if (priceMatch && priceMatch[1]) {
@@ -619,9 +631,11 @@ const sizeBlock = document.getElementById('size-selector-block');
 const sizeLabel = document.getElementById('modal-size-label');
 const colorSelect = document.getElementById('modal-color-select');
 const colorBlock = document.getElementById('color-selector-block');
+const colorLabel = document.getElementById('modal-color-label');
 
 const parsedData = parseOptionsField(p.optionsField);
 
+// РЕНДЕР СЕЛЕКТОРА РОЗМІРІВ
 if (parsedData.sizes.length > 0) {
 sizeBlock.classList.remove('hidden');
 sizeLabel.textContent = parsedData.sizeLabel; 
@@ -636,8 +650,10 @@ sizeBlock.classList.add('hidden');
 sizeSelect.innerHTML = '';
 }
 
+// РЕНДЕР СЕЛЕКТОРА КОЛЬОРУ
 if (parsedData.colors.length > 0) {
 colorBlock.classList.remove('hidden');
+colorLabel.textContent = parsedData.colorLabel;
 let colorOptions = parsedData.colors.map((c, idx) => {
 let isSelected = idx === 0 ? 'selected' : '';
 return `<option value="${c}" data-index="${idx}" ${isSelected}>${c}</option>`;
@@ -890,7 +906,7 @@ const price = parseFloat(String(item.cartPrice).replace(/\s/g, '').replace(',', 
 total += price * item.quantity;
 
 let metaText = '';
-if (item.size) metaText += `<span class="inline-block text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded mt-1 mr-1">Параметр: ${item.size}</span>`; 
+if (item.size) metaText += `<span class="inline-block text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded mt-1 mr-1">Розмір: ${item.size}</span>`; 
 if (item.color) metaText += `<span class="inline-block text-xs bg-amber-50 text-amber-800 border border-amber-100 px-2 py-0.5 rounded mt-1">Колір: ${item.color}</span>`;
 
 const imgUrl = item.product.images.length > 0 ? item.product.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=80';
@@ -1010,4 +1026,3 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
-
