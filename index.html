@@ -86,7 +86,8 @@ onkeyup="filterProducts()">
 
 <div class="px-4 mb-3 flex flex-col gap-3">
   <div id="categories" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
-  <div id="subcategories" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2 bg-zinc-50 p-3 rounded-2xl border-2 border-zinc-800/20 shadow-inner"></div>
+  
+  <div id="subcategories" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2 bg-amber-50 p-3.5 rounded-2xl border-2 border-amber-200 shadow-sm"></div>
 </div>
 
 <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
@@ -309,7 +310,6 @@ const row = rows[i];
 if (row && row[0] && row[0].trim() !== '') {
 let imagesArray = [];
 if (row[4]) {
-// НАДІЙНА ОЧИСТКА: Видаляємо пробіли та символи переносу рядків з посилань на фото
 imagesArray = row[4].split(',')
   .map(url => url.trim().replace(/[\r\n]/g, ''))
   .filter(Boolean);
@@ -362,6 +362,7 @@ document.getElementById('categories').innerHTML = html;
 renderSubcategories();
 }
 
+// ОНОВЛЕНА СТИЛІЗАЦІЯ КНОПОК ПІДКАТЕГОРІЙ: активна стає темно-сірою (як шапка), неактивні — білі з сірим текстом
 function renderSubcategories() {
 const subContainer = document.getElementById('subcategories');
 if (!selectedCategory) {
@@ -384,13 +385,12 @@ return;
 subContainer.classList.remove('hidden');
 let html = '';
 subcats.forEach(sub => {
-const activeStyle = (sub === selectedSubcategory) ? 'border-amber-400 bg-amber-400 font-bold text-zinc-900 shadow-md scale-[1.01]' : 'bg-white text-zinc-600 border-zinc-200';
+const activeStyle = (sub === selectedSubcategory) ? 'border-zinc-800 bg-zinc-800 font-bold text-white shadow-md scale-[1.01]' : 'bg-white text-zinc-600 border-amber-200/60';
 html += `<div onclick="filterBySubcategory('${sub}')" class="${activeStyle} p-2.5 rounded-xl text-center text-xs font-semibold cursor-pointer border shadow-sm transition-all active:scale-95">${sub}</div>`;
 });
 subContainer.innerHTML = html;
 }
 
-// Залізобетонна сувора фільтрація категорій та підкатегорій
 function applyFilterAndSort() {
 let filtered = [...allProducts];
 
@@ -504,14 +504,12 @@ let defaultColor = parsedData.colors.length > 0 ? parsedData.colors[0] : null;
 addToCart(index, 1, defaultSize, defaultColor, basePrice);
 }
 
-// Виправлена функція відображення деталей та завантаження фото
 function showProductDetails(index) {
 currentProductIndex = index;
 const p = allProducts[index];
 currentModalQty = 1;
 document.getElementById('modal-qty').textContent = currentModalQty;
 
-// НАДІЙНА ФІЛЬТРАЦІЯ КАРТИНOК
 let validImages = [];
 if (p.images && p.images.length > 0) {
   validImages = p.images.map(url => url.trim()).filter(url => url.startsWith('http'));
