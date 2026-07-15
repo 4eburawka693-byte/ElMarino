@@ -109,13 +109,13 @@ onkeyup="filterProducts()">
   
   <div class="bg-amber-50/60 border border-amber-100 p-3.5 rounded-2xl">
     <span class="font-bold text-amber-900 block mb-1">🍎 Для iPhone (Safari):</span>
-    1. Натисніть кнопку <b class="text-lg text-amber-600">⎋</b> (квадрат зі стрілкою вгору) внизу екрана.<br>
+    1. Натисніть кнопку <b class="text-lg text-amber-600">⎋</b> внизу екрана.<br>
     2. Прокрутіть та оберіть <b>«Додати на початковий екран»</b> <b class="text-base text-amber-600">➕</b>.
   </div>
 
   <div class="bg-slate-50 border border-slate-100 p-3.5 rounded-2xl">
     <span class="font-bold text-slate-800 block mb-1">🤖 Для Android (Chrome):</span>
-    1. Натисніть <b class="text-lg text-slate-700">⋮</b> (три крапки) у правому верхньому кутку.<br>
+    1. Натисніть <b class="text-lg text-slate-700">⋮</b> у правому верхньому кутку.<br>
     2. Оберіть <b>«Додати на головний екран»</b> або <b>«Встановити додаток»</b>.
   </div>
 </div>
@@ -145,7 +145,7 @@ onkeyup="filterProducts()">
 
 <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
 <span id="modal-size-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть варіант:</span>
-<select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]"></select>
+<select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]" onchange="updateModalPrice()"></select>
 </div>
 
 <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
@@ -309,7 +309,7 @@ if (cleanPrice && !isNaN(parseFloat(cleanPrice))) {
 price = parseFloat(cleanPrice).toFixed(2);
 }
 }
-return { sizeName, price: parseFloat(price).toFixed(2).replace('.', ',') };
+return { sizeName, price: parseFloat(price).toFixed(2) };
 }
 
 window.addEventListener('popstate', function () {
@@ -436,7 +436,6 @@ document.getElementById('categories').innerHTML = html;
 renderSubcategories();
 }
 
-// ОБНОВЛЕННЫЕ СТИЛИ ВНУТРИ ФУНКЦИИ ГЕНЕРАЦИИ ПОДКАТЕГОРИЙ
 function renderSubcategories() {
 const subContainer = document.getElementById('subcategories');
 if (!selectedCategory) {
@@ -459,8 +458,6 @@ return;
 subContainer.classList.remove('hidden');
 let html = '';
 subcats.forEach(sub => {
-// Активная подкатегория: насыщенная темно-кофейная с янтарным текстом
-// Неактивная подкатегория: молочно-белая с кофейным контуром и плавным наведением
 const activeStyle = (sub === selectedSubcategory) ? 'border-[#3b2d2c] bg-[#4a3e3d] font-bold text-amber-400 shadow-md scale-[1.01]' : 'bg-white text-[#5c4a44] border-[#dfc3b0] hover:border-[#cbb09d]';
 html += `<div onclick="filterBySubcategory('${sub}')" class="${activeStyle} p-2.5 rounded-xl text-center text-xs font-semibold cursor-pointer border shadow-sm transition-all active:scale-95">${sub}</div>`;
 });
@@ -609,7 +606,6 @@ const colorSelect = document.getElementById('modal-color-select');
 const colorBlock = document.getElementById('color-selector-block');
 
 const parsedData = parseOptionsField(p.optionsField);
-sizeSelect.onchange = updateModalPrice;
 
 if (parsedData.sizes.length > 0) {
 sizeBlock.classList.remove('hidden');
@@ -653,7 +649,10 @@ showToast("❌ Будь ласка, оберіть колір товару!", "e
 return;
 }
 
-let activePrice = (chosenSize && sizeSelect.selectedOptions.length > 0) ? sizeSelect.selectedOptions[0].getAttribute('data-price') : p.price;
+let activePrice = p.price;
+if (!sizeBlock.classList.contains('hidden') && sizeSelect.selectedOptions.length > 0) {
+activePrice = sizeSelect.selectedOptions[0].getAttribute('data-price');
+}
 addToCart(index, currentModalQty, chosenSize, chosenColor, activePrice);
 hideProductModal();
 };
