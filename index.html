@@ -41,18 +41,26 @@ object-fit: contain;
 
 <!-- ШАПКА -->
 <header class="bg-[#242426] text-white p-4 sticky top-0 z-40 shadow-md">
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-2">
-<button onclick="goHome()" class="flex items-center justify-center w-10 h-10 bg-[#2d2d30] active:bg-[#3d3d42] rounded-2xl border border-[#3a3a3d] shadow-inner transition-colors">
+<div class="flex justify-between items-center gap-2">
+<!-- Ліва частина: Головна та Логотип -->
+<div class="flex items-center gap-2 min-w-0">
+<button onclick="goHome()" class="flex items-center justify-center w-10 h-10 bg-[#2d2d30] active:bg-[#3d3d42] rounded-2xl border border-[#3a3a3d] shadow-inner transition-colors shrink-0">
 🏠
 </button>
-<h1 class="text-xl font-bold tracking-wide flex items-center gap-1 ml-1">
+<h1 class="text-lg sm:text-xl font-bold tracking-wide flex items-center gap-1 ml-1 truncate">
 ElMarino <span class="text-amber-400 font-medium">Магазин</span>
 </h1>
 </div>
+
+<!-- Права частина: Кнопка Telegram + Кошик -->
+<div class="flex items-center gap-2 shrink-0">
+<a href="https://t.me/ElMarino_we" target="_blank" class="flex items-center gap-1.5 bg-[#2d2d30] active:bg-[#3d3d42] border border-[#3a3a3d] px-3 py-2 rounded-2xl text-[11px] sm:text-xs font-bold text-amber-400 transition-colors shadow-inner">
+💬 <span class="hidden xs:inline">Задати питання</span><span class="xs:hidden">Питання</span>
+</a>
 <button onclick="showCart()" class="flex items-center gap-2 bg-[#2d2d30] active:bg-[#3d3d42] border border-[#3a3a3d] px-4 py-2 rounded-2xl font-medium transition-colors">
 🛒 <span id="cart-count" class="bg-amber-400 text-[#242426] text-xs rounded-full px-2 py-0.5 font-bold">0</span>
 </button>
+</div>
 </div>
 </header>
 
@@ -237,6 +245,17 @@ onkeyup="filterProducts()">
 const SHEET_ID = '1SyxBE2iwqqt-JtEZ8N9vkdrtxUUcxtv_goVA878TMog';
 const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
+// Налаштування для адаптивності кнопок у шапці (додає брекпоінт 'xs' для екранів від 390px)
+tailwind.config = {
+  theme: {
+    extend: {
+      screens: {
+        'xs': '390px',
+      }
+    }
+  }
+}
+
 let allProducts = [];
 let cart = [];
 let currentModalQty = 1;
@@ -298,11 +317,9 @@ function parseOptionsField(optionsStr) {
   };
   if (!optionsStr || optionsStr.trim() === "") return result;
 
-  // Автоматично розбиваємо текст на частини, якщо все написано в один рядок
-  // Наприклад: "Колір: синій Розмір: 44" перетвориться на два різні рядки
   let normalized = optionsStr
-    .replace(/([^;\r\n]+)\s+(Розмір|Цвет|Колір|Размер)/gi, '$1\n$2') // Розділяємо, якщо злито без знаків
-    .replace(/;/g, '\n'); // Розділяємо, якщо написано через крапку з комою
+    .replace(/([^;\r\n]+)\s+(Розмір|Цвет|Колір|Размер)/gi, '$1\n$2') 
+    .replace(/;/g, '\n'); 
 
   const lines = normalized.split(/\r?\n/);
 
@@ -327,7 +344,6 @@ function parseOptionsField(optionsStr) {
   return result;
 }
 
-// Функція для пошуку ціни варіанту
 function parseSizePrice(sizeStr, defaultPrice) {
   let sizeName = sizeStr;
   let price = String(defaultPrice).replace(/\s/g, '').replace(',', '.');
@@ -536,7 +552,7 @@ let html = '';
 products.forEach((p) => {
 const realIndex = allProducts.findIndex(item => item.name === p.name);
 const mainImage = p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=60';
-html += `<div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col justify-between">
+html += `<div onclick="showProductDetails(realIndex)" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col justify-between">
 <div>
 <div class="w-full h-40 bg-slate-50 flex items-center justify-center overflow-hidden">
 <img src="${mainImage}" class="max-w-full max-h-full object-contain">
@@ -1041,4 +1057,3 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
-
