@@ -39,25 +39,22 @@ object-fit: contain;
 <img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Banner" class="w-full h-auto object-cover block" loading="eager">
 </div>
 
-<!-- ШАПКА -->
-<header class="bg-[#242426] text-white p-4 sticky top-0 z-40 shadow-md">
-<div class="flex justify-between items-center gap-2">
-<!-- Ліва частина: Головна та Логотип -->
-<div class="flex items-center gap-2 min-w-0">
+<header class="bg-[#242426] text-white p-3 sticky top-0 z-40 shadow-md">
+<div class="flex justify-between items-center gap-1.5">
+<div class="flex items-center gap-1.5 min-w-0">
 <button onclick="goHome()" class="flex items-center justify-center w-10 h-10 bg-[#2d2d30] active:bg-[#3d3d42] rounded-2xl border border-[#3a3a3d] shadow-inner transition-colors shrink-0">
 🏠
 </button>
-<h1 class="text-lg sm:text-xl font-bold tracking-wide flex items-center gap-1 ml-1 truncate">
-ElMarino <span class="text-amber-400 font-medium">Магазин</span>
-</h1>
+<button onclick="showReviewsModal()" class="flex items-center gap-1 bg-[#2d2d30] active:bg-[#3d3d42] border border-[#3a3a3d] px-2.5 py-2.5 rounded-2xl text-[11px] sm:text-xs font-bold text-amber-400 transition-colors shadow-inner truncate">
+⭐ <span class="hidden xs:inline">Відгуки про магазин</span><span class="xs:hidden">Відгуки</span>
+</button>
 </div>
 
-<!-- Права частина: Кнопка Telegram + Кошик -->
-<div class="flex items-center gap-2 shrink-0">
-<a href="https://t.me/ElMarino_we" target="_blank" class="flex items-center gap-1.5 bg-[#2d2d30] active:bg-[#3d3d42] border border-[#3a3a3d] px-3 py-2 rounded-2xl text-[11px] sm:text-xs font-bold text-amber-400 transition-colors shadow-inner">
+<div class="flex items-center gap-1.5 shrink-0">
+<a href="https://t.me/ElMarino_we" target="_blank" class="flex items-center gap-1 bg-[#2d2d30] active:bg-[#3d3d42] border border-[#3a3a3d] px-2.5 py-2.5 rounded-2xl text-[11px] sm:text-xs font-bold text-amber-400 transition-colors shadow-inner">
 💬 <span class="hidden xs:inline">Задати питання</span><span class="xs:hidden">Питання</span>
 </a>
-<button onclick="showCart()" class="flex items-center gap-2 bg-[#2d2d30] active:bg-[#3d3d42] border border-[#3a3a3d] px-4 py-2 rounded-2xl font-medium transition-colors">
+<button onclick="showCart()" class="flex items-center gap-1.5 bg-[#2d2d30] active:bg-[#3d3d42] border border-[#3a3a3d] px-3.5 py-2.5 rounded-2xl font-medium transition-colors">
 🛒 <span id="cart-count" class="bg-amber-400 text-[#242426] text-xs rounded-full px-2 py-0.5 font-bold">0</span>
 </button>
 </div>
@@ -96,19 +93,35 @@ onkeyup="filterProducts()">
 <div class="px-4 mb-3 flex flex-col gap-3">
   <div id="categories" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
   
-  <!-- БЛОК ПОДКАТЕГОРИЙ -->
   <div id="subcategories" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2 bg-[#f2e6dc] p-4 rounded-2xl border-2 border-[#dfc3b0] shadow-inner"></div>
 </div>
 
 <div id="products" class="px-4 grid grid-cols-2 gap-4"></div>
 </div>
 
-<!-- КНОПКА "ДОДАТИ НА ЕКРАН" -->
 <button onclick="showInstallModal()" class="fixed bottom-5 left-4 z-40 bg-[#242426] active:bg-[#1a1a1b] text-amber-400 w-12 h-12 rounded-full shadow-lg border border-[#3a3a3d] flex items-center justify-center text-xl transition-all hover:scale-105 active:scale-95">
 📲
 </button>
 
-<!-- МОДАЛЬНЕ ВІКНО: Як додати на головний екран -->
+<div id="reviews-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick="hideReviewsModal()">
+<div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl relative max-h-[80vh] flex flex-col" onclick="event.stopPropagation()">
+<button onclick="hideReviewsModal()" class="absolute top-4 right-4 text-slate-400 text-xl p-1 hover:text-slate-600">✕</button>
+<h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-3">
+  <span class="text-amber-500">⭐</span> Відгуки про магазин
+</h3>
+
+<div id="reviews-list" class="space-y-4 overflow-y-auto flex-1 pr-1 text-sm text-slate-600 my-2">
+  <div class="text-center py-6 text-slate-400">Завантаження відгуків...</div>
+</div>
+
+<div class="border-t pt-4 mt-2">
+  <a href="https://t.me/ElMarino_we" target="_blank" class="block w-full bg-[#242426] hover:bg-[#323235] text-amber-400 py-3 rounded-xl font-bold transition-all shadow-md border border-[#3a3a3d] text-center text-sm">
+    ✍️ Написати свій відгук у Telegram
+  </a>
+</div>
+</div>
+</div>
+
 <div id="install-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick="hideInstallModal()">
 <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative" onclick="event.stopPropagation()">
 <button onclick="hideInstallModal()" class="absolute top-4 right-4 text-slate-400 text-xl p-1">✕</button>
@@ -138,7 +151,6 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
-<!-- Модальне вікно товару -->
 <div id="product-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onclick="hideProductModal()">
 <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
 <button onclick="hideProductModal()" class="absolute top-4 right-4 bg-[#242426]/60 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold z-50 shadow-lg border border-white/20">✕</button>
@@ -156,13 +168,11 @@ onkeyup="filterProducts()">
 <h2 id="modal-product-name" class="text-xl font-bold text-slate-800 mt-3 leading-tight"></h2>
 <p id="modal-product-description" class="text-slate-600 text-sm mt-2 whitespace-pre-line"></p>
 
-<!-- Блок вибору варіантів/розмірів -->
 <div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
 <span id="modal-size-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть варіант:</span>
 <select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]" onchange="updateModalPrice()"></select>
 </div>
 
-<!-- Блок вибору кольору -->
 <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
 <span id="modal-color-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть колір:</span>
 <select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]" onchange="syncPhotoByColor()"></select>
@@ -191,7 +201,6 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
-<!-- Повноекранний перегляд зображень (Lightbox) -->
 <div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-slate-950/95 z-[60] flex flex-col items-center justify-center p-4" onclick="closeFullscreenPhoto()">
 <button onclick="closeFullscreenPhoto()" class="fixed top-6 right-6 text-white text-3xl font-light hover:text-slate-300 z-[70] bg-black/40 w-12 h-12 rounded-full flex items-center justify-center">✕</button>
 <div id="lightbox-content-area" class="w-full flex items-center justify-center"></div>
@@ -199,7 +208,6 @@ onkeyup="filterProducts()">
 <button id="lightbox-next-btn" onclick="changePhoto(1); updateLightboxImage(); event.stopPropagation();" class="fixed right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl select-none z-[65]">＞</button>
 </div>
 
-<!-- Кошик -->
 <div id="cart-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end z-50" onclick="hideCart()">
 <div class="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-auto p-5 flex flex-col" onclick="event.stopPropagation()">
 <div class="flex justify-between mb-4 items-center">
@@ -219,7 +227,6 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
-<!-- Оформлення замовлення -->
 <div id="checkout-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[55]" onclick="hideCheckoutModal()">
 <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative" onclick="event.stopPropagation()">
 <button onclick="hideCheckoutModal()" class="absolute top-4 right-4 text-slate-400 text-2xl p-1">✕</button>
@@ -243,9 +250,11 @@ onkeyup="filterProducts()">
 
 <script>
 const SHEET_ID = '1SyxBE2iwqqt-JtEZ8N9vkdrtxUUcxtv_goVA878TMog';
-const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+// Посилання для отримання товарів з першого аркуша
+const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
+// Посилання на аркуш з відгуками (використовуємо tq для фільтрації або просто tqx=out:csv&sheet=відгуки)
+const REVIEWS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=відгуки`;
 
-// Налаштування для адаптивності кнопок у шапці (додає брекпоінт 'xs' для екранів від 390px)
 tailwind.config = {
   theme: {
     extend: {
@@ -274,6 +283,7 @@ let ignoreSwipe = false;
 let pzInstance = null;   
 
 let deferredInstallPrompt = null;
+let loadedReviews = []; // Масив для збереження відгуків
 
 function showInstallModal() {
   document.getElementById('install-modal').classList.remove('hidden');
@@ -370,12 +380,32 @@ function parseSizePrice(sizeStr, defaultPrice) {
   return { sizeName, price: parseFloat(price).toFixed(2) };
 }
 
+// ДОПОМІЖНА ФУНКЦІЯ ДЛЯ ПАРСИНГУ CSV
+const parseCSV = (text) => {
+  let p = '', r = [];
+  let q = false;
+  let row = [''];
+  for (let i=0; i<text.length; i++) {
+    let c = text[i];
+    if (c === '"') { q = !q; continue; }
+    if (c === ',' && !q) { row.push(''); continue; }
+    if ((c === '\n' || c === '\r') && !q) {
+      if (c === '\n' && text[i-1] === '\r') continue;
+      r.push(row); row = ['']; continue;
+    }
+    row[row.length-1] += c;
+  }
+  if (row.length > 1 || row[0] !== '') r.push(row);
+  return r;
+};
+
 window.addEventListener('popstate', function () {
 const modalOpen = !document.getElementById('product-modal').classList.contains('hidden');
 const cartOpen = !document.getElementById('cart-modal').classList.contains('hidden');
 const lightboxOpen = !document.getElementById('fullscreen-lightbox').classList.contains('hidden');
 const checkoutOpen = !document.getElementById('checkout-modal').classList.contains('hidden');
 const installOpen = !document.getElementById('install-modal').classList.contains('hidden');
+const reviewsOpen = !document.getElementById('reviews-modal').classList.contains('hidden');
 
 if (lightboxOpen) {
 closeFullscreenPhoto();
@@ -388,6 +418,8 @@ hideProductModal(true);
 hideCart(true);
 } else if (installOpen) {
 hideInstallModal(true);
+} else if (reviewsOpen) {
+hideReviewsModal(true);
 }
 });
 
@@ -410,29 +442,76 @@ document.body.appendChild(toast);
 setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
 }
 
+// ЗАВАНТАЖЕННЯ ВІДГУКІВ З ТАБЛИЦІ
+async function loadReviewsFromSheet() {
+  try {
+    const response = await fetch(REVIEWS_URL);
+    if (!response.ok) throw new Error("Не вдалося завантажити відгуки");
+    const csvText = await response.text();
+    const rows = parseCSV(csvText);
+    
+    loadedReviews = [];
+    // Починаємо з 1 рядка (ігноруємо заголовки)
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (row && row[0] && row[0].trim() !== '') {
+        loadedReviews.push({
+          name: row[0].trim(),
+          text: row[1] ? row[1].trim() : '',
+          rating: row[2] ? parseInt(row[2].trim()) : 5, // опціонально: оцінка в зірочках (якщо є в колонці C)
+          date: row[3] ? row[3].trim() : '' // опціонально: дата (якщо є в колонці D)
+        });
+      }
+    }
+    renderReviews();
+  } catch (err) {
+    console.error("Помилка завантаження відгуків:", err);
+    document.getElementById('reviews-list').innerHTML = `<div class="text-center py-6 text-red-400">Не вдалося завантажити відгуки. Спробуйте пізніше.</div>`;
+  }
+}
+
+function renderReviews() {
+  const container = document.getElementById('reviews-list');
+  if (loadedReviews.length === 0) {
+    container.innerHTML = `<div class="text-center py-10 text-slate-400">Відгуків поки немає. Будьте першим, хто залишить відгук!</div>`;
+    return;
+  }
+
+  let html = '';
+  loadedReviews.forEach(rev => {
+    // Формуємо зірочки за оцінкою
+    let stars = '⭐'.repeat(rev.rating || 5);
+    
+    html += `
+      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm">
+        <div class="flex justify-between items-center mb-1.5">
+          <span class="font-bold text-slate-800 text-sm">${rev.name}</span>
+          <span class="text-xs text-amber-500 font-bold flex gap-0.5">${stars}</span>
+        </div>
+        <p class="text-slate-600 text-xs leading-relaxed whitespace-pre-line">${rev.text}</p>
+        ${rev.date ? `<div class="text-[10px] text-slate-400 mt-2 text-right">${rev.date}</div>` : ''}
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+function showReviewsModal() {
+  document.getElementById('reviews-modal').classList.remove('hidden');
+  history.pushState({modal: "reviews"}, null, null);
+  loadReviewsFromSheet(); // Свіже завантаження при кожному відкритті
+}
+
+function hideReviewsModal(fromPopState = false) {
+  document.getElementById('reviews-modal').classList.add('hidden');
+  if (!fromPopState && window.history.state?.modal === "reviews") history.back();
+}
+
 async function loadProductsFromSheet() {
 try {
 const response = await fetch(SPREADSHEET_URL);
 if (!response.ok) throw new Error(`Помилка: ${response.status}`);
 const csvText = await response.text();
-
-const parseCSV = (text) => {
-let p = '', r = [];
-let q = false;
-let row = [''];
-for (let i=0; i<text.length; i++) {
-let c = text[i];
-if (c === '"') { q = !q; continue; }
-if (c === ',' && !q) { row.push(''); continue; }
-if ((c === '\n' || c === '\r') && !q) {
-if (c === '\n' && text[i-1] === '\r') continue;
-r.push(row); row = ['']; continue;
-}
-row[row.length-1] += c;
-}
-if (row.length > 1 || row[0] !== '') r.push(row);
-return r;
-};
 
 let rows = parseCSV(csvText);
 allProducts = [];
