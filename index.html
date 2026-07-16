@@ -250,9 +250,7 @@ onkeyup="filterProducts()">
 
 <script>
 const SHEET_ID = '1SyxBE2iwqqt-JtEZ8N9vkdrtxUUcxtv_goVA878TMog';
-// Посилання для отримання товарів з першого аркуша
 const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
-// Посилання на аркуш з відгуками (використовуємо tq для фільтрації або просто tqx=out:csv&sheet=відгуки)
 const REVIEWS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=відгуки`;
 
 tailwind.config = {
@@ -283,7 +281,7 @@ let ignoreSwipe = false;
 let pzInstance = null;   
 
 let deferredInstallPrompt = null;
-let loadedReviews = []; // Масив для збереження відгуків
+let loadedReviews = [];
 
 function showInstallModal() {
   document.getElementById('install-modal').classList.remove('hidden');
@@ -317,7 +315,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
   deferredInstallPrompt = e;
 });
 
-// РОЗУМНЕ РОЗДІЛЕННЯ ПАРАМЕТРІВ (ПРАЦЮЄ НАВІТЬ В ОДИН РЯДОК)
 function parseOptionsField(optionsStr) {
   let result = { 
     sizeLabel: 'Оберіть розмір:', 
@@ -380,7 +377,6 @@ function parseSizePrice(sizeStr, defaultPrice) {
   return { sizeName, price: parseFloat(price).toFixed(2) };
 }
 
-// ДОПОМІЖНА ФУНКЦІЯ ДЛЯ ПАРСИНГУ CSV
 const parseCSV = (text) => {
   let p = '', r = [];
   let q = false;
@@ -442,7 +438,6 @@ document.body.appendChild(toast);
 setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
 }
 
-// ЗАВАНТАЖЕННЯ ВІДГУКІВ З ТАБЛИЦІ
 async function loadReviewsFromSheet() {
   try {
     const response = await fetch(REVIEWS_URL);
@@ -451,15 +446,14 @@ async function loadReviewsFromSheet() {
     const rows = parseCSV(csvText);
     
     loadedReviews = [];
-    // Починаємо з 1 рядка (ігноруємо заголовки)
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       if (row && row[0] && row[0].trim() !== '') {
         loadedReviews.push({
           name: row[0].trim(),
           text: row[1] ? row[1].trim() : '',
-          rating: row[2] ? parseInt(row[2].trim()) : 5, // опціонально: оцінка в зірочках (якщо є в колонці C)
-          date: row[3] ? row[3].trim() : '' // опціонально: дата (якщо є в колонці D)
+          rating: row[2] ? parseInt(row[2].trim()) : 5, 
+          date: row[3] ? row[3].trim() : '' 
         });
       }
     }
@@ -479,9 +473,7 @@ function renderReviews() {
 
   let html = '';
   loadedReviews.forEach(rev => {
-    // Формуємо зірочки за оцінкою
     let stars = '⭐'.repeat(rev.rating || 5);
-    
     html += `
       <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm">
         <div class="flex justify-between items-center mb-1.5">
@@ -499,7 +491,7 @@ function renderReviews() {
 function showReviewsModal() {
   document.getElementById('reviews-modal').classList.remove('hidden');
   history.pushState({modal: "reviews"}, null, null);
-  loadReviewsFromSheet(); // Свіже завантаження при кожному відкритті
+  loadReviewsFromSheet();
 }
 
 function hideReviewsModal(fromPopState = false) {
@@ -631,7 +623,7 @@ let html = '';
 products.forEach((p) => {
 const realIndex = allProducts.findIndex(item => item.name === p.name);
 const mainImage = p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=60';
-html += `<div onclick="showProductDetails(realIndex)" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col justify-between">
+html += `<div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col justify-between">
 <div>
 <div class="w-full h-40 bg-slate-50 flex items-center justify-center overflow-hidden">
 <img src="${mainImage}" class="max-w-full max-h-full object-contain">
@@ -745,7 +737,6 @@ const colorLabel = document.getElementById('modal-color-label');
 
 const parsedData = parseOptionsField(p.optionsField);
 
-// РЕНДЕР СЕЛЕКТОРА РОЗМІРІВ
 if (parsedData.sizes.length > 0) {
 sizeBlock.classList.remove('hidden');
 sizeLabel.textContent = parsedData.sizeLabel; 
@@ -760,7 +751,6 @@ sizeBlock.classList.add('hidden');
 sizeSelect.innerHTML = '';
 }
 
-// РЕНДЕР СЕЛЕКТОРА КОЛЬОРУ
 if (parsedData.colors.length > 0) {
 colorBlock.classList.remove('hidden');
 colorLabel.textContent = parsedData.colorLabel;
@@ -1136,3 +1126,4 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
+
