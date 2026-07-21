@@ -45,7 +45,6 @@ object-fit: contain;
 <button onclick="goHome()" class="flex items-center justify-center w-10 h-10 bg-[#2d2d30] active:bg-[#3d3d42] rounded-2xl border border-[#3a3a3d] shadow-inner transition-colors shrink-0">
 🏠
 </button>
-<!-- Спрощено: тепер тут просто "Відгуки" -->
 <button onclick="showReviewsModal()" class="flex items-center gap-1 bg-[#2d2d30] active:bg-[#3d3d42] border border-[#3a3a3d] px-3.5 py-2.5 rounded-2xl text-[11px] sm:text-xs font-bold text-amber-400 transition-colors shadow-inner truncate">
 ⭐ Відгуки
 </button>
@@ -53,7 +52,7 @@ object-fit: contain;
 
 <div class="flex items-center gap-1.5 shrink-0">
 <a href="https://t.me/ElMarino_we" target="_blank" class="flex items-center gap-1 bg-[#2d2d30] active:bg-[#3d3d42] border border-[#3a3a3d] px-2.5 py-2.5 rounded-2xl text-[11px] sm:text-xs font-bold text-amber-400 transition-colors shadow-inner">
-💬 <span class="hidden xs:inline">Задати питання</span><span class="xs:hidden">Питання</span>
+💬 <span class="hidden xs:inline">Задати питання</span><span class="xs:hidden">Ппитання</span>
 </a>
 <button onclick="showCart()" class="flex items-center gap-1.5 bg-[#2d2d30] active:bg-[#3d3d42] border border-[#3a3a3d] px-3.5 py-2.5 rounded-2xl font-medium transition-colors">
 🛒 <span id="cart-count" class="bg-amber-400 text-[#242426] text-xs rounded-full px-2 py-0.5 font-bold">0</span>
@@ -107,7 +106,6 @@ onkeyup="filterProducts()">
 <div id="reviews-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick="hideReviewsModal()">
 <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl relative max-h-[80vh] flex flex-col" onclick="event.stopPropagation()">
 <button onclick="hideReviewsModal()" class="absolute top-4 right-4 text-slate-400 text-xl p-1 hover:text-slate-600">✕</button>
-<!-- Змінено заголовок вікна на "Відгуки" -->
 <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-3">
   <span class="text-amber-500">⭐</span> Відгуки
 </h3>
@@ -178,6 +176,12 @@ onkeyup="filterProducts()">
 <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
 <span id="modal-color-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть колір:</span>
 <select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]" onchange="syncPhotoByColor()"></select>
+</div>
+
+<!-- Додано блок вибору Запаху / Аромату -->
+<div id="scent-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
+<span id="modal-scent-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть запах:</span>
+<select id="modal-scent-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]"></select>
 </div>
 
 <div class="mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
@@ -317,17 +321,20 @@ window.addEventListener('beforeinstallprompt', (e) => {
   deferredInstallPrompt = e;
 });
 
+// Парсер розширено підтримкою полів Запах / Аромат / Смак
 function parseOptionsField(optionsStr) {
   let result = { 
     sizeLabel: 'Оберіть розмір:', 
     sizes: [], 
     colorLabel: 'Оберіть колір:', 
-    colors: [] 
+    colors: [],
+    scentLabel: 'Оберіть запах:',
+    scents: []
   };
   if (!optionsStr || optionsStr.trim() === "") return result;
 
   let normalized = optionsStr
-    .replace(/([^;\r\n]+)\s+(Розмір|Цвет|Колір|Размер)/gi, '$1\n$2') 
+    .replace(/([^;\r\n]+)\s+(Розмір|Цвет|Колір|Размер|Запах|Аромат|Вкус|Смак)/gi, '$1\n$2') 
     .replace(/;/g, '\n'); 
 
   const lines = normalized.split(/\r?\n/);
@@ -342,6 +349,10 @@ function parseOptionsField(optionsStr) {
         let cleanLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
         result.colorLabel = `${cleanLabel}:`;
         result.colors = rawValues.split(',').map(c => c.trim()).filter(Boolean);
+      } else if (/запах|аромат|вкус|смак/i.test(rawLabel)) {
+        let cleanLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
+        result.scentLabel = `${cleanLabel}:`;
+        result.scents = rawValues.split(',').map(s => s.trim()).filter(Boolean);
       } else {
         let cleanLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
         result.sizeLabel = `${cleanLabel}:`;
@@ -704,8 +715,9 @@ const parsedData = parseOptionsField(p.optionsField);
 let defaultSize = parsedData.sizes.length > 0 ? parseSizePrice(parsedData.sizes[0], p.price).sizeName : null;
 let basePrice = parsedData.sizes.length > 0 ? parseSizePrice(parsedData.sizes[0], p.price).price : p.price;
 let defaultColor = parsedData.colors.length > 0 ? parsedData.colors[0] : null;
+let defaultScent = parsedData.scents.length > 0 ? parsedData.scents[0] : null;
 
-addToCart(index, 1, defaultSize, defaultColor, basePrice);
+addToCart(index, 1, defaultSize, defaultColor, defaultScent, basePrice);
 }
 
 function showProductDetails(index) {
@@ -733,12 +745,18 @@ document.getElementById('modal-product-description').textContent = p.description
 const sizeSelect = document.getElementById('modal-size-select');
 const sizeBlock = document.getElementById('size-selector-block');
 const sizeLabel = document.getElementById('modal-size-label');
+
 const colorSelect = document.getElementById('modal-color-select');
 const colorBlock = document.getElementById('color-selector-block');
 const colorLabel = document.getElementById('modal-color-label');
 
+const scentSelect = document.getElementById('modal-scent-select');
+const scentBlock = document.getElementById('scent-selector-block');
+const scentLabel = document.getElementById('modal-scent-label');
+
 const parsedData = parseOptionsField(p.optionsField);
 
+// 1. Розмір / Варіант
 if (parsedData.sizes.length > 0) {
 sizeBlock.classList.remove('hidden');
 sizeLabel.textContent = parsedData.sizeLabel; 
@@ -753,6 +771,7 @@ sizeBlock.classList.add('hidden');
 sizeSelect.innerHTML = '';
 }
 
+// 2. Колір
 if (parsedData.colors.length > 0) {
 colorBlock.classList.remove('hidden');
 colorLabel.textContent = parsedData.colorLabel;
@@ -766,12 +785,27 @@ colorBlock.classList.add('hidden');
 colorSelect.innerHTML = '';
 }
 
+// 3. Запах / Аромат
+if (parsedData.scents.length > 0) {
+scentBlock.classList.remove('hidden');
+scentLabel.textContent = parsedData.scentLabel;
+let scentOptions = parsedData.scents.map((sc, idx) => {
+let isSelected = idx === 0 ? 'selected' : '';
+return `<option value="${sc}" ${isSelected}>${sc}</option>`;
+}).join('');
+scentSelect.innerHTML = scentOptions;
+} else {
+scentBlock.classList.add('hidden');
+scentSelect.innerHTML = '';
+}
+
 updateModalPrice();
 setTimeout(() => { syncColorByPhoto(); }, 10);
 
 document.getElementById('modal-product-btn').onclick = function() {
 let chosenSize = (!sizeBlock.classList.contains('hidden')) ? sizeSelect.value : null;
 let chosenColor = (!colorBlock.classList.contains('hidden')) ? colorSelect.value : null;
+let chosenScent = (!scentBlock.classList.contains('hidden')) ? scentSelect.value : null;
 
 if (!sizeBlock.classList.contains('hidden') && !chosenSize) {
 showToast("❌ Будь ласка, оберіть потрібний варіант!", "error");
@@ -781,12 +815,16 @@ if (!colorBlock.classList.contains('hidden') && !chosenColor) {
 showToast("❌ Будь ласка, оберіть колір товару!", "error");
 return;
 }
+if (!scentBlock.classList.contains('hidden') && !chosenScent) {
+showToast("❌ Будь ласка, оберіть запах товару!", "error");
+return;
+}
 
 let activePrice = p.price;
 if (!sizeBlock.classList.contains('hidden') && sizeSelect.selectedOptions.length > 0) {
 activePrice = sizeSelect.selectedOptions[0].getAttribute('data-price');
 }
-addToCart(index, currentModalQty, chosenSize, chosenColor, activePrice);
+addToCart(index, currentModalQty, chosenSize, chosenColor, chosenScent, activePrice);
 hideProductModal();
 };
 
@@ -985,14 +1023,14 @@ closeFullscreenPhoto();
 if (!fromPopState && window.history.state?.modal === "product") history.back();
 }
 
-function addToCart(index, qty, size = null, color = null, customPrice = null) {
+function addToCart(index, qty, size = null, color = null, scent = null, customPrice = null) {
 const product = allProducts[index];
 const finalPrice = customPrice || product.price;
 
-const existingItem = cart.find(item => item.product.name === product.name && item.size === size && item.color === color && item.cartPrice === finalPrice);
+const existingItem = cart.find(item => item.product.name === product.name && item.size === size && item.color === color && item.scent === scent && item.cartPrice === finalPrice);
 if (existingItem) existingItem.quantity += qty;
 else {
-cart.push({ product: product, quantity: qty, size: size, color: color, cartPrice: finalPrice });
+cart.push({ product: product, quantity: qty, size: size, color: color, scent: scent, cartPrice: finalPrice });
 }
 updateCartCount();
 showToast(`✅ Додано в кошик!`);
@@ -1008,8 +1046,9 @@ const price = parseFloat(String(item.cartPrice).replace(/\s/g, '').replace(',', 
 total += price * item.quantity;
 
 let metaText = '';
-if (item.size) metaText += `<span class="inline-block text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded mt-1 mr-1">Розмір: ${item.size}</span>`; 
-if (item.color) metaText += `<span class="inline-block text-xs bg-amber-50 text-amber-800 border border-amber-100 px-2 py-0.5 rounded mt-1">Колір: ${item.color}</span>`;
+if (item.size) metaText += `<span class="inline-block text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded mt-1 mr-1">Варіант: ${item.size}</span>`; 
+if (item.color) metaText += `<span class="inline-block text-xs bg-amber-50 text-amber-800 border border-amber-100 px-2 py-0.5 rounded mt-1 mr-1">Колір: ${item.color}</span>`;
+if (item.scent) metaText += `<span class="inline-block text-xs bg-emerald-50 text-emerald-800 border border-emerald-100 px-2 py-0.5 rounded mt-1">Запах: ${item.scent}</span>`;
 
 const imgUrl = item.product.images.length > 0 ? item.product.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=80';
 
@@ -1101,6 +1140,7 @@ total += itemTotal;
 let variantInfo = '';
 if (item.size) variantInfo += ` (${item.size})`;
 if (item.color) variantInfo += ` (колір: ${item.color})`;
+if (item.scent) variantInfo += ` (запах: ${item.scent})`;
 
 text += `${index + 1}. 📦 *${item.product.name}*${variantInfo}\n`; 
 text += `↳ ${item.quantity} шт. х ${item.cartPrice} грн (= ${itemTotal.toFixed(2).replace('.', ',')} грн)\n\n`;
@@ -1128,3 +1168,4 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
+
