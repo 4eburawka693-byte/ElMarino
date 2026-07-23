@@ -92,7 +92,6 @@ onkeyup="filterProducts()">
 
 <div class="px-4 mb-3 flex flex-col gap-3">
   <div id="categories" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
-  
   <div id="subcategories" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2 bg-[#f2e6dc] p-4 rounded-2xl border-2 border-[#dfc3b0] shadow-inner"></div>
 </div>
 
@@ -178,7 +177,6 @@ onkeyup="filterProducts()">
 <select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]" onchange="syncPhotoByColor()"></select>
 </div>
 
-<!-- Додано блок вибору Запаху / Аромату -->
 <div id="scent-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
 <span id="modal-scent-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть запах:</span>
 <select id="modal-scent-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]"></select>
@@ -321,7 +319,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
   deferredInstallPrompt = e;
 });
 
-// Парсер розширено підтримкою полів Запах / Аромат / Смак
 function parseOptionsField(optionsStr) {
   let result = { 
     sizeLabel: 'Оберіть розмір:', 
@@ -549,7 +546,8 @@ subcategory: subcategoryPart,
 price: safePrice,
 description: row[3] ? row[3].trim() : '',
 images: imagesArray,
-optionsField: row[5] ? row[5].trim() : ''
+optionsField: row[5] ? row[5].trim() : '',
+searchTags: row[6] ? row[6].trim() : '' // Стовпчик G (7-й) для пошукових тегів/синонімів
 });
 }
 }
@@ -617,8 +615,13 @@ if (selectedSubcategory) {
 filtered = filtered.filter(p => p.subcategory === selectedSubcategory);
 }
 
+// Оновлений розширений пошук (шукає в Назві, Описі та в Схованих тегах)
 if (currentSearchTerm) {
-filtered = filtered.filter(p => p.name.toLowerCase().includes(currentSearchTerm) || (p.description && p.description.toLowerCase().includes(currentSearchTerm)));
+filtered = filtered.filter(p => 
+  p.name.toLowerCase().includes(currentSearchTerm) || 
+  (p.description && p.description.toLowerCase().includes(currentSearchTerm)) ||
+  (p.searchTags && p.searchTags.toLowerCase().includes(currentSearchTerm))
+);
 }
 
 if (currentSortOrder === 'low-to-high') {
@@ -756,7 +759,6 @@ const scentLabel = document.getElementById('modal-scent-label');
 
 const parsedData = parseOptionsField(p.optionsField);
 
-// 1. Розмір / Варіант
 if (parsedData.sizes.length > 0) {
 sizeBlock.classList.remove('hidden');
 sizeLabel.textContent = parsedData.sizeLabel; 
@@ -771,7 +773,6 @@ sizeBlock.classList.add('hidden');
 sizeSelect.innerHTML = '';
 }
 
-// 2. Колір
 if (parsedData.colors.length > 0) {
 colorBlock.classList.remove('hidden');
 colorLabel.textContent = parsedData.colorLabel;
@@ -785,7 +786,6 @@ colorBlock.classList.add('hidden');
 colorSelect.innerHTML = '';
 }
 
-// 3. Запах / Аромат
 if (parsedData.scents.length > 0) {
 scentBlock.classList.remove('hidden');
 scentLabel.textContent = parsedData.scentLabel;
