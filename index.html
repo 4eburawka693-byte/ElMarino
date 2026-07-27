@@ -5,6 +5,13 @@
 <meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ElMarino Магазин</title>
+
+<!-- Прискорюємо з'єднання з зовнішніми серверами -->
+<link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+<link rel="dns-prefetch" href="https://unpkg.com">
+<link rel="dns-prefetch" href="https://docs.google.com">
+<link rel="preconnect" href="https://docs.google.com" crossorigin>
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/pinch-zoom-js@2.3.4/dist/pinch-zoom.umd.min.js"></script>
 <style>
@@ -513,17 +520,16 @@ function hideReviewsModal(fromPopState = false) {
   if (!fromPopState && window.history.state?.modal === "reviews") history.back();
 }
 
-// Оптимізована функція завантаження з кэшуванням (localStorage)
+// Завантаження з кэшуванням на 3 хвилини
 async function loadProductsFromSheet() {
   const CACHE_KEY = 'elmarino_products_cache';
   const CACHE_TIME_KEY = 'elmarino_cache_time';
-  const CACHE_EXPIRE = 10 * 60 * 1000; // Кэш оновлюється кожні 10 хвилин
+  const CACHE_EXPIRE = 3 * 60 * 1000; // Кэш оновлюється кожні 3 хвилини
 
   const cachedData = localStorage.getItem(CACHE_KEY);
   const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
   const now = Date.now();
 
-  // Якщо кэш свіжий — відображаємо миттєво!
   if (cachedData && cachedTime && (now - cachedTime < CACHE_EXPIRE)) {
     allProducts = JSON.parse(cachedData);
     renderCategories();
@@ -569,12 +575,11 @@ async function loadProductsFromSheet() {
           description: row[3] ? row[3].trim() : '',
           images: imagesArray,
           optionsField: row[5] ? row[5].trim() : '',
-          searchTags: row[6] ? row[6].trim() : '' // Стовпчик G (7-й)
+          searchTags: row[6] ? row[6].trim() : ''
         });
       }
     }
 
-    // Сохраняем актуальные данные в память браузера
     localStorage.setItem(CACHE_KEY, JSON.stringify(allProducts));
     localStorage.setItem(CACHE_TIME_KEY, now.toString());
 
