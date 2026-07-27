@@ -161,58 +161,64 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
-<div id="product-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onclick="hideProductModal()">
-<div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
-<button onclick="hideProductModal()" class="absolute top-4 right-4 bg-[#242426]/60 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold z-50 shadow-lg border border-white/20">✕</button>
+<!-- ПОВНОЕКРАННА КАРТОЧКА ТОВАРУ -->
+<div id="product-modal" class="hidden fixed inset-0 bg-white z-50 flex flex-col" onclick="hideProductModal()">
+<div class="bg-white w-full h-full flex flex-col relative" onclick="event.stopPropagation()">
+  
+  <!-- Кнопка закриття (хрестик) -->
+  <button onclick="hideProductModal()" class="fixed top-4 right-4 bg-[#242426]/70 text-white w-10 h-10 rounded-full flex items-center justify-center text-base font-bold z-50 shadow-lg border border-white/20 active:scale-95">✕</button>
 
-<div class="overflow-y-auto p-0 flex-1 pb-24">
-<div id="modal-swipe-zone" class="w-full h-64 bg-slate-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in">
-<img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" onclick="openFullscreenPhoto()">
-<button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none">＜</button>
-<button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none">＞</button>
-<span id="photo-counter" class="absolute bottom-3 right-3 bg-[#242426]/60 text-white text-xs px-2.5 py-1 rounded-full font-medium"></span>
-</div>
+  <!-- Прокручувана область з фото та описом -->
+  <div class="overflow-y-auto flex-1 pb-28">
+    <div id="modal-swipe-zone" class="w-full h-80 sm:h-96 bg-slate-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in">
+      <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" onclick="openFullscreenPhoto()">
+      <button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none">＜</button>
+      <button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none">＞</button>
+      <span id="photo-counter" class="absolute bottom-3 right-3 bg-[#242426]/60 text-white text-xs px-2.5 py-1 rounded-full font-medium"></span>
+    </div>
 
-<div class="p-4">
-<span id="modal-product-category" class="text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-100"></span>
-<h2 id="modal-product-name" class="text-xl font-bold text-slate-800 mt-3 leading-tight"></h2>
-<p id="modal-product-description" class="text-slate-600 text-sm mt-2 whitespace-pre-line"></p>
+    <div class="p-5">
+      <span id="modal-product-category" class="text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-100"></span>
+      <h2 id="modal-product-name" class="text-2xl font-bold text-slate-800 mt-3 leading-tight"></h2>
+      <p id="modal-product-description" class="text-slate-600 text-sm mt-3 whitespace-pre-line leading-relaxed"></p>
 
-<div id="size-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
-<span id="modal-size-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть варіант:</span>
-<select id="modal-size-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]" onchange="updateModalPrice()"></select>
-</div>
+      <div id="size-selector-block" class="hidden mt-5 flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl justify-between border border-slate-100">
+        <span id="modal-size-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть варіант:</span>
+        <select id="modal-size-select" class="p-2.5 rounded-xl border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]" onchange="updateModalPrice()"></select>
+      </div>
 
-<div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
-<span id="modal-color-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть колір:</span>
-<select id="modal-color-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]" onchange="syncPhotoByColor()"></select>
-</div>
+      <div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl justify-between border border-slate-100">
+        <span id="modal-color-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть колір:</span>
+        <select id="modal-color-select" class="p-2.5 rounded-xl border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]" onchange="syncPhotoByColor()"></select>
+      </div>
 
-<div id="scent-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
-<span id="modal-scent-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть запах:</span>
-<select id="modal-scent-select" class="p-2 rounded-lg border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]"></select>
-</div>
+      <div id="scent-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl justify-between border border-slate-100">
+        <span id="modal-scent-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть запах:</span>
+        <select id="modal-scent-select" class="p-2.5 rounded-xl border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]"></select>
+      </div>
 
-<div class="mt-4 flex items-center gap-3 bg-slate-50 p-2 rounded-xl justify-between">
-<span class="text-slate-600 font-medium text-sm pl-2">Кількість:</span>
-<div class="flex items-center gap-1">
-<button onclick="changeModalQty(-1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-slate-100 shadow-sm">-</button>
-<span id="modal-qty" class="w-12 text-center font-bold text-slate-800 text-lg">1</span>
-<button onclick="changeModalQty(1)" class="w-10 h-10 bg-white rounded-lg border font-bold text-xl active:bg-slate-100 shadow-sm">+</button>
-</div>
-</div>
-</div>
-</div>
+      <div class="mt-4 flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl justify-between border border-slate-100">
+        <span class="text-slate-600 font-medium text-sm pl-2">Кількість:</span>
+        <div class="flex items-center gap-1">
+          <button onclick="changeModalQty(-1)" class="w-10 h-10 bg-white rounded-xl border font-bold text-xl active:bg-slate-100 shadow-sm">-</button>
+          <span id="modal-qty" class="w-12 text-center font-bold text-slate-800 text-lg">1</span>
+          <button onclick="changeModalQty(1)" class="w-10 h-10 bg-white rounded-xl border font-bold text-xl active:bg-slate-100 shadow-sm">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<div class="absolute bottom-0 left-0 right-0 bg-white border-t p-4 flex items-center justify-between gap-4 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-20">
-<div>
-<span class="text-slate-400 text-xs block">Ціна</span>
-<span id="modal-product-price" class="text-xl font-black text-slate-800"></span>
-</div>
-<button id="modal-product-btn" class="flex-1 bg-[#242426] hover:bg-[#323235] text-amber-400 py-3.5 rounded-2xl font-bold transition-all shadow-lg text-center border border-[#3a3a3d]">
-Додати в кошик
-</button>
-</div>
+  <!-- Закріплена нижня панель із ціною та кнопкою -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex items-center justify-between gap-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] z-30">
+    <div>
+      <span class="text-slate-400 text-xs block font-medium">Загальна ціна</span>
+      <span id="modal-product-price" class="text-2xl font-black text-slate-800"></span>
+    </div>
+    <button id="modal-product-btn" class="flex-1 bg-[#242426] active:bg-[#323235] text-amber-400 py-4 rounded-2xl font-bold transition-all shadow-lg text-center border border-[#3a3a3d] text-base">
+      Додати в кошик
+    </button>
+  </div>
+
 </div>
 </div>
 
@@ -520,11 +526,10 @@ function hideReviewsModal(fromPopState = false) {
   if (!fromPopState && window.history.state?.modal === "reviews") history.back();
 }
 
-// Завантаження з кэшуванням на 3 хвилини
 async function loadProductsFromSheet() {
   const CACHE_KEY = 'elmarino_products_cache';
   const CACHE_TIME_KEY = 'elmarino_cache_time';
-  const CACHE_EXPIRE = 3 * 60 * 1000; // Кэш оновлюється кожні 3 хвилини
+  const CACHE_EXPIRE = 3 * 60 * 1000; // Кэш на 3 хвилини
 
   const cachedData = localStorage.getItem(CACHE_KEY);
   const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
@@ -1204,3 +1209,4 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
+
