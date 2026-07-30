@@ -6,11 +6,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ElMarino Магазин</title>
 
-<!-- Прискорюємо з'єднання з зовнішніми серверами -->
+<!-- Швидше з'єднання з серверами та фотохостингами -->
 <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
 <link rel="dns-prefetch" href="https://unpkg.com">
 <link rel="dns-prefetch" href="https://docs.google.com">
+<link rel="dns-prefetch" href="https://i.postimg.cc">
 <link rel="preconnect" href="https://docs.google.com" crossorigin>
+<link rel="preconnect" href="https://i.postimg.cc" crossorigin>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/pinch-zoom-js@2.3.4/dist/pinch-zoom.umd.min.js"></script>
@@ -43,7 +45,7 @@ object-fit: contain;
 
 <div class="max-w-4xl mx-auto pb-20">
 <div class="w-full overflow-hidden shadow-sm">
-<img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Banner" class="w-full h-auto object-cover block" loading="eager">
+<img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Banner" class="w-full h-auto object-cover block" loading="eager" fetchpriority="high">
 </div>
 
 <header class="bg-[#242426] text-white p-3 sticky top-0 z-40 shadow-md">
@@ -59,7 +61,7 @@ object-fit: contain;
 
 <div class="flex items-center gap-1.5 shrink-0">
 <a href="https://t.me/ElMarino_we" target="_blank" class="flex items-center gap-1 bg-[#2d2d30] active:bg-[#3d3d42] border border-[#3a3a3d] px-2.5 py-2.5 rounded-2xl text-[11px] sm:text-xs font-bold text-amber-400 transition-colors shadow-inner">
-💬 <span class="hidden xs:inline">Задати питання</span><span class="xs:hidden">Ппитання</span>
+💬 <span class="hidden xs:inline">Задати питання</span><span class="xs:hidden">Питання</span>
 </a>
 <button onclick="showCart()" class="flex items-center gap-1.5 bg-[#2d2d30] active:bg-[#3d3d42] border border-[#3a3a3d] px-3.5 py-2.5 rounded-2xl font-medium transition-colors">
 🛒 <span id="cart-count" class="bg-amber-400 text-[#242426] text-xs rounded-full px-2 py-0.5 font-bold">0</span>
@@ -165,13 +167,11 @@ onkeyup="filterProducts()">
 <div id="product-modal" class="hidden fixed inset-0 bg-white z-50 flex flex-col" onclick="hideProductModal()">
 <div class="bg-white w-full h-full flex flex-col relative" onclick="event.stopPropagation()">
   
-  <!-- Кнопка закриття (хрестик) -->
   <button onclick="hideProductModal()" class="fixed top-4 right-4 bg-[#242426]/70 text-white w-10 h-10 rounded-full flex items-center justify-center text-base font-bold z-50 shadow-lg border border-white/20 active:scale-95">✕</button>
 
-  <!-- Прокручувана область з фото та описом -->
   <div class="overflow-y-auto flex-1 pb-28">
     <div id="modal-swipe-zone" class="w-full h-80 sm:h-96 bg-slate-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in">
-      <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" onclick="openFullscreenPhoto()">
+      <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" loading="eager" onclick="openFullscreenPhoto()">
       <button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none">＜</button>
       <button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none">＞</button>
       <span id="photo-counter" class="absolute bottom-3 right-3 bg-[#242426]/60 text-white text-xs px-2.5 py-1 rounded-full font-medium"></span>
@@ -208,7 +208,6 @@ onkeyup="filterProducts()">
     </div>
   </div>
 
-  <!-- Закріплена нижня панель із ціною та кнопкою -->
   <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex items-center justify-between gap-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] z-30">
     <div>
       <span class="text-slate-400 text-xs block font-medium">Загальна ціна</span>
@@ -529,7 +528,7 @@ function hideReviewsModal(fromPopState = false) {
 async function loadProductsFromSheet() {
   const CACHE_KEY = 'elmarino_products_cache';
   const CACHE_TIME_KEY = 'elmarino_cache_time';
-  const CACHE_EXPIRE = 3 * 60 * 1000; // Кэш на 3 хвилини
+  const CACHE_EXPIRE = 15 * 60 * 1000; // Кэш збільшено до 15 хвилин для максимальної швидкості
 
   const cachedData = localStorage.getItem(CACHE_KEY);
   const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
@@ -677,13 +676,17 @@ renderProducts(filtered);
 
 function renderProducts(products) {
 let html = '';
-products.forEach((p) => {
+products.forEach((p, idx) => {
 const realIndex = allProducts.findIndex(item => item.name === p.name);
 const mainImage = p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=60';
+
+// Перші 4 фото завантажуються одразу (eager), решта — ліниво (lazy) для високої швидкості
+const loadingType = idx < 4 ? 'eager' : 'lazy';
+
 html += `<div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col justify-between">
 <div>
 <div class="w-full h-40 bg-slate-50 flex items-center justify-center overflow-hidden">
-<img src="${mainImage}" class="max-w-full max-h-full object-contain">
+<img src="${mainImage}" class="max-w-full max-h-full object-contain" loading="${loadingType}">
 </div>
 <div class="p-3">
 <h3 class="text-sm font-bold text-slate-800 leading-tight line-clamp-2 min-h-[40px]">${p.name}</h3>
@@ -1095,7 +1098,7 @@ const imgUrl = item.product.images.length > 0 ? item.product.images[0] : 'https:
 
 html += `<div class="flex gap-4 border-b pb-4 items-center justify-between notranslate">
 <div class="flex gap-3 items-center flex-1">
-<img src="${imgUrl}" class="w-14 h-14 object-cover rounded-xl">
+<img src="${imgUrl}" class="w-14 h-14 object-cover rounded-xl" loading="lazy">
 <div>
 <div class="text-sm font-medium text-slate-800 leading-tight line-clamp-2">${item.product.name}</div>
 <div class="flex flex-wrap">${metaText}</div>
@@ -1209,4 +1212,3 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
-
