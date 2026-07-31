@@ -540,7 +540,6 @@ function hideReviewsModal(fromPopState = false) {
 }
 
 async function loadProductsFromSheet() {
-  // Очищаем кэш, чтобы новые изменения сработали мгновенно
   localStorage.clear();
 
   try {
@@ -554,13 +553,21 @@ async function loadProductsFromSheet() {
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       if (row && row[0] && row[0].trim() !== '') {
-        // A: Название [0], B: Категория [1], C: Розница [2], D: Опт [3], E: Фото [4], F: Описание [5], G: Варианты [6], H: Теги [7]
+        // A: Название [0]
+        // B: Категория [1]
+        // C: Розница [2]
+        // D: Опт [3]
+        // E: Описание [4]
+        // F: Ссылки на фото [5]
+        // G: Варианты [6]
+        // H: Теги [7]
+
         let retailPrice = row[2] ? row[2].trim() : '0,00';
         let wholesalePrice = row[3] ? row[3].trim() : retailPrice;
         let selectedPrice = isWholesale ? (wholesalePrice || retailPrice) : retailPrice;
 
         let imagesArray = [];
-        let rawImages = row[4] ? row[4].trim() : '';
+        let rawImages = row[5] ? row[5].trim() : ''; // Берем ссылки на фото из колонки F (индекс 5)
         if (rawImages) {
           imagesArray = rawImages.split(',')
             .map(url => url.trim().replace(/[\r\n]/g, ''))
@@ -583,7 +590,7 @@ async function loadProductsFromSheet() {
           subcategory: subcategoryPart,
           price: selectedPrice,
           images: imagesArray,
-          description: row[5] ? row[5].trim() : '', 
+          description: row[4] ? row[4].trim() : '', // Берем описание из колонки E (индекс 4)
           optionsField: row[6] ? row[6].trim() : '',
           searchTags: row[7] ? row[7].trim() : ''
         });
@@ -1208,4 +1215,3 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
-
