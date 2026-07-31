@@ -194,7 +194,7 @@ onkeyup="filterProducts()">
 
 <p id="modal-product-description" class="text-slate-600 text-sm mt-3 whitespace-pre-line leading-relaxed"></p>
 
-<!-- БЛОКИ ВЫПАДАЮЩИХ СПИСКОВ (ЦВЕТ И РАЗМЕР ОТДЕЛЬНО) -->
+<!-- БЛОКИ ВЫПАДАЮЩИХ СПИСКОВ (КОЛИР И РОЗМІР ОТДЕЛЬНО) -->
 <div id="modal-color-wrapper" class="mt-4 hidden bg-slate-50 p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-3">
   <label class="text-sm font-semibold text-slate-700 whitespace-nowrap">Колір:</label>
   <select id="modal-color-select" class="flex-1 bg-white border border-slate-300 text-slate-800 text-sm font-semibold rounded-xl p-2.5 outline-none focus:border-slate-800 shadow-sm cursor-pointer"></select>
@@ -228,7 +228,7 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
-<!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР С ПИНЧ-ЗУМОМ (УВЕЛИЧЕНИЕ ПАЛЬЦАМИ) -->
+<!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР С ПИНЧ-ЗУМОМ -->
 <div id="fullscreen-photo-modal" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col items-center justify-center">
   <button onclick="closeFullscreenPhoto()" class="fixed top-4 right-4 bg-white/20 text-white w-11 h-11 rounded-full flex items-center justify-center text-xl font-bold z-50 backdrop-blur-sm active:scale-95">✕</button>
   <div id="fullscreen-img-container">
@@ -378,7 +378,7 @@ async function loadProductsFromSheet() {
     console.error("Помилка завантаження товарів:", error);
     container.innerHTML = `<div class="col-span-2 text-center py-10 text-red-500 font-bold">
       ❌ Не вдалося завантажити товари.<br>
-      <span class="text-xs text-slate-500 font-normal">Перевірте доступ до Google Таблиці («Доступ всім, у кого є посилання»).</span>
+      <span class="text-xs text-slate-500 font-normal">Перевірте доступ до Google Таблиці.</span>
     </div>`;
   }
 }
@@ -478,6 +478,7 @@ function filterByCategory(cat) {
   selectedCategory = (selectedCategory === cat) ? null : cat; 
   selectedSubcategory = null; 
   renderCategories(); 
+ ром = null; 
   applyFilterAndSort(); 
 
   if (selectedCategory) {
@@ -630,7 +631,7 @@ function showProductDetails(index) {
   document.getElementById('modal-product-name').textContent = p.name;
   document.getElementById('modal-product-description').textContent = p.description || 'Опис відсутній';
 
-  parseAndRenderProductOptions(p.optionsField);
+  renderProductOptionsExact(p.optionsField);
 
   updateModalPhoto();
   updateModalPrice();
@@ -646,8 +647,8 @@ function showProductDetails(index) {
   document.getElementById('product-modal').classList.remove('hidden');
 }
 
-// Умный парсер: разделяет варианты на цвета и размеры, если они есть
-function parseAndRenderProductOptions(optionsField) {
+// Прямой вывод того, что написано в таблице (делим запятой на варианты)
+function renderProductOptionsExact(optionsField) {
   const colorWrapper = document.getElementById('modal-color-wrapper');
   const colorSelect = document.getElementById('modal-color-select');
   const sizeWrapper = document.getElementById('modal-size-wrapper');
@@ -658,44 +659,19 @@ function parseAndRenderProductOptions(optionsField) {
 
   if (!optionsField || optionsField.trim() === '') return;
 
+  // Делим всё поле вариантов по запятой
   const rawOpts = optionsField.split(',').map(o => o.trim()).filter(Boolean);
+  if (rawOpts.length === 0) return;
 
-  let colors = [];
-  let sizes = [];
+  // Если в колонке записано несколько вариантов через запятую — делаем два селекта (Колір и Розмір),
+  // где в каждый идет полный список твоих вариантов, без фильтрации слов.
+  const optionsHtml = rawOpts.map(opt => `<option value="${opt}">${opt}</option>`).join('');
 
-  rawOpts.forEach(opt => {
-    const lower = opt.toLowerCase();
-    // Проверяем, содержит ли элемент слово размер или цифры, похожие на размер (например 36-45 или 37)
-    if (lower.includes('розмір') || lower.includes('размер') || /^\d{2}$/.test(opt)) {
-      sizes.push(opt.replace(/розмір:?/i, '').replace(/размер:?/i, '').trim());
-    } else if (lower.includes('колір') || lower.includes('цвет') || (!/\d/.test(opt) && !lower.includes('шт'))) {
-      colors.push(opt.replace(/колір:?/i, '').replace(/цвет:?/i, '').trim());
-    } else {
-      // Если просто набор цифр или непонятный формат - кидаем в размеры или цвета
-      sizes.push(opt);
-    }
-  });
+  colorSelect.innerHTML = optionsHtml;
+  colorWrapper.classList.remove('hidden');
 
-  // Если разбиение не вышло или все попало в одно место, но есть разделитель точка с запятой или запятая
-  if (colors.length === 0 && sizes.length === rawOpts.length) {
-    // Проверим на наличие размеров
-    sizeSelect.innerHTML = rawOpts.map(o => `<option value="${o}">${o}</option>`).join('');
-    sizeWrapper.classList.remove('hidden');
-  } else {
-    if (colors.length > 0) {
-      colorSelect.innerHTML = colors.map(c => `<option value="${c}">${c}</option>`).join('');
-      colorWrapper.classList.remove('hidden');
-    }
-    if (sizes.length > 0) {
-      sizeSelect.innerHTML = sizes.map(s => `<option value="${s}">${s}</option>`).join('');
-      sizeWrapper.classList.remove('hidden');
-    }
-    // Если вообще стандартный единый список не разбился
-    if (colors.length === 0 && sizes.length === 0) {
-      sizeSelect.innerHTML = rawOpts.map(o => `<option value="${o}">${o}</option>`).join('');
-      sizeWrapper.classList.remove('hidden');
-    }
-  }
+  sizeSelect.innerHTML = optionsHtml;
+  sizeWrapper.classList.remove('hidden');
 }
 
 function getSelectedOptionsString() {
@@ -714,7 +690,6 @@ function getSelectedOptionsString() {
   return parts.length > 0 ? parts.join(', ') : null;
 }
 
-// Извлечение цены из названия варианта или базовой цены
 function getSelectedPrice() {
   if (currentProductIndex === null) return 0;
   const p = allProducts[currentProductIndex];
@@ -733,10 +708,6 @@ function getSelectedPrice() {
   });
 
   return unitPrice;
-}
-
-function onOptionSelectChange() {
-  updateModalPrice();
 }
 
 function updateModalPhoto(syncSelect = true) {
