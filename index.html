@@ -108,7 +108,8 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
-<div id="subcat-anchor" class="scroll-mt-20"></div>
+<!-- Якорь для автоскролла к товарам -->
+<div id="subcat-anchor" class="scroll-mt-16"></div>
 
 <div class="px-4 mb-3 flex flex-col gap-3">
 <div id="categories" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
@@ -301,7 +302,7 @@ async function loadProductsFromSheet() {
     let rows = parseCSV(csvText);
     allProducts = [];
 
-    // Порядок столбцов из вашей Google Таблицы:
+    // Порядок столбцов из Google Таблицы:
     // row[0] -> A: name
     // row[1] -> B: category
     // row[2] -> C: price (Розница)
@@ -316,7 +317,6 @@ async function loadProductsFromSheet() {
       if (row && row[0] && row[0].trim() !== '') {
         let imagesArray = [];
         
-        // Фотографии берутся из столбца F (индекс 5)
         if (row[5]) {
           imagesArray = row[5].split(',')
             .map(url => url.trim().replace(/[\r\n]/g, ''))
@@ -324,7 +324,7 @@ async function loadProductsFromSheet() {
         }
         
         let retailPrice = row[2] ? row[2].trim() : '0,00';
-        let optPrice = (row[3] && row[3].trim() !== '') ? row[3].trim() : retailPrice; // Если оптовая цена пустая, подставляем розничную
+        let optPrice = (row[3] && row[3].trim() !== '') ? row[3].trim() : retailPrice;
         let safePrice = IS_OPT ? optPrice : retailPrice;
 
         let rawCategory = row[1] ? row[1].trim() : 'Інше';
@@ -343,9 +343,9 @@ async function loadProductsFromSheet() {
           subcategory: subcategoryPart,
           price: safePrice,
           images: imagesArray,
-          description: row[4] ? row[4].trim() : '',      // Описание из E (индекс 4)
-          optionsField: row[6] ? row[6].trim() : '',     // Характеристики из G (индекс 6)
-          searchTags: row[7] ? row[7].trim() : ''        // Теги из H (индекс 7)
+          description: row[4] ? row[4].trim() : '',
+          optionsField: row[6] ? row[6].trim() : '',
+          searchTags: row[7] ? row[7].trim() : ''
         });
       }
     }
@@ -451,8 +451,30 @@ function renderProducts(products) {
 
 function toggleSortMenu() { document.getElementById('sort-menu').classList.toggle('hidden'); }
 function setSortOrder(order) { currentSortOrder = order; document.getElementById('sort-menu').classList.add('hidden'); applyFilterAndSort(); }
-function filterByCategory(cat) { selectedCategory = (selectedCategory === cat) ? null : cat; selectedSubcategory = null; renderCategories(); applyFilterAndSort(); }
-function filterBySubcategory(sub) { selectedSubcategory = (selectedSubcategory === sub) ? null : sub; renderSubcategories(); applyFilterAndSort(); }
+
+function filterByCategory(cat) { 
+  selectedCategory = (selectedCategory === cat) ? null : cat; 
+  selectedSubcategory = null; 
+  renderCategories(); 
+  applyFilterAndSort(); 
+
+  if (selectedCategory) {
+    const anchor = document.getElementById('subcat-anchor');
+    if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function filterBySubcategory(sub) { 
+  selectedSubcategory = (selectedSubcategory === sub) ? null : sub; 
+  renderSubcategories(); 
+  applyFilterAndSort(); 
+
+  if (selectedSubcategory) {
+    const anchor = document.getElementById('subcat-anchor');
+    if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
 function filterProducts() { currentSearchTerm = document.getElementById('search').value.toLowerCase(); applyFilterAndSort(); }
 function resetFilters() { selectedCategory = null; selectedSubcategory = null; document.getElementById('search').value = ''; currentSearchTerm = ""; renderCategories(); applyFilterAndSort(); }
 function goHome() { selectedCategory = null; selectedSubcategory = null; currentSearchTerm = ""; currentSortOrder = "default"; document.getElementById('search').value = ''; renderCategories(); applyFilterAndSort(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -636,3 +658,4 @@ function showToast(message, type = 'success') {
 </script>
 </body>
 </html>
+
