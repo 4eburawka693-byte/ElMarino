@@ -15,9 +15,8 @@
 <link rel="preconnect" href="https://i.postimg.cc" crossorigin>
 
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/pinch-zoom-js@2.3.4/dist/pinch-zoom.umd.min.js"></script>
 <style>
-body { font-family: system-ui, sans-serif; }
+body { font-family: system-ui, sans-serif; touch-action: manipulation; }
 .product-card { transition: all 0.2s ease; cursor: pointer; }
 .product-card:active { transform: scale(0.98); }
 .clamp-desc {
@@ -26,18 +25,6 @@ body { font-family: system-ui, sans-serif; }
   -webkit-box-orient: vertical !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-}
-.pinch-zoom-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.zoomable-img {
-  max-width: 100%;
-  max-height: 90vh;
-  object-fit: contain;
 }
 .opt-badge {
   background-color: #fef3c7;
@@ -49,6 +36,25 @@ body { font-family: system-ui, sans-serif; }
   border-radius: 6px;
   display: inline-block;
   margin-bottom: 4px;
+}
+/* Полноэкранный просмотр с поддержкой масштабирования */
+#fullscreen-photo-modal {
+  touch-action: none;
+}
+#fullscreen-img-container {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#fullscreen-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.05s ease-out;
+  transform-origin: center center;
 }
 </style>
 </head>
@@ -172,11 +178,12 @@ onkeyup="filterProducts()">
 <div class="bg-white w-full h-full flex flex-col relative" onclick="event.stopPropagation()">
 <button onclick="hideProductModal()" class="fixed top-4 right-4 bg-[#242426]/70 text-white w-10 h-10 rounded-full flex items-center justify-center text-base font-bold z-50 shadow-lg border border-white/20 active:scale-95">✕</button>
 <div class="overflow-y-auto flex-1 pb-28">
-<div id="modal-swipe-zone" onclick="openFullscreenPhoto()" class="w-full h-80 sm:h-96 bg-slate-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in">
-<img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" loading="eager">
-<button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none">＜</button>
-<button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none">＞</button>
-<span id="photo-counter" class="absolute bottom-3 right-3 bg-[#242426]/60 text-white text-xs px-2.5 py-1 rounded-full font-medium"></span>
+<!-- ЗОНА СВАЙПА И КЛИКА ДЛЯ УВЕЛИЧЕНИЯ -->
+<div id="modal-swipe-zone" onclick="openFullscreenPhoto()" class="w-full h-80 sm:h-96 bg-slate-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in select-none">
+<img id="modal-product-image" src="" class="max-w-full max-h-full object-contain pointer-events-none" loading="eager">
+<button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none z-10">＜</button>
+<button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none z-10">＞</button>
+<span id="photo-counter" class="absolute bottom-3 right-3 bg-[#242426]/60 text-white text-xs px-2.5 py-1 rounded-full font-medium z-10"></span>
 </div>
 <div class="p-5">
 <div class="flex items-center gap-2">
@@ -216,11 +223,11 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
-<!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР ФОТО -->
-<div id="fullscreen-photo-modal" class="hidden fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-2" onclick="closeFullscreenPhoto()">
+<!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР С ПИНЧ-ЗУМОМ (УВЕЛИЧЕНИЕ ПАЛЬЦАМИ) -->
+<div id="fullscreen-photo-modal" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col items-center justify-center">
   <button onclick="closeFullscreenPhoto()" class="fixed top-4 right-4 bg-white/20 text-white w-11 h-11 rounded-full flex items-center justify-center text-xl font-bold z-50 backdrop-blur-sm active:scale-95">✕</button>
-  <div id="pinch-zoom-wrapper" class="w-full h-full flex items-center justify-center overflow-hidden" onclick="event.stopPropagation()">
-    <img id="fullscreen-img" class="zoomable-img" src="" alt="Fullscreen image">
+  <div id="fullscreen-img-container">
+    <img id="fullscreen-img" src="" alt="Fullscreen image">
   </div>
 </div>
 
@@ -282,7 +289,6 @@ let currentModalQty = 1;
 let currentPhotos = [];
 let currentPhotoIndex = 0;
 let currentProductIndex = null;
-let pZoom = null;
 
 let selectedCategory = null;
 let selectedSubcategory = null;
@@ -291,6 +297,8 @@ let currentSortOrder = "default";
 
 document.addEventListener('DOMContentLoaded', () => {
   loadProductsFromSheet();
+  initSwipeGesture();
+  initPinchZoom();
 });
 
 const parseCSV = (text) => {
@@ -353,7 +361,7 @@ async function loadProductsFromSheet() {
           price: safePrice,
           images: imagesArray,
           description: row[4] ? row[4].trim() : '',
-          optionsField: row[6] ? row[6].trim() : '', // КОЛОНКА G
+          optionsField: row[6] ? row[6].trim() : '',
           searchTags: row[7] ? row[7].trim() : ''
         });
       }
@@ -617,14 +625,13 @@ function showProductDetails(index) {
   document.getElementById('modal-product-name').textContent = p.name;
   document.getElementById('modal-product-description').textContent = p.description || 'Опис відсутній';
 
-  // НАСТРОЙКА ВЫПАДАЮЩЕГО СПИСКА (SELECT) ИЗ КОЛОНКИ G
   const optionsWrapper = document.getElementById('modal-options-wrapper');
   const optionsSelect = document.getElementById('modal-options-select');
   
   if (p.optionsField && p.optionsField.trim() !== '') {
     const opts = p.optionsField.split(',').map(o => o.trim()).filter(Boolean);
     if (opts.length > 0) {
-      optionsSelect.innerHTML = opts.map((opt, i) => `<option value="${opt}" data-idx="${i}">${opt}</option>`).join('');
+      optionsSelect.innerHTML = opts.map((opt, i) => `<option value="${opt}">${opt}</option>`).join('');
       optionsWrapper.classList.remove('hidden');
     } else {
       optionsSelect.innerHTML = '';
@@ -641,21 +648,40 @@ function showProductDetails(index) {
   const addBtn = document.getElementById('modal-product-btn');
   addBtn.onclick = function() {
     let selectedOpt = optionsSelect.value || null;
-    addToCart(index, currentModalQty, p.price, selectedOpt);
+    let unitPrice = getSelectedPrice();
+    addToCart(index, currentModalQty, unitPrice, selectedOpt);
     hideProductModal();
   };
   
   document.getElementById('product-modal').classList.remove('hidden');
 }
 
-// При изменении цвета в выпадающем списке -> перелистываем фото
+// Извлечение цены из названия варианта или базовой цены
+function getSelectedPrice() {
+  if (currentProductIndex === null) return 0;
+  const p = allProducts[currentProductIndex];
+  const optionsSelect = document.getElementById('modal-options-select');
+  
+  let unitPrice = parseFloat(String(p.price).replace(/\s/g, '').replace(',', '.'));
+  
+  if (optionsSelect && optionsSelect.value) {
+    // Ищем цену в формате "(40 грн)" или "40грн" или "- 40"
+    const match = optionsSelect.value.match(/\((\d+[\.,]?\d*)\s*грн\)/i) || optionsSelect.value.match(/(\d+[\.,]?\d*)\s*грн/i);
+    if (match && match[1]) {
+      unitPrice = parseFloat(match[1].replace(',', '.'));
+    }
+  }
+  return unitPrice;
+}
+
 function onOptionSelectChange() {
   const select = document.getElementById('modal-options-select');
   const selectedIndex = select.selectedIndex;
   if (selectedIndex !== -1 && selectedIndex < currentPhotos.length) {
     currentPhotoIndex = selectedIndex;
-    updateModalPhoto(false); // переключаем фото без закольцованного обновления списка
+    updateModalPhoto(false);
   }
+  updateModalPrice();
 }
 
 function updateModalPhoto(syncSelect = true) {
@@ -665,13 +691,13 @@ function updateModalPhoto(syncSelect = true) {
     counter.classList.remove('hidden'); counter.textContent = `${currentPhotoIndex + 1} із ${currentPhotos.length}`;
   } else counter.classList.add('hidden');
 
-  // При перелистывании фото стрелочками -> синхронизируем выпадающий список
   if (syncSelect) {
     const select = document.getElementById('modal-options-select');
     if (select && select.options.length > currentPhotoIndex) {
       select.selectedIndex = currentPhotoIndex;
     }
   }
+  updateModalPrice();
 }
 
 function changePhoto(direction) {
@@ -681,40 +707,10 @@ function changePhoto(direction) {
   updateModalPhoto(true);
 }
 
-function openFullscreenPhoto() {
-  const fsImg = document.getElementById('fullscreen-img');
-  fsImg.src = currentPhotos[currentPhotoIndex];
-  const modal = document.getElementById('fullscreen-photo-modal');
-  modal.classList.remove('hidden');
-
-  if (window.PinchZoom) {
-    const el = document.getElementById('pinch-zoom-wrapper');
-    if (!pZoom) {
-      pZoom = new PinchZoom(el, {
-        draggableUnzoomed: false
-      });
-    }
-  }
-}
-
-function closeFullscreenPhoto() {
-  document.getElementById('fullscreen-photo-modal').classList.add('hidden');
-}
-
-function showReviewsModal() { document.getElementById('reviews-modal').classList.remove('hidden'); }
-function hideReviewsModal() { document.getElementById('reviews-modal').classList.remove('hidden'); }
-function showInstallModal() { document.getElementById('install-modal').classList.remove('hidden'); }
-function hideInstallModal() { document.getElementById('install-modal').classList.add('hidden'); }
-
-function hideReviewsModal() { document.getElementById('reviews-modal').classList.add('hidden'); }
-function hideInstallModal() { document.getElementById('install-modal').classList.add('hidden'); }
-function hideProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
-
 function updateModalPrice() {
-  if (currentProductIndex === null) return;
-  const p = allProducts[currentProductIndex];
-  let cleanNum = parseFloat(String(p.price).replace(/\s/g, '').replace(',', '.'));
-  document.getElementById('modal-product-price').textContent = (cleanNum * currentModalQty).toFixed(2).replace('.', ',') + ' грн';
+  let unitPrice = getSelectedPrice();
+  let totalPrice = unitPrice * currentModalQty;
+  document.getElementById('modal-product-price').textContent = totalPrice.toFixed(2).replace('.', ',') + ' грн';
 }
 
 function changeModalQty(delta) {
@@ -723,6 +719,92 @@ function changeModalQty(delta) {
   document.getElementById('modal-qty').textContent = currentModalQty;
   updateModalPrice();
 }
+
+// ---------------- СВАЙП ФОТО ПАЛЬЦЕМ ----------------
+function initSwipeGesture() {
+  const zone = document.getElementById('modal-swipe-zone');
+  let startX = 0;
+  let startY = 0;
+
+  zone.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+
+  zone.addEventListener('touchend', (e) => {
+    let endX = e.changedTouches[0].clientX;
+    let endY = e.changedTouches[0].clientY;
+    let diffX = startX - endX;
+    let diffY = startY - endY;
+
+    // Проверяем, что свайп был именно по горизонтали
+    if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) {
+        changePhoto(1); // Свайп влево -> следующее фото
+      } else {
+        changePhoto(-1); // Свайп вправо -> предыдущее фото
+      }
+    }
+  }, { passive: true });
+}
+
+// ---------------- УВЕЛИЧЕНИЕ ФОТО (PINCH TO ZOOM) ----------------
+let currentScale = 1;
+let startDistance = 0;
+
+function initPinchZoom() {
+  const container = document.getElementById('fullscreen-img-container');
+  const img = document.getElementById('fullscreen-img');
+
+  container.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      startDistance = getDistance(e.touches[0], e.touches[1]);
+    }
+  }, { passive: true });
+
+  container.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      let newDistance = getDistance(e.touches[0], e.touches[1]);
+      let factor = newDistance / startDistance;
+      let targetScale = currentScale * factor;
+      if (targetScale >= 1 && targetScale <= 4) {
+        img.style.transform = `scale(${targetScale})`;
+      }
+    }
+  }, { passive: true });
+
+  container.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) {
+      const transform = img.style.transform;
+      if (transform) {
+        const match = transform.match(/scale\(([^)]+)\)/);
+        if (match) currentScale = parseFloat(match[1]);
+      }
+    }
+  }, { passive: true });
+}
+
+function getDistance(t1, t2) {
+  return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+}
+
+function openFullscreenPhoto() {
+  const fsImg = document.getElementById('fullscreen-img');
+  fsImg.src = currentPhotos[currentPhotoIndex];
+  fsImg.style.transform = 'scale(1)';
+  currentScale = 1;
+  document.getElementById('fullscreen-photo-modal').classList.remove('hidden');
+}
+
+function closeFullscreenPhoto() {
+  document.getElementById('fullscreen-photo-modal').classList.add('hidden');
+}
+
+function showReviewsModal() { document.getElementById('reviews-modal').classList.remove('hidden'); }
+function hideReviewsModal() { document.getElementById('reviews-modal').classList.add('hidden'); }
+function showInstallModal() { document.getElementById('install-modal').classList.remove('hidden'); }
+function hideInstallModal() { document.getElementById('install-modal').classList.add('hidden'); }
+function hideProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
 
 function showToast(message, type = 'success') {
   const toast = document.createElement('div');
