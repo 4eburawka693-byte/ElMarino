@@ -151,6 +151,7 @@
       border-radius: 4px;
       margin-bottom: 4px;
       font-weight: bold;
+      align-self: flex-start;
     }
 
     .btn-add {
@@ -417,14 +418,16 @@
 
   <script>
     // --- Конфігурація ---
-    const SHEET_ID = '1-69oT-jYw9S0fO4M4p3T4H9lQk1tV9A'; // Вкажіть свій ID Google Таблиці
-    const REVIEWS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('відгуки')}`;
-    const PRODUCTS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
+    const SHEET_ID = '1-69oT-jYw9S0fO4M4p3T4H9lQk1tV9A'; 
+    
+    // Прямий експорт в чистий CSV формат без JS-відповідей
+    const PRODUCTS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+    const REVIEWS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&sheet=${encodeURIComponent('відгуки')}`;
 
     const BOT_TOKEN = '8775134268:AAE9lKCPpZWs4E94uwAbMR26O2GPaJ8osDw'; 
     const CHAT_ID = '5263239405';
 
-    // Зчитування оптового режиму з URL (наприклад: ?mode=opt)
+    // Зчитування оптового режиму з URL (?mode=opt)
     const urlParams = new URLSearchParams(window.location.search);
     const IS_OPT = urlParams.get('mode') === 'opt';
 
@@ -467,24 +470,37 @@
         .catch(() => console.warn("Відгуки не завантажено або вкладка відсутня"));
     }
 
-    // Простий CSV парсер
+    // Покращений та надійний CSV-парсер
     function parseCSV(text) {
-      const lines = text.split('\n').filter(line => line.trim() !== '');
+      const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
       if (lines.length <= 1) return [];
-      
-      const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
-      
+
       return lines.slice(1).map(line => {
-        // Регулярка для розділення по комам з урахуванням лапок
-        const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
+        let cells = [];
+        let cur = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+          let c = line[i];
+          if (c === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+              cur += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (c === ',' && !inQuotes) {
+            cells.push(cur.trim());
+            cur = '';
+          } else {
+            cur += c;
+          }
+        }
+        cells.push(cur.trim());
+
         const row = {};
-        
-        // Фоллбек на базове розділення якщо регулярка повернула мало даних
-        const cells = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-        
         cells.forEach((val, idx) => {
-          let cleanVal = val.trim().replace(/^"|"$/g, '').replace(/""/g, '"');
-          row[idx] = cleanVal;
+          row[idx] = val.replace(/^"|"$/g, '').trim();
         });
         return row;
       });
@@ -496,7 +512,7 @@
       productsData.forEach(p => {
         if (p[1]) {
           const mainCat = p[1].split('/')[0].trim();
-          categories.add(mainCat);
+          if (mainCat) categories.add(mainCat);
         }
       });
 
@@ -541,7 +557,7 @@
       grid.innerHTML = '';
 
       if (list.length === 0) {
-        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Товари не знайдені</p>';
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 20px;">Товари не знайдені</p>';
         return;
       }
 
@@ -684,7 +700,7 @@
       container.innerHTML = '';
 
       if (cart.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color: var(--text-muted);">Кошик порожній</p>';
+        container.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 20px;">Кошик порожній</p>';
       } else {
         cart.forEach((item, idx) => {
           const optStr = Object.entries(item.options).map(([k,v]) => `${k}: ${v}`).join(', ');
@@ -761,7 +777,6 @@
                    `\n📦 **Товари:**\n${itemsText}\n\n` +
                    `💰 **Усього до сплати:** ${total} грн`;
 
-      // Надсилання запиту до Telegram API
       fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
