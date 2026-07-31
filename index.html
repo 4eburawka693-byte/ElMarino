@@ -609,10 +609,13 @@ function showProductDetails(index) {
   document.getElementById('modal-product-description').textContent = p.description || 'Опис відсутній';
 
   updateModalPrice();
-  document.getElementById('modal-[#modal-product-btn]'.replace('[','').replace(']','')).onclick = function() {
+  
+  const addBtn = document.getElementById('modal-product-btn');
+  addBtn.onclick = function() {
     addToCart(index, currentModalQty, p.price);
     hideProductModal();
   };
+  
   document.getElementById('product-modal').classList.remove('hidden');
 }
 
