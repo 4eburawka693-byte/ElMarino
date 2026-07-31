@@ -36,7 +36,7 @@ body { font-family: system-ui, sans-serif; touch-action: manipulation; }
   border-radius: 6px;
   display: inline-block;
 }
-/* Полноэкранный просмотр с поддержкой масштабирования */
+/* Полноэкранный просмотр с поддержкой масштабирования и перетаскивания */
 #fullscreen-photo-modal {
   touch-action: none;
 }
@@ -47,6 +47,7 @@ body { font-family: system-ui, sans-serif; touch-action: manipulation; }
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 #fullscreen-img {
   max-width: 100%;
@@ -54,6 +55,7 @@ body { font-family: system-ui, sans-serif; touch-action: manipulation; }
   object-fit: contain;
   transition: transform 0.05s ease-out;
   transform-origin: center center;
+  will-change: transform;
 }
 </style>
 </head>
@@ -224,7 +226,7 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
-<!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР С ПИНЧ-ЗУМОМ И СВАЙПАМИ -->
+<!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР С ЗУМОМ И ПЕРЕМЕЩЕНИЕМ -->
 <div id="fullscreen-photo-modal" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col items-center justify-center" onclick="closeFullscreenPhoto()">
   <button onclick="closeFullscreenPhoto(); event.stopPropagation();" class="fixed top-4 right-4 bg-white/20 text-white w-11 h-11 rounded-full flex items-center justify-center text-xl font-bold z-50 backdrop-blur-sm active:scale-95">✕</button>
   
@@ -306,10 +308,9 @@ let isProductModalOpen = false;
 document.addEventListener('DOMContentLoaded', () => {
   loadProductsFromSheet();
   initSwipeGesture();
-  initPinchZoom();
+  initZoomAndPan();
   initFullscreenSwipe();
 
-  // Відстежуємо кнопку «Назад» в браузері/телефоні
   window.addEventListener('popstate', (event) => {
     const fsModal = document.getElementById('fullscreen-photo-modal');
     const productModal = document.getElementById('product-modal');
@@ -318,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeFullscreenPhoto();
       history.pushState(null, '', window.location.href);
     } else if (!productModal.classList.contains('hidden')) {
-      hideProductModal(true); // Закриваємо без зайвого history.back()
+      hideProductModal(true);
     }
   });
 });
@@ -660,7 +661,6 @@ function showProductDetails(index) {
     hideProductModal();
   };
   
-  // Додаємо стан в історію браузера, щоб кнопка "Назад" закривала модалку
   history.pushState({ modalOpen: true }, '', window.location.href);
   isProductModalOpen = true;
 
@@ -671,7 +671,7 @@ function hideProductModal(isFromHistory = false) {
   document.getElementById('product-modal').classList.add('hidden');
   if (isProductModalOpen && !isFromHistory) {
     isProductModalOpen = false;
-    history.back(); // Повертаємо історію назад, якщо закрили кнопкою "✕" або кліком поза модалкою
+    history.back();
   }
 }
 
@@ -719,7 +719,7 @@ function onColorSelectChange() {
   
   if (colorIndex !== -1 && colorIndex < currentPhotos.length) {
     currentPhotoIndex = colorIndex;
-    updateModalPhoto(false); // Оновлюємо фото без зміни селекту
+    updateModalPhoto(false);
   }
 }
 
@@ -753,7 +753,6 @@ function updateModalPhoto(syncColorSelect = true) {
     counter.classList.remove('hidden'); counter.textContent = `${currentPhotoIndex + 1} із ${currentPhotos.length}`;
   } else counter.classList.add('hidden');
 
-  // Синхронізуємо випадаючий список кольорів із поточним фото
   if (syncColorSelect && availableColors.length > 0 && currentPhotoIndex < availableColors.length) {
     const colorSelect = document.getElementById('modal-color-select');
     colorSelect.value = availableColors[currentPhotoIndex];
@@ -808,16 +807,33 @@ function initSwipeGesture() {
   }, { passive: true });
 }
 
+// Змінні для зуму та панорамування
 let currentScale = 1;
 let startDistance = 0;
+let panX = 0;
+let panY = 0;
+let startTouchX = 0;
+let startTouchY = 0;
+let lastPanX = 0;
+let lastPanY = 0;
 
-function initPinchZoom() {
+function updateTransform() {
+  const img = document.getElementById('fullscreen-img');
+  img.style.transform = `translate(${panX}px, ${panY}px) scale(${currentScale})`;
+}
+
+function initZoomAndPan() {
   const container = document.getElementById('fullscreen-img-container');
   const img = document.getElementById('fullscreen-img');
 
   container.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
       startDistance = getDistance(e.touches[0], e.touches[1]);
+    } else if (e.touches.length === 1 && currentScale > 1) {
+      startTouchX = e.touches[0].clientX;
+      startTouchY = e.touches[0].clientY;
+      lastPanX = panX;
+      lastPanY = panY;
     }
   }, { passive: true });
 
@@ -827,18 +843,24 @@ function initPinchZoom() {
       let factor = newDistance / startDistance;
       let targetScale = currentScale * factor;
       if (targetScale >= 1 && targetScale <= 4) {
-        img.style.transform = `scale(${targetScale})`;
+        currentScale = targetScale;
+        updateTransform();
       }
+    } else if (e.touches.length === 1 && currentScale > 1) {
+      let moveX = e.touches[0].clientX - startTouchX;
+      let moveY = e.touches[0].clientY - startTouchY;
+      panX = lastPanX + moveX;
+      panY = lastPanY + moveY;
+      updateTransform();
     }
   }, { passive: true });
 
   container.addEventListener('touchend', (e) => {
-    if (e.touches.length < 2) {
-      const transform = img.style.transform;
-      if (transform) {
-        const match = transform.match(/scale\(([^)]+)\)/);
-        if (match) currentScale = parseFloat(match[1]);
-      }
+    if (e.touches.length === 0 && currentScale < 1) {
+      currentScale = 1;
+      panX = 0;
+      panY = 0;
+      updateTransform();
     }
   }, { passive: true });
 }
@@ -849,7 +871,7 @@ function initFullscreenSwipe() {
   let startY = 0;
 
   modal.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
+    if (e.touches.length === 1 && currentScale === 1) {
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
     }
@@ -881,8 +903,10 @@ function getDistance(t1, t2) {
 function openFullscreenPhoto() {
   updateFullscreenPhotoSrc();
   currentScale = 1;
+  panX = 0;
+  panY = 0;
+  updateTransform();
   
-  // Додаємо стан в історію для повноноекранного перегляду
   history.pushState({ fullscreenOpen: true }, '', window.location.href);
   document.getElementById('fullscreen-photo-modal').classList.remove('hidden');
 }
@@ -890,8 +914,10 @@ function openFullscreenPhoto() {
 function updateFullscreenPhotoSrc() {
   const fsImg = document.getElementById('fullscreen-img');
   fsImg.src = currentPhotos[currentPhotoIndex];
-  fsImg.style.transform = 'scale(1)';
   currentScale = 1;
+  panX = 0;
+  panY = 0;
+  updateTransform();
   
   const counter = document.getElementById('fullscreen-counter');
   if (currentPhotos.length > 1) {
