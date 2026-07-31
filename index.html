@@ -168,7 +168,6 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
-<!-- ПОВНОЕКРАННА КАРТОЧКА ТОВАРУ -->
 <div id="product-modal" class="hidden fixed inset-0 bg-white z-50 flex flex-col" onclick="hideProductModal()">
 <div class="bg-white w-full h-full flex flex-col relative" onclick="event.stopPropagation()">
   
@@ -278,7 +277,6 @@ const SHEET_ID = '1SyxBE2iwqqt-JtEZ8N9vkdrtxUUcxtv_goVA878TMog';
 const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
 const REVIEWS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=відгуки`;
 
-// Перевірка режиму (Опт чи Розниця) з URL параметра
 const urlParams = new URLSearchParams(window.location.search);
 const isWholesale = urlParams.get('mode') === 'opt';
 
@@ -542,21 +540,8 @@ function hideReviewsModal(fromPopState = false) {
 }
 
 async function loadProductsFromSheet() {
-  const CACHE_KEY = isWholesale ? 'elmarino_products_opt_cache' : 'elmarino_products_retail_cache';
-  const CACHE_TIME_KEY = isWholesale ? 'elmarino_opt_cache_time' : 'elmarino_retail_cache_time';
-  const CACHE_EXPIRE = 15 * 60 * 1000;
-
-  const cachedData = localStorage.getItem(CACHE_KEY);
-  const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
-  const now = Date.now();
-
-  if (cachedData && cachedTime && (now - cachedTime < CACHE_EXPIRE)) {
-    allProducts = JSON.parse(cachedData);
-    renderCategories();
-    applyFilterAndSort();
-    initSwipeListeners();
-    return;
-  }
+  // Очищаем кэш, чтобы новые изменения сработали мгновенно
+  localStorage.clear();
 
   try {
     const response = await fetch(SPREADSHEET_URL);
@@ -569,7 +554,7 @@ async function loadProductsFromSheet() {
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       if (row && row[0] && row[0].trim() !== '') {
-        // Определение цены в зависимости от режима: Розница (Колонка C = row[2]) или Опт (Колонка D = row[3])
+        // A: Название [0], B: Категория [1], C: Розница [2], D: Опт [3], E: Фото [4], F: Описание [5], G: Варианты [6], H: Теги [7]
         let retailPrice = row[2] ? row[2].trim() : '0,00';
         let wholesalePrice = row[3] ? row[3].trim() : retailPrice;
         let selectedPrice = isWholesale ? (wholesalePrice || retailPrice) : retailPrice;
@@ -597,28 +582,19 @@ async function loadProductsFromSheet() {
           category: categoryPart,
           subcategory: subcategoryPart,
           price: selectedPrice,
-          description: row[4] ? row[4].trim() : '', 
           images: imagesArray,
-          optionsField: row[5] ? row[5].trim() : '',
-          searchTags: row[6] ? row[6].trim() : ''
+          description: row[5] ? row[5].trim() : '', 
+          optionsField: row[6] ? row[6].trim() : '',
+          searchTags: row[7] ? row[7].trim() : ''
         });
       }
     }
-
-    localStorage.setItem(CACHE_KEY, JSON.stringify(allProducts));
-    localStorage.setItem(CACHE_TIME_KEY, now.toString());
 
     renderCategories();
     applyFilterAndSort();
     initSwipeListeners();
   } catch (error) {
     console.error(error);
-    if (cachedData) {
-      allProducts = JSON.parse(cachedData);
-      renderCategories();
-      applyFilterAndSort();
-      initSwipeListeners();
-    }
   }
 }
 
