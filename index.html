@@ -50,6 +50,21 @@ body { font-family: system-ui, sans-serif; }
   display: inline-block;
   margin-bottom: 4px;
 }
+.option-btn {
+  border: 1px solid #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  background-color: #fff;
+  transition: all 0.15s ease;
+}
+.option-btn.active {
+  border-color: #242426;
+  background-color: #242426;
+  color: #fbbf24;
+}
 </style>
 </head>
 <body class="bg-[#f4f5f7] notranslate">
@@ -108,7 +123,6 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
-<!-- Якорь для автоскролла к товарам -->
 <div id="subcat-anchor" class="scroll-mt-16"></div>
 
 <div class="px-4 mb-3 flex flex-col gap-3">
@@ -185,7 +199,14 @@ onkeyup="filterProducts()">
   <span id="modal-opt-badge" class="opt-badge hidden">ОПТ ЦІНА</span>
 </div>
 <h2 id="modal-product-name" class="text-2xl font-bold text-slate-800 mt-3 leading-tight"></h2>
-<p id="modal-product-description" class="text-slate-600 text-sm mt-3 whitespace-pre-line leading-relaxed"></p>
+
+<!-- БЛОК ВЫБОРА ОПЦИЙ (Размер, цвет и т.д.) -->
+<div id="modal-options-wrapper" class="mt-4 hidden">
+  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Оберіть варіант (розмір / колір):</label>
+  <div id="modal-options-container" class="flex flex-wrap gap-2"></div>
+</div>
+
+<p id="modal-product-description" class="text-slate-600 text-sm mt-4 whitespace-pre-line leading-relaxed"></p>
 
 <div class="mt-4 flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl justify-between border border-slate-100">
 <span class="text-slate-600 font-medium text-sm pl-2">Кількість:</span>
@@ -276,6 +297,7 @@ let currentModalQty = 1;
 let currentPhotos = [];
 let currentPhotoIndex = 0;
 let currentProductIndex = null;
+let selectedOption = null;
 let pZoom = null;
 
 let selectedCategory = null;
@@ -347,7 +369,7 @@ async function loadProductsFromSheet() {
           price: safePrice,
           images: imagesArray,
           description: row[4] ? row[4].trim() : '',
-          optionsField: row[6] ? row[6].trim() : '',
+          optionsField: row[6] ? row[6].trim() : '', // КОЛОНКА G
           searchTags: row[7] ? row[7].trim() : ''
         });
       }
@@ -499,12 +521,16 @@ function updateFilterIndicator() {
 
 function addToCartFromList(index) {
   const p = allProducts[index];
-  addToCart(index, 1, p.price);
+  if (p.optionsField) {
+    showProductDetails(index);
+  } else {
+    addToCart(index, 1, p.price, null);
+  }
 }
 
-function addToCart(index, qty, price) {
+function addToCart(index, qty, price, option) {
   const p = allProducts[index];
-  const itemKey = p.name;
+  const itemKey = p.name + (option ? ` (${option})` : '');
   const existing = cart.find(item => item.key === itemKey);
 
   if (existing) {
@@ -512,7 +538,7 @@ function addToCart(index, qty, price) {
   } else {
     cart.push({
       key: itemKey,
-      name: p.name,
+      name: itemKey,
       price: parseFloat(String(price).replace(/\s/g, '').replace(',', '.')),
       qty: qty,
       img: p.images.length > 0 ? p.images[0] : ''
@@ -608,15 +634,46 @@ function showProductDetails(index) {
   document.getElementById('modal-product-name').textContent = p.name;
   document.getElementById('modal-product-description').textContent = p.description || 'Опис відсутній';
 
+  // РЕНДЕР ОПЦИЙ ИЗ КОЛОНКИ G
+  const optionsWrapper = document.getElementById('modal-options-wrapper');
+  const optionsContainer = document.getElementById('modal-options-container');
+  
+  if (p.optionsField && p.optionsField.trim() !== '') {
+    const opts = p.optionsField.split(',').map(o => o.trim()).filter(Boolean);
+    if (opts.length > 0) {
+      selectedOption = opts[0];
+      let optsHtml = '';
+      opts.forEach((opt, idx) => {
+        const activeClass = idx === 0 ? 'active' : '';
+        optsHtml += `<button type="button" onclick="selectOption('${opt}', this)" class="option-btn ${activeClass}">${opt}</button>`;
+      });
+      optionsContainer.innerHTML = optsHtml;
+      optionsWrapper.classList.remove('hidden');
+    } else {
+      selectedOption = null;
+      optionsWrapper.classList.add('hidden');
+    }
+  } else {
+    selectedOption = null;
+    optionsWrapper.classList.add('hidden');
+  }
+
   updateModalPrice();
   
   const addBtn = document.getElementById('modal-product-btn');
   addBtn.onclick = function() {
-    addToCart(index, currentModalQty, p.price);
+    addToCart(index, currentModalQty, p.price, selectedOption);
     hideProductModal();
   };
   
   document.getElementById('product-modal').classList.remove('hidden');
+}
+
+function selectOption(optValue, btnEl) {
+  selectedOption = optValue;
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach(b => b.classList.remove('active'));
+  btnEl.classList.add('active');
 }
 
 function hideProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
@@ -649,7 +706,6 @@ function changePhoto(direction) {
   updateModalPhoto();
 }
 
-// Полноэкранный просмотр фото
 function openFullscreenPhoto() {
   const fsImg = document.getElementById('fullscreen-img');
   fsImg.src = currentPhotos[currentPhotoIndex];
