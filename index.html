@@ -191,7 +191,6 @@ onkeyup="filterProducts()">
 <h2 id="modal-product-name" class="text-2xl font-bold text-slate-800 mt-3 leading-tight"></h2>
 <p id="modal-product-description" class="text-slate-600 text-sm mt-3 whitespace-pre-line leading-relaxed"></p>
 
-<!-- РАЗДЕЛЬНЫЕ БЛОКИ: ЧЕТКО СТРОКА ЗА СТРОКОЙ -->
 <div id="modal-color-wrapper" class="mt-4 hidden bg-slate-50 p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-3">
   <label class="text-sm font-semibold text-slate-700 whitespace-nowrap">Колір:</label>
   <select id="modal-color-select" class="flex-1 bg-white border border-slate-300 text-slate-800 text-sm font-semibold rounded-xl p-2.5 outline-none focus:border-slate-800 shadow-sm cursor-pointer"></select>
@@ -296,11 +295,25 @@ let selectedCategory = null;
 let selectedSubcategory = null;
 let currentSearchTerm = "";
 let currentSortOrder = "default";
+let isProductModalOpen = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   loadProductsFromSheet();
   initSwipeGesture();
   initPinchZoom();
+
+  // Відстежуємо кнопку «Назад» в браузері/телефоні
+  window.addEventListener('popstate', (event) => {
+    const fsModal = document.getElementById('fullscreen-photo-modal');
+    const productModal = document.getElementById('product-modal');
+
+    if (!fsModal.classList.contains('hidden')) {
+      closeFullscreenPhoto();
+      history.pushState(null, '', window.location.href);
+    } else if (!productModal.classList.contains('hidden')) {
+      hideProductModal(true); // Закриваємо без зайвого history.back()
+    }
+  });
 });
 
 const parseCSV = (text) => {
@@ -356,7 +369,6 @@ async function loadProductsFromSheet() {
           subcategoryPart = parts[1].trim();
         }
 
-        // Зберігаємо сирий рядок варіантів із колонки G (індекс 6)
         let rawField = row[6] ? row[6].trim() : '';
         
         allProducts.push({
@@ -628,7 +640,6 @@ function showProductDetails(index) {
   document.getElementById('modal-product-name').textContent = p.name;
   document.getElementById('modal-product-description').textContent = p.description || 'Опис відсутній';
 
-  // Автоматичне розбивання твого формату "Колір: ...; Розмір: ..." на окремі списки
   parseAndSetupDropdowns(p.rawOptionsField);
 
   updateModalPhoto();
@@ -642,7 +653,19 @@ function showProductDetails(index) {
     hideProductModal();
   };
   
+  // Додаємо стан в історію браузера, щоб кнопка "Назад" закривала модалку
+  history.pushState({ modalOpen: true }, '', window.location.href);
+  isProductModalOpen = true;
+
   document.getElementById('product-modal').classList.remove('hidden');
+}
+
+function hideProductModal(isFromHistory = false) {
+  document.getElementById('product-modal').classList.add('hidden');
+  if (isProductModalOpen && !isFromHistory) {
+    isProductModalOpen = false;
+    history.back(); // Повертаємо історію назад, якщо закрили кнопкою "✕" або кліком поза модалкою
+  }
 }
 
 function parseAndSetupDropdowns(rawText) {
@@ -656,7 +679,6 @@ function parseAndSetupDropdowns(rawText) {
 
   if (!rawText) return;
 
-  // Розбиваємо за крапкою з комою (наприклад: "Колір: чорний, синій" та "Розмір: 37, 38")
   let parts = rawText.split(';');
   parts.forEach(part => {
     let subParts = part.split(':');
@@ -733,7 +755,6 @@ function changeModalQty(delta) {
   updateModalPrice();
 }
 
-// ---------------- СВАЙП ФОТО ПАЛЬЦЕМ ----------------
 function initSwipeGesture() {
   const zone = document.getElementById('modal-swipe-zone');
   let startX = 0;
@@ -760,7 +781,6 @@ function initSwipeGesture() {
   }, { passive: true });
 }
 
-// ---------------- УВЕЛИЧЕНИЕ ФОТО (PINCH TO ZOOM) ----------------
 let currentScale = 1;
 let startDistance = 0;
 
@@ -816,7 +836,6 @@ function showReviewsModal() { document.getElementById('reviews-modal').classList
 function hideReviewsModal() { document.getElementById('reviews-modal').classList.add('hidden'); }
 function showInstallModal() { document.getElementById('install-modal').classList.remove('hidden'); }
 function hideInstallModal() { document.getElementById('install-modal').classList.add('hidden'); }
-function hideProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
 
 function showToast(message, type = 'success') {
   const toast = document.createElement('div');
