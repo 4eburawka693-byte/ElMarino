@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ElMarino Магазин</title>
 
-<!-- Швидше з'єднання -->
+<!-- Швидше з'єднання з серверами та фотохостингами -->
 <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
 <link rel="dns-prefetch" href="https://unpkg.com">
 <link rel="dns-prefetch" href="https://docs.google.com">
@@ -35,7 +35,6 @@ body { font-family: system-ui, sans-serif; touch-action: manipulation; }
   padding: 2px 6px;
   border-radius: 6px;
   display: inline-block;
-  margin-bottom: 4px;
 }
 /* Полноэкранный просмотр с поддержкой масштабирования */
 #fullscreen-photo-modal {
@@ -178,7 +177,6 @@ onkeyup="filterProducts()">
 <div class="bg-white w-full h-full flex flex-col relative" onclick="event.stopPropagation()">
 <button onclick="hideProductModal()" class="fixed top-4 right-4 bg-[#242426]/70 text-white w-10 h-10 rounded-full flex items-center justify-center text-base font-bold z-50 shadow-lg border border-white/20 active:scale-95">✕</button>
 <div class="overflow-y-auto flex-1 pb-28">
-<!-- ЗОНА СВАЙПА И КЛИКА ДЛЯ УВЕЛИЧЕНИЯ -->
 <div id="modal-swipe-zone" onclick="openFullscreenPhoto()" class="w-full h-80 sm:h-96 bg-slate-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in select-none">
 <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain pointer-events-none" loading="eager">
 <button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none z-10">＜</button>
@@ -191,7 +189,6 @@ onkeyup="filterProducts()">
   <span id="modal-opt-badge" class="opt-badge hidden">ОПТ ЦІНА</span>
 </div>
 <h2 id="modal-product-name" class="text-2xl font-bold text-slate-800 mt-3 leading-tight"></h2>
-
 <p id="modal-product-description" class="text-slate-600 text-sm mt-3 whitespace-pre-line leading-relaxed"></p>
 
 <!-- БЛОКИ ВЫПАДАЮЩИХ СПИСКОВ (КОЛИР И РОЗМІР ОТДЕЛЬНО) -->
@@ -346,7 +343,8 @@ async function loadProductsFromSheet() {
         }
         
         let retailPrice = row[2] ? row[2].trim() : '0,00';
-        let optPrice = (row[3] && row[3].trim() !== '') ? row[3].trim() : retailPrice;
+        // Колонка G (індекс 6) — оптова ціна, якщо задана; інакше роздрібна
+        let optPrice = (row[6] && row[6].trim() !== '') ? row[6].trim() : retailPrice;
         let safePrice = IS_OPT ? optPrice : retailPrice;
 
         let rawCategory = row[1] ? row[1].trim() : 'Інше';
@@ -366,7 +364,7 @@ async function loadProductsFromSheet() {
           price: safePrice,
           images: imagesArray,
           description: row[4] ? row[4].trim() : '',
-          optionsField: row[6] ? row[6].trim() : '',
+          optionsField: row[6] ? row[6].trim() : '', // Варіанти/розміри зберігаються у відповідних колонках
           searchTags: row[7] ? row[7].trim() : ''
         });
       }
@@ -478,7 +476,6 @@ function filterByCategory(cat) {
   selectedCategory = (selectedCategory === cat) ? null : cat; 
   selectedSubcategory = null; 
   renderCategories(); 
- ром = null; 
   applyFilterAndSort(); 
 
   if (selectedCategory) {
@@ -647,7 +644,6 @@ function showProductDetails(index) {
   document.getElementById('product-modal').classList.remove('hidden');
 }
 
-// Прямой вывод того, что написано в таблице (делим запятой на варианты)
 function renderProductOptionsExact(optionsField) {
   const colorWrapper = document.getElementById('modal-color-wrapper');
   const colorSelect = document.getElementById('modal-color-select');
@@ -659,12 +655,9 @@ function renderProductOptionsExact(optionsField) {
 
   if (!optionsField || optionsField.trim() === '') return;
 
-  // Делим всё поле вариантов по запятой
   const rawOpts = optionsField.split(',').map(o => o.trim()).filter(Boolean);
   if (rawOpts.length === 0) return;
 
-  // Если в колонке записано несколько вариантов через запятую — делаем два селекта (Колір и Розмір),
-  // где в каждый идет полный список твоих вариантов, без фильтрации слов.
   const optionsHtml = rawOpts.map(opt => `<option value="${opt}">${opt}</option>`).join('');
 
   colorSelect.innerHTML = optionsHtml;
