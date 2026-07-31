@@ -29,14 +29,14 @@ body { font-family: system-ui, sans-serif; }
 }
 .pinch-zoom-container {
   width: 100%;
-  height: 80vh;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .zoomable-img {
   max-width: 100%;
-  max-height: 80vh;
+  max-height: 90vh;
   object-fit: contain;
 }
 .opt-badge {
@@ -127,7 +127,7 @@ onkeyup="filterProducts()">
 📲
 </button>
 
-<!-- МОДАЛКИ -->
+<!-- МОДАЛКА ОТЗЫВОВ -->
 <div id="reviews-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick="hideReviewsModal()">
 <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl relative max-h-[80vh] flex flex-col" onclick="event.stopPropagation()">
 <button onclick="hideReviewsModal()" class="absolute top-4 right-4 text-slate-400 text-xl p-1 hover:text-slate-600">✕</button>
@@ -145,6 +145,7 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
+<!-- МОДАЛКА УСТАНОВКИ -->
 <div id="install-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick="hideInstallModal()">
 <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative" onclick="event.stopPropagation()">
 <button onclick="hideInstallModal()" class="absolute top-4 right-4 text-slate-400 text-xl p-1">✕</button>
@@ -167,11 +168,12 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
+<!-- МОДАЛКА КАРТОЧКИ ТОВАРА -->
 <div id="product-modal" class="hidden fixed inset-0 bg-white z-50 flex flex-col" onclick="hideProductModal()">
 <div class="bg-white w-full h-full flex flex-col relative" onclick="event.stopPropagation()">
 <button onclick="hideProductModal()" class="fixed top-4 right-4 bg-[#242426]/70 text-white w-10 h-10 rounded-full flex items-center justify-center text-base font-bold z-50 shadow-lg border border-white/20 active:scale-95">✕</button>
 <div class="overflow-y-auto flex-1 pb-28">
-<div id="modal-swipe-zone" class="w-full h-80 sm:h-96 bg-slate-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in">
+<div id="modal-swipe-zone" onclick="openFullscreenPhoto()" class="w-full h-80 sm:h-96 bg-slate-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in">
 <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" loading="eager">
 <button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none">＜</button>
 <button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none">＞</button>
@@ -208,6 +210,15 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
+<!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР ФОТО -->
+<div id="fullscreen-photo-modal" class="hidden fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-2" onclick="closeFullscreenPhoto()">
+  <button onclick="closeFullscreenPhoto()" class="fixed top-4 right-4 bg-white/20 text-white w-11 h-11 rounded-full flex items-center justify-center text-xl font-bold z-50 backdrop-blur-sm active:scale-95">✕</button>
+  <div id="pinch-zoom-wrapper" class="w-full h-full flex items-center justify-center overflow-hidden" onclick="event.stopPropagation()">
+    <img id="fullscreen-img" class="zoomable-img" src="" alt="Fullscreen image">
+  </div>
+</div>
+
+<!-- МОДАЛКА КОРЗИНЫ -->
 <div id="cart-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end z-50" onclick="hideCart()">
 <div class="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-auto p-5 flex flex-col" onclick="event.stopPropagation()">
 <div class="flex justify-between mb-4 items-center">
@@ -227,6 +238,7 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
+<!-- МОДАЛКА ОФОРМЛЕНИЯ -->
 <div id="checkout-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[55]" onclick="hideCheckoutModal()">
 <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative" onclick="event.stopPropagation()">
 <button onclick="hideCheckoutModal()" class="absolute top-4 right-4 text-slate-400 text-2xl p-1">✕</button>
@@ -264,6 +276,7 @@ let currentModalQty = 1;
 let currentPhotos = [];
 let currentPhotoIndex = 0;
 let currentProductIndex = null;
+let pZoom = null;
 
 let selectedCategory = null;
 let selectedSubcategory = null;
@@ -301,16 +314,6 @@ async function loadProductsFromSheet() {
 
     let rows = parseCSV(csvText);
     allProducts = [];
-
-    // Порядок столбцов из Google Таблицы:
-    // row[0] -> A: name
-    // row[1] -> B: category
-    // row[2] -> C: price (Розница)
-    // row[3] -> D: opt_price (Опт)
-    // row[4] -> E: description (Описание)
-    // row[5] -> F: image (Ссылки на фото)
-    // row[6] -> G: Characteristics (Характеристики)
-    // row[7] -> H: Теги_Search (Теги для поиска)
 
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
@@ -606,7 +609,7 @@ function showProductDetails(index) {
   document.getElementById('modal-product-description').textContent = p.description || 'Опис відсутній';
 
   updateModalPrice();
-  document.getElementById('modal-product-btn').onclick = function() {
+  document.getElementById('modal-[#modal-product-btn]'.replace('[','').replace(']','')).onclick = function() {
     addToCart(index, currentModalQty, p.price);
     hideProductModal();
   };
@@ -641,6 +644,27 @@ function changePhoto(direction) {
   if (currentPhotoIndex < 0) currentPhotoIndex = currentPhotos.length - 1;
   if (currentPhotoIndex >= currentPhotos.length) currentPhotoIndex = 0;
   updateModalPhoto();
+}
+
+// Полноэкранный просмотр фото
+function openFullscreenPhoto() {
+  const fsImg = document.getElementById('fullscreen-img');
+  fsImg.src = currentPhotos[currentPhotoIndex];
+  const modal = document.getElementById('fullscreen-photo-modal');
+  modal.classList.remove('hidden');
+
+  if (window.PinchZoom) {
+    const el = document.getElementById('pinch-zoom-wrapper');
+    if (!pZoom) {
+      pZoom = new PinchZoom(el, {
+        draggableUnzoomed: false
+      });
+    }
+  }
+}
+
+function closeFullscreenPhoto() {
+  document.getElementById('fullscreen-photo-modal').classList.add('hidden');
 }
 
 function showReviewsModal() { document.getElementById('reviews-modal').classList.remove('hidden'); }
