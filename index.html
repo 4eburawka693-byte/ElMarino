@@ -48,6 +48,11 @@ object-fit: contain;
 <img src="https://i.postimg.cc/KvynpRrT/1782584017691.jpg" alt="ElMarino Banner" class="w-full h-auto object-cover block" loading="eager" fetchpriority="high">
 </div>
 
+<!-- Індикатор Оптового режиму -->
+<div id="wholesale-banner" class="hidden bg-amber-500 text-slate-900 font-bold text-center py-2 text-xs uppercase tracking-wider shadow-inner">
+  📦 Оптовий каталог (Спеціальні ціни)
+</div>
+
 <header class="bg-[#242426] text-white p-3 sticky top-0 z-40 shadow-md">
 <div class="flex justify-between items-center gap-1.5">
 <div class="flex items-center gap-1.5 min-w-0">
@@ -272,6 +277,17 @@ onkeyup="filterProducts()">
 const SHEET_ID = '1SyxBE2iwqqt-JtEZ8N9vkdrtxUUcxtv_goVA878TMog';
 const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
 const REVIEWS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=відгуки`;
+
+// Перевірка режиму (Опт чи Розниця) з URL параметра
+const urlParams = new URLSearchParams(window.location.search);
+const isWholesale = urlParams.get('mode') === 'opt';
+
+if (isWholesale) {
+  document.addEventListener("DOMContentLoaded", () => {
+    const banner = document.getElementById('wholesale-banner');
+    if (banner) banner.classList.remove('hidden');
+  });
+}
 
 tailwind.config = {
   theme: {
@@ -526,9 +542,9 @@ function hideReviewsModal(fromPopState = false) {
 }
 
 async function loadProductsFromSheet() {
-  const CACHE_KEY = 'elmarino_products_cache';
-  const CACHE_TIME_KEY = 'elmarino_cache_time';
-  const CACHE_EXPIRE = 15 * 60 * 1000; // Кэш збільшено до 15 хвилин для максимальної швидкості
+  const CACHE_KEY = isWholesale ? 'elmarino_products_opt_cache' : 'elmarino_products_retail_cache';
+  const CACHE_TIME_KEY = isWholesale ? 'elmarino_opt_cache_time' : 'elmarino_retail_cache_time';
+  const CACHE_EXPIRE = 15 * 60 * 1000;
 
   const cachedData = localStorage.getItem(CACHE_KEY);
   const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
@@ -553,13 +569,18 @@ async function loadProductsFromSheet() {
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       if (row && row[0] && row[0].trim() !== '') {
+        // Определение цены в зависимости от режима: Розница (Колонка C = row[2]) или Опт (Колонка D = row[3])
+        let retailPrice = row[2] ? row[2].trim() : '0,00';
+        let wholesalePrice = row[3] ? row[3].trim() : retailPrice;
+        let selectedPrice = isWholesale ? (wholesalePrice || retailPrice) : retailPrice;
+
         let imagesArray = [];
-        if (row[4]) {
-          imagesArray = row[4].split(',')
+        let rawImages = row[4] ? row[4].trim() : '';
+        if (rawImages) {
+          imagesArray = rawImages.split(',')
             .map(url => url.trim().replace(/[\r\n]/g, ''))
             .filter(Boolean);
         }
-        let safePrice = row[2] ? row[2].trim() : '0,00';
 
         let rawCategory = row[1] ? row[1].trim() : 'Інше';
         let categoryPart = rawCategory;
@@ -575,8 +596,8 @@ async function loadProductsFromSheet() {
           name: row[0].trim(),
           category: categoryPart,
           subcategory: subcategoryPart,
-          price: safePrice,
-          description: row[3] ? row[3].trim() : '',
+          price: selectedPrice,
+          description: row[4] ? row[4].trim() : '', 
           images: imagesArray,
           optionsField: row[5] ? row[5].trim() : '',
           searchTags: row[6] ? row[6].trim() : ''
@@ -679,8 +700,6 @@ let html = '';
 products.forEach((p, idx) => {
 const realIndex = allProducts.findIndex(item => item.name === p.name);
 const mainImage = p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=60';
-
-// Перші 4 фото завантажуються одразу (eager), решта — ліниво (lazy) для високої швидкості
 const loadingType = idx < 4 ? 'eager' : 'lazy';
 
 html += `<div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col justify-between">
@@ -694,7 +713,7 @@ html += `<div onclick="showProductDetails(${realIndex})" class="product-card bg-
 </div>
 </div>
 <div class="p-3 pt-0">
-<p class="text-slate-800 font-black text-base">${p.price} грн</p>
+<p class="text-slate-800 font-black text-base">${p.price} грн ${isWholesale ? '<span class="text-[10px] text-amber-600 font-bold border border-amber-300 bg-amber-50 px-1 py-0.5 rounded ml-1">ОПТ</span>' : ''}</p>
 <button onclick="addToCartFromList(${realIndex}); event.stopPropagation();" class="mt-2 w-full bg-[#242426] active:bg-[#323235] text-amber-400 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border border-[#3a3a3d]">В кошик</button>
 </div>
 </div>`;
@@ -1169,10 +1188,11 @@ return;
 const BOT_TOKEN = '8775134268:AAE9lKCPpZWs4E94uwAbMR26O2GPaJ8osDw';
 const CHAT_ID = '5263239405';
 
-let text = "🔔 НОВЕ ЗАМОВЛЕННЯ ElMarino!\n";
+let text = isWholesale ? "🔔 НОВЕ ОПТОВЕ ЗАМОВЛЕННЯ ElMarino!\n" : "🔔 НОВЕ ЗАМОВЛЕННЯ ElMarino!\n";
 text += "━━━━━━━━━━━━━━━━━━━━\n\n";
 text += `👤 *Покупець:* ${nameInput}\n`;
 text += `📞 *Зв'язок:* ${phoneInput}\n`;
+if (isWholesale) text += `🏷️ *Тип ціни:* ОПТ\n`;
 text += "━━━━━━━━━━━━━━━━━━━━\n\n";
 
 let total = 0;
@@ -1212,3 +1232,4 @@ loadProductsFromSheet();
 </script>
 </body>
 </html>
+
