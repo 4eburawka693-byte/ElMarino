@@ -194,10 +194,15 @@ onkeyup="filterProducts()">
 
 <p id="modal-product-description" class="text-slate-600 text-sm mt-3 whitespace-pre-line leading-relaxed"></p>
 
-<!-- БЛОК ВЫПАДАЮЩЕГО СПИСКА ВАРИАНТОВ -->
-<div id="modal-options-wrapper" class="mt-4 hidden bg-slate-50 p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-3">
-  <label class="text-sm font-semibold text-slate-700 whitespace-nowrap">Оберіть колір / варіант:</label>
-  <select id="modal-options-select" onchange="onOptionSelectChange()" class="flex-1 bg-white border border-slate-300 text-slate-800 text-sm font-semibold rounded-xl p-2.5 outline-none focus:border-slate-800 shadow-sm cursor-pointer"></select>
+<!-- БЛОКИ ВЫПАДАЮЩИХ СПИСКОВ (ЦВЕТ И РАЗМЕР ОТДЕЛЬНО) -->
+<div id="modal-color-wrapper" class="mt-4 hidden bg-slate-50 p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-3">
+  <label class="text-sm font-semibold text-slate-700 whitespace-nowrap">Колір:</label>
+  <select id="modal-color-select" class="flex-1 bg-white border border-slate-300 text-slate-800 text-sm font-semibold rounded-xl p-2.5 outline-none focus:border-slate-800 shadow-sm cursor-pointer"></select>
+</div>
+
+<div id="modal-size-wrapper" class="mt-3 hidden bg-slate-50 p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-3">
+  <label class="text-sm font-semibold text-slate-700 whitespace-nowrap">Розмір:</label>
+  <select id="modal-size-select" class="flex-1 bg-white border border-slate-300 text-slate-800 text-sm font-semibold rounded-xl p-2.5 outline-none focus:border-slate-800 shadow-sm cursor-pointer"></select>
 </div>
 
 <div class="mt-4 flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl justify-between border border-slate-100">
@@ -625,62 +630,112 @@ function showProductDetails(index) {
   document.getElementById('modal-product-name').textContent = p.name;
   document.getElementById('modal-product-description').textContent = p.description || 'Опис відсутній';
 
-  const optionsWrapper = document.getElementById('modal-options-wrapper');
-  const optionsSelect = document.getElementById('modal-options-select');
-  
-  if (p.optionsField && p.optionsField.trim() !== '') {
-    const opts = p.optionsField.split(',').map(o => o.trim()).filter(Boolean);
-    if (opts.length > 0) {
-      optionsSelect.innerHTML = opts.map((opt, i) => `<option value="${opt}">${opt}</option>`).join('');
-      optionsWrapper.classList.remove('hidden');
-    } else {
-      optionsSelect.innerHTML = '';
-      optionsWrapper.classList.add('hidden');
-    }
-  } else {
-    optionsSelect.innerHTML = '';
-    optionsWrapper.classList.add('hidden');
-  }
+  parseAndRenderProductOptions(p.optionsField);
 
   updateModalPhoto();
   updateModalPrice();
   
   const addBtn = document.getElementById('modal-product-btn');
   addBtn.onclick = function() {
-    let selectedOpt = optionsSelect.value || null;
+    let selectedOptionText = getSelectedOptionsString();
     let unitPrice = getSelectedPrice();
-    addToCart(index, currentModalQty, unitPrice, selectedOpt);
+    addToCart(index, currentModalQty, unitPrice, selectedOptionText);
     hideProductModal();
   };
   
   document.getElementById('product-modal').classList.remove('hidden');
 }
 
+// Умный парсер: разделяет варианты на цвета и размеры, если они есть
+function parseAndRenderProductOptions(optionsField) {
+  const colorWrapper = document.getElementById('modal-color-wrapper');
+  const colorSelect = document.getElementById('modal-color-select');
+  const sizeWrapper = document.getElementById('modal-size-wrapper');
+  const sizeSelect = document.getElementById('modal-size-select');
+
+  colorWrapper.classList.add('hidden');
+  sizeWrapper.classList.add('hidden');
+
+  if (!optionsField || optionsField.trim() === '') return;
+
+  const rawOpts = optionsField.split(',').map(o => o.trim()).filter(Boolean);
+
+  let colors = [];
+  let sizes = [];
+
+  rawOpts.forEach(opt => {
+    const lower = opt.toLowerCase();
+    // Проверяем, содержит ли элемент слово размер или цифры, похожие на размер (например 36-45 или 37)
+    if (lower.includes('розмір') || lower.includes('размер') || /^\d{2}$/.test(opt)) {
+      sizes.push(opt.replace(/розмір:?/i, '').replace(/размер:?/i, '').trim());
+    } else if (lower.includes('колір') || lower.includes('цвет') || (!/\d/.test(opt) && !lower.includes('шт'))) {
+      colors.push(opt.replace(/колір:?/i, '').replace(/цвет:?/i, '').trim());
+    } else {
+      // Если просто набор цифр или непонятный формат - кидаем в размеры или цвета
+      sizes.push(opt);
+    }
+  });
+
+  // Если разбиение не вышло или все попало в одно место, но есть разделитель точка с запятой или запятая
+  if (colors.length === 0 && sizes.length === rawOpts.length) {
+    // Проверим на наличие размеров
+    sizeSelect.innerHTML = rawOpts.map(o => `<option value="${o}">${o}</option>`).join('');
+    sizeWrapper.classList.remove('hidden');
+  } else {
+    if (colors.length > 0) {
+      colorSelect.innerHTML = colors.map(c => `<option value="${c}">${c}</option>`).join('');
+      colorWrapper.classList.remove('hidden');
+    }
+    if (sizes.length > 0) {
+      sizeSelect.innerHTML = sizes.map(s => `<option value="${s}">${s}</option>`).join('');
+      sizeWrapper.classList.remove('hidden');
+    }
+    // Если вообще стандартный единый список не разбился
+    if (colors.length === 0 && sizes.length === 0) {
+      sizeSelect.innerHTML = rawOpts.map(o => `<option value="${o}">${o}</option>`).join('');
+      sizeWrapper.classList.remove('hidden');
+    }
+  }
+}
+
+function getSelectedOptionsString() {
+  const colorSelect = document.getElementById('modal-color-select');
+  const sizeSelect = document.getElementById('modal-size-select');
+  const colorWrapper = document.getElementById('modal-color-wrapper');
+  const sizeWrapper = document.getElementById('modal-size-wrapper');
+
+  let parts = [];
+  if (!colorWrapper.classList.contains('hidden') && colorSelect.value) {
+    parts.push(`Колір: ${colorSelect.value}`);
+  }
+  if (!sizeWrapper.classList.contains('hidden') && sizeSelect.value) {
+    parts.push(`Розмір: ${sizeSelect.value}`);
+  }
+  return parts.length > 0 ? parts.join(', ') : null;
+}
+
 // Извлечение цены из названия варианта или базовой цены
 function getSelectedPrice() {
   if (currentProductIndex === null) return 0;
   const p = allProducts[currentProductIndex];
-  const optionsSelect = document.getElementById('modal-options-select');
-  
   let unitPrice = parseFloat(String(p.price).replace(/\s/g, '').replace(',', '.'));
   
-  if (optionsSelect && optionsSelect.value) {
-    // Ищем цену в формате "(40 грн)" или "40грн" или "- 40"
-    const match = optionsSelect.value.match(/\((\d+[\.,]?\d*)\s*грн\)/i) || optionsSelect.value.match(/(\d+[\.,]?\d*)\s*грн/i);
-    if (match && match[1]) {
-      unitPrice = parseFloat(match[1].replace(',', '.'));
+  const colorSelect = document.getElementById('modal-color-select');
+  const sizeSelect = document.getElementById('modal-size-select');
+  
+  [colorSelect, sizeSelect].forEach(select => {
+    if (select && select.value) {
+      const match = select.value.match(/\((\d+[\.,]?\d*)\s*грн\)/i) || select.value.match(/(\d+[\.,]?\d*)\s*грн/i);
+      if (match && match[1]) {
+        unitPrice = parseFloat(match[1].replace(',', '.'));
+      }
     }
-  }
+  });
+
   return unitPrice;
 }
 
 function onOptionSelectChange() {
-  const select = document.getElementById('modal-options-select');
-  const selectedIndex = select.selectedIndex;
-  if (selectedIndex !== -1 && selectedIndex < currentPhotos.length) {
-    currentPhotoIndex = selectedIndex;
-    updateModalPhoto(false);
-  }
   updateModalPrice();
 }
 
@@ -691,12 +746,6 @@ function updateModalPhoto(syncSelect = true) {
     counter.classList.remove('hidden'); counter.textContent = `${currentPhotoIndex + 1} із ${currentPhotos.length}`;
   } else counter.classList.add('hidden');
 
-  if (syncSelect) {
-    const select = document.getElementById('modal-options-select');
-    if (select && select.options.length > currentPhotoIndex) {
-      select.selectedIndex = currentPhotoIndex;
-    }
-  }
   updateModalPrice();
 }
 
@@ -737,12 +786,11 @@ function initSwipeGesture() {
     let diffX = startX - endX;
     let diffY = startY - endY;
 
-    // Проверяем, что свайп был именно по горизонтали
     if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
       if (diffX > 0) {
-        changePhoto(1); // Свайп влево -> следующее фото
+        changePhoto(1);
       } else {
-        changePhoto(-1); // Свайп вправо -> предыдущее фото
+        changePhoto(-1);
       }
     }
   }, { passive: true });
