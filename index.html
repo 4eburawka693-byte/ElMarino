@@ -563,11 +563,16 @@ async function loadProductsFromSheet() {
         // H: Теги [7]
 
         let retailPrice = row[2] ? row[2].trim() : '0,00';
-        let wholesalePrice = row[3] ? row[3].trim() : retailPrice;
-        let selectedPrice = isWholesale ? (wholesalePrice || retailPrice) : retailPrice;
+        let wholesalePrice = row[3] ? row[3].trim() : '';
+
+        // Четкая логика выбора цены
+        let selectedPrice = retailPrice;
+        if (isWholesale) {
+          selectedPrice = (wholesalePrice && wholesalePrice !== '') ? wholesalePrice : retailPrice;
+        }
 
         let imagesArray = [];
-        let rawImages = row[5] ? row[5].trim() : ''; // Берем ссылки на фото из колонки F (индекс 5)
+        let rawImages = row[5] ? row[5].trim() : '';
         if (rawImages) {
           imagesArray = rawImages.split(',')
             .map(url => url.trim().replace(/[\r\n]/g, ''))
@@ -590,7 +595,7 @@ async function loadProductsFromSheet() {
           subcategory: subcategoryPart,
           price: selectedPrice,
           images: imagesArray,
-          description: row[4] ? row[4].trim() : '', // Берем описание из колонки E (индекс 4)
+          description: row[4] ? row[4].trim() : '',
           optionsField: row[6] ? row[6].trim() : '',
           searchTags: row[7] ? row[7].trim() : ''
         });
@@ -745,7 +750,17 @@ anchorEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
 function filterProducts() { currentSearchTerm = document.getElementById('search').value.toLowerCase(); applyFilterAndSort(); }
 function resetFilters() { selectedCategory = null; selectedSubcategory = null; document.getElementById('search').value = ''; currentSearchTerm = ""; renderCategories(); applyFilterAndSort(); }
-function goHome() { selectedCategory = null; selectedSubcategory = null; currentSearchTerm = ""; currentSortOrder = "default"; document.getElementById('search').value = ''; renderCategories(); applyFilterAndSort(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+function goHome() { 
+  selectedCategory = null; 
+  selectedSubcategory = null; 
+  currentSearchTerm = ""; 
+  currentSortOrder = "default"; 
+  document.getElementById('search').value = ''; 
+  renderCategories(); 
+  applyFilterAndSort(); 
+  window.scrollTo({ top: 0, behavior: 'smooth' }); 
+}
 
 function updateFilterIndicator() {
 const indicator = document.getElementById('filter-indicator');
