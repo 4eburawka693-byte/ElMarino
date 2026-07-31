@@ -126,7 +126,7 @@ onkeyup="filterProducts()">
 📲
 </button>
 
-<!-- МОДАЛКИ И СКРИПТ -->
+<!-- МОДАЛКИ -->
 <div id="reviews-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick="hideReviewsModal()">
 <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl relative max-h-[80vh] flex flex-col" onclick="event.stopPropagation()">
 <button onclick="hideReviewsModal()" class="absolute top-4 right-4 text-slate-400 text-xl p-1 hover:text-slate-600">✕</button>
@@ -163,9 +163,6 @@ onkeyup="filterProducts()">
 2. Оберіть <b>«Додати на головний екран»</b> або <b>«Встановити додаток»</b>.
 </div>
 </div>
-<button onclick="triggerNativeInstall(); hideInstallModal();" id="native-install-btn" class="hidden mt-4 w-full bg-[#242426] hover:bg-[#323235] text-amber-400 py-3 rounded-xl font-bold transition-all shadow-md border border-[#3a3a3d]">
-Встановити автоматично
-</button>
 </div>
 </div>
 
@@ -174,7 +171,7 @@ onkeyup="filterProducts()">
 <button onclick="hideProductModal()" class="fixed top-4 right-4 bg-[#242426]/70 text-white w-10 h-10 rounded-full flex items-center justify-center text-base font-bold z-50 shadow-lg border border-white/20 active:scale-95">✕</button>
 <div class="overflow-y-auto flex-1 pb-28">
 <div id="modal-swipe-zone" class="w-full h-80 sm:h-96 bg-slate-50 flex items-center justify-center overflow-hidden relative cursor-zoom-in">
-<img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" loading="eager" onclick="openFullscreenPhoto()">
+<img id="modal-product-image" src="" class="max-w-full max-h-full object-contain" loading="eager">
 <button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none">＜</button>
 <button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none">＞</button>
 <span id="photo-counter" class="absolute bottom-3 right-3 bg-[#242426]/60 text-white text-xs px-2.5 py-1 rounded-full font-medium"></span>
@@ -186,21 +183,6 @@ onkeyup="filterProducts()">
 </div>
 <h2 id="modal-product-name" class="text-2xl font-bold text-slate-800 mt-3 leading-tight"></h2>
 <p id="modal-product-description" class="text-slate-600 text-sm mt-3 whitespace-pre-line leading-relaxed"></p>
-
-<div id="size-selector-block" class="hidden mt-5 flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl justify-between border border-slate-100">
-<span id="modal-size-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть варіант:</span>
-<select id="modal-size-select" class="p-2.5 rounded-xl border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]" onchange="updateModalPrice()"></select>
-</div>
-
-<div id="color-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl justify-between border border-slate-100">
-<span id="modal-color-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть колір:</span>
-<select id="modal-color-select" class="p-2.5 rounded-xl border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]"></select>
-</div>
-
-<div id="scent-selector-block" class="hidden mt-4 flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl justify-between border border-slate-100">
-<span id="modal-scent-label" class="text-slate-600 font-medium text-sm pl-2">Оберіть запах:</span>
-<select id="modal-scent-select" class="p-2.5 rounded-xl border bg-white font-bold text-slate-700 outline-none focus:border-amber-500 min-w-[140px]"></select>
-</div>
 
 <div class="mt-4 flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl justify-between border border-slate-100">
 <span class="text-slate-600 font-medium text-sm pl-2">Кількість:</span>
@@ -223,11 +205,6 @@ onkeyup="filterProducts()">
 </button>
 </div>
 </div>
-</div>
-
-<div id="fullscreen-lightbox" class="hidden fixed inset-0 bg-slate-950/95 z-[60] flex flex-col items-center justify-center p-4" onclick="closeFullscreenPhoto()">
-<button onclick="closeFullscreenPhoto()" class="fixed top-6 right-6 text-white text-3xl font-light hover:text-slate-300 z-[70] bg-black/40 w-12 h-12 rounded-full flex items-center justify-center">✕</button>
-<div id="lightbox-content-area" class="w-full flex items-center justify-center"></div>
 </div>
 
 <div id="cart-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end z-50" onclick="hideCart()">
@@ -272,7 +249,6 @@ onkeyup="filterProducts()">
 <script>
 const SHEET_ID = '1SyxBE2iwqqt-JtEZ8N9vkdrtxUUcxtv_goVA878TMog';
 const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`; 
-const REVIEWS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('відгуки')}`;
 
 const urlParams = new URLSearchParams(window.location.search);
 const IS_OPT = urlParams.get('mode') === 'opt';
@@ -292,8 +268,6 @@ let selectedCategory = null;
 let selectedSubcategory = null;
 let currentSearchTerm = "";
 let currentSortOrder = "default";
-let deferredInstallPrompt = null;
-let loadedReviews = [];
 
 document.addEventListener('DOMContentLoaded', () => {
   loadProductsFromSheet();
@@ -327,26 +301,30 @@ async function loadProductsFromSheet() {
     let rows = parseCSV(csvText);
     allProducts = [];
 
-    // Столбцы таблицы (0-index):
-    // 0: Название
-    // 1: Категория
-    // 2: Розница цена
-    // 3: Опт цена
-    // 4: Ссылки на фото
-    // 5: Описание / Модификации
-    // 6: Варианты / Теги
+    // Порядок столбцов из вашей Google Таблицы:
+    // row[0] -> A: name
+    // row[1] -> B: category
+    // row[2] -> C: price (Розница)
+    // row[3] -> D: opt_price (Опт)
+    // row[4] -> E: description (Описание)
+    // row[5] -> F: image (Ссылки на фото)
+    // row[6] -> G: Characteristics (Характеристики)
+    // row[7] -> H: Теги_Search (Теги для поиска)
+
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       if (row && row[0] && row[0].trim() !== '') {
         let imagesArray = [];
-        if (row[4]) {
-          imagesArray = row[4].split(',')
+        
+        // Фотографии берутся из столбца F (индекс 5)
+        if (row[5]) {
+          imagesArray = row[5].split(',')
             .map(url => url.trim().replace(/[\r\n]/g, ''))
             .filter(Boolean);
         }
         
         let retailPrice = row[2] ? row[2].trim() : '0,00';
-        let optPrice = row[3] ? row[3].trim() : retailPrice;
+        let optPrice = (row[3] && row[3].trim() !== '') ? row[3].trim() : retailPrice; // Если оптовая цена пустая, подставляем розничную
         let safePrice = IS_OPT ? optPrice : retailPrice;
 
         let rawCategory = row[1] ? row[1].trim() : 'Інше';
@@ -365,9 +343,9 @@ async function loadProductsFromSheet() {
           subcategory: subcategoryPart,
           price: safePrice,
           images: imagesArray,
-          description: row[5] ? row[5].trim() : '',
-          optionsField: row[6] ? row[6].trim() : '',
-          searchTags: row[7] ? row[7].trim() : ''
+          description: row[4] ? row[4].trim() : '',      // Описание из E (индекс 4)
+          optionsField: row[6] ? row[6].trim() : '',     // Характеристики из G (индекс 6)
+          searchTags: row[7] ? row[7].trim() : ''        // Теги из H (индекс 7)
         });
       }
     }
@@ -496,12 +474,12 @@ function updateFilterIndicator() {
 
 function addToCartFromList(index) {
   const p = allProducts[index];
-  addToCart(index, 1, null, null, null, p.price);
+  addToCart(index, 1, p.price);
 }
 
-function addToCart(index, qty, size, color, scent, price) {
+function addToCart(index, qty, price) {
   const p = allProducts[index];
-  const itemKey = `${p.name}_${size}_${color}_${scent}`;
+  const itemKey = p.name;
   const existing = cart.find(item => item.key === itemKey);
 
   if (existing) {
@@ -510,8 +488,8 @@ function addToCart(index, qty, size, color, scent, price) {
     cart.push({
       key: itemKey,
       name: p.name,
-      price: parseFloat(String(price).replace(',', '.')),
-      size, color, scent, qty,
+      price: parseFloat(String(price).replace(/\s/g, '').replace(',', '.')),
+      qty: qty,
       img: p.images.length > 0 ? p.images[0] : ''
     });
   }
@@ -607,7 +585,7 @@ function showProductDetails(index) {
 
   updateModalPrice();
   document.getElementById('modal-product-btn').onclick = function() {
-    addToCart(index, currentModalQty, null, null, null, p.price);
+    addToCart(index, currentModalQty, p.price);
     hideProductModal();
   };
   document.getElementById('product-modal').classList.remove('hidden');
@@ -642,6 +620,11 @@ function changePhoto(direction) {
   if (currentPhotoIndex >= currentPhotos.length) currentPhotoIndex = 0;
   updateModalPhoto();
 }
+
+function showReviewsModal() { document.getElementById('reviews-modal').classList.remove('hidden'); }
+function hideReviewsModal() { document.getElementById('reviews-modal').classList.add('hidden'); }
+function showInstallModal() { document.getElementById('install-modal').classList.remove('hidden'); }
+function hideInstallModal() { document.getElementById('install-modal').classList.add('hidden'); }
 
 function showToast(message, type = 'success') {
   const toast = document.createElement('div');
