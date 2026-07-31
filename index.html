@@ -193,7 +193,7 @@ onkeyup="filterProducts()">
 
 <div id="modal-color-wrapper" class="mt-4 hidden bg-slate-50 p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-3">
   <label class="text-sm font-semibold text-slate-700 whitespace-nowrap">Колір:</label>
-  <select id="modal-color-select" class="flex-1 bg-white border border-slate-300 text-slate-800 text-sm font-semibold rounded-xl p-2.5 outline-none focus:border-slate-800 shadow-sm cursor-pointer"></select>
+  <select id="modal-color-select" onchange="onColorSelectChange()" class="flex-1 bg-white border border-slate-300 text-slate-800 text-sm font-semibold rounded-xl p-2.5 outline-none focus:border-slate-800 shadow-sm cursor-pointer"></select>
 </div>
 
 <div id="modal-size-wrapper" class="mt-3 hidden bg-slate-50 p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-3">
@@ -224,12 +224,17 @@ onkeyup="filterProducts()">
 </div>
 </div>
 
-<!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР С ПИНЧ-ЗУМОМ -->
-<div id="fullscreen-photo-modal" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col items-center justify-center">
-  <button onclick="closeFullscreenPhoto()" class="fixed top-4 right-4 bg-white/20 text-white w-11 h-11 rounded-full flex items-center justify-center text-xl font-bold z-50 backdrop-blur-sm active:scale-95">✕</button>
-  <div id="fullscreen-img-container">
+<!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР С ПИНЧ-ЗУМОМ И СВАЙПАМИ -->
+<div id="fullscreen-photo-modal" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col items-center justify-center" onclick="closeFullscreenPhoto()">
+  <button onclick="closeFullscreenPhoto(); event.stopPropagation();" class="fixed top-4 right-4 bg-white/20 text-white w-11 h-11 rounded-full flex items-center justify-center text-xl font-bold z-50 backdrop-blur-sm active:scale-95">✕</button>
+  
+  <button onclick="changePhoto(-1); updateFullscreenPhotoSrc(); event.stopPropagation();" class="fixed left-3 top-1/2 -translate-y-1/2 bg-white/20 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-2xl z-50 backdrop-blur-sm active:bg-white/40 select-none">＜</button>
+  <button onclick="changePhoto(1); updateFullscreenPhotoSrc(); event.stopPropagation();" class="fixed right-3 top-1/2 -translate-y-1/2 bg-white/20 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-2xl z-50 backdrop-blur-sm active:bg-white/40 select-none">＞</button>
+
+  <div id="fullscreen-img-container" class="w-full h-full flex items-center justify-center" onclick="event.stopPropagation()">
     <img id="fullscreen-img" src="" alt="Fullscreen image">
   </div>
+  <span id="fullscreen-counter" class="fixed bottom-6 bg-white/20 text-white text-sm px-3 py-1 rounded-full font-medium z-50 backdrop-blur-sm"></span>
 </div>
 
 <!-- МОДАЛКА КОРЗИНЫ -->
@@ -290,6 +295,7 @@ let currentModalQty = 1;
 let currentPhotos = [];
 let currentPhotoIndex = 0;
 let currentProductIndex = null;
+let availableColors = [];
 
 let selectedCategory = null;
 let selectedSubcategory = null;
@@ -301,6 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadProductsFromSheet();
   initSwipeGesture();
   initPinchZoom();
+  initFullscreenSwipe();
 
   // Відстежуємо кнопку «Назад» в браузері/телефоні
   window.addEventListener('popstate', (event) => {
@@ -676,6 +683,7 @@ function parseAndSetupDropdowns(rawText) {
 
   colorWrapper.classList.add('hidden');
   sizeWrapper.classList.add('hidden');
+  availableColors = [];
 
   if (!rawText) return;
 
@@ -689,6 +697,7 @@ function parseAndSetupDropdowns(rawText) {
 
       if (key.includes('колір') || key.includes('цвет')) {
         if (values.length > 0) {
+          availableColors = values;
           colorSelect.innerHTML = values.map(v => `<option value="${v}">${v}</option>`).join('');
           colorWrapper.classList.remove('hidden');
         }
@@ -700,6 +709,18 @@ function parseAndSetupDropdowns(rawText) {
       }
     }
   });
+}
+
+function onColorSelectChange() {
+  if (availableColors.length === 0) return;
+  const colorSelect = document.getElementById('modal-color-select');
+  const selectedColor = colorSelect.value;
+  const colorIndex = availableColors.indexOf(selectedColor);
+  
+  if (colorIndex !== -1 && colorIndex < currentPhotos.length) {
+    currentPhotoIndex = colorIndex;
+    updateModalPhoto(false); // Оновлюємо фото без зміни селекту
+  }
 }
 
 function getSelectedOptionsString() {
@@ -725,12 +746,18 @@ function getSelectedPrice() {
   return unitPrice;
 }
 
-function updateModalPhoto(syncSelect = true) {
+function updateModalPhoto(syncColorSelect = true) {
   document.getElementById('modal-product-image').src = currentPhotos[currentPhotoIndex];
   const counter = document.getElementById('photo-counter');
   if (currentPhotos.length > 1) {
     counter.classList.remove('hidden'); counter.textContent = `${currentPhotoIndex + 1} із ${currentPhotos.length}`;
   } else counter.classList.add('hidden');
+
+  // Синхронізуємо випадаючий список кольорів із поточним фото
+  if (syncColorSelect && availableColors.length > 0 && currentPhotoIndex < availableColors.length) {
+    const colorSelect = document.getElementById('modal-color-select');
+    colorSelect.value = availableColors[currentPhotoIndex];
+  }
 
   updateModalPrice();
 }
@@ -816,16 +843,63 @@ function initPinchZoom() {
   }, { passive: true });
 }
 
+function initFullscreenSwipe() {
+  const modal = document.getElementById('fullscreen-photo-modal');
+  let startX = 0;
+  let startY = 0;
+
+  modal.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  modal.addEventListener('touchend', (e) => {
+    if (e.changedTouches.length === 1 && currentScale === 1) {
+      let endX = e.changedTouches[0].clientX;
+      let endY = e.changedTouches[0].clientY;
+      let diffX = startX - endX;
+      let diffY = startY - endY;
+
+      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+        if (diffX > 0) {
+          changePhoto(1);
+        } else {
+          changePhoto(-1);
+        }
+        updateFullscreenPhotoSrc();
+      }
+    }
+  }, { passive: true });
+}
+
 function getDistance(t1, t2) {
   return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
 }
 
 function openFullscreenPhoto() {
+  updateFullscreenPhotoSrc();
+  currentScale = 1;
+  
+  // Додаємо стан в історію для повноноекранного перегляду
+  history.pushState({ fullscreenOpen: true }, '', window.location.href);
+  document.getElementById('fullscreen-photo-modal').classList.remove('hidden');
+}
+
+function updateFullscreenPhotoSrc() {
   const fsImg = document.getElementById('fullscreen-img');
   fsImg.src = currentPhotos[currentPhotoIndex];
   fsImg.style.transform = 'scale(1)';
   currentScale = 1;
-  document.getElementById('fullscreen-photo-modal').classList.remove('hidden');
+  
+  const counter = document.getElementById('fullscreen-counter');
+  if (currentPhotos.length > 1) {
+    counter.classList.remove('hidden');
+    counter.textContent = `${currentPhotoIndex + 1} із ${currentPhotos.length}`;
+  } else {
+    counter.classList.add('hidden');
+  }
 }
 
 function closeFullscreenPhoto() {
