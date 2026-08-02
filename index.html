@@ -983,8 +983,8 @@ function submitOrder() {
 
   orderText += `\n💰 *Загальна сума: ${totalSum.toFixed(2).replace('.', ',')} грн*`;
 
-  // Замініть на свій Telegram або @ElMarinooptbot
-  const botUrl = `https://t.me/ElMarinooptbot?text=${encodeURIComponent(orderText)}`;
+  // Посилання на ваш правильний телеграм-бот
+  const botUrl = `https://t.me/el_marino_shop_bot?text=${encodeURIComponent(orderText)}`;
   window.open(botUrl, '_blank');
 
   cart = [];
