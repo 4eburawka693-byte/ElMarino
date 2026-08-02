@@ -263,8 +263,7 @@ onkeyup="filterProducts()">
 
 <script>
 const SHEET_ID = '1SyxBE2iwqqt-JtEZ8N9vkdrtxUUcxtv_goVA878TMog';
-const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
-const REVIEWS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=відгуки`;
+const SPREADSHEET_URL = https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0; const REVIEWS_URL =https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=відгуки;
 
 tailwind.config = {
 theme: {
@@ -351,7 +350,10 @@ scents: []
 if (!optionsStr || optionsStr.trim() === "") return result;
 
 let normalized = optionsStr
-.replace(/([^;\r\n]+)\s+(Розмір|Цвет|Колір|Размер|Запах|Аромат|Вкус|Смак)/gi, '$1\n$2')
+.replace(/([^;\r\n]+)\s+(Розмір|Цвет|Колір|Размер|Запах|Аромат|Вкус|Смак)/gi, 'latex
+1\n
+
+2')
 .replace(/;/g, '\n');
 
 const lines = normalized.split(/\r?\n/);
@@ -364,15 +366,11 @@ let rawValues = match[2].trim();
 
 if (/колір|кольори|цвет|цвета/i.test(rawLabel)) {
 let cleanLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
-result.colorLabel = `${cleanLabel}:`;
-result.colors = rawValues.split(',').map(c => c.trim()).filter(Boolean);
-} else if (/запах|аромат|вкус|смак/i.test(rawLabel)) {
-let cleanLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
-result.scentLabel = `${cleanLabel}:`;
+result.colorLabel = ${cleanLabel}:; result.colors = rawValues.split(',').map(c =&gt; c.trim()).filter(Boolean); } else if (/запах|аромат|вкус|смак/i.test(rawLabel)) { let cleanLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1); result.scentLabel = ``${cleanLabel}:;
 result.scents = rawValues.split(',').map(s => s.trim()).filter(Boolean);
 } else {
 let cleanLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
-result.sizeLabel = `${cleanLabel}:`;
+result.sizeLabel = ${cleanLabel}:`;
 result.sizes = rawValues.split(',').map(s => s.trim()).filter(Boolean);
 }
 }
@@ -394,9 +392,9 @@ price = parseFloat(rawPricePart).toFixed(2);
 }
 }
 else {
-let priceMatch = sizeStr.match(/\(([^)]+)\)/);
+let priceMatch = sizeStr.match(/(([^)]+))/);
 if (priceMatch && priceMatch[1]) {
-sizeName = sizeStr.replace(/\s*\([^)]+\)\s*/g, '').trim();
+sizeName = sizeStr.replace(/\s*([^)]+)\s*/g, '').trim();
 let rawPricePart = priceMatch[1].replace(/[^\d.,]/g, '').replace(',', '.').trim();
 if (rawPricePart && !isNaN(parseFloat(rawPricePart))) {
 price = parseFloat(rawPricePart).toFixed(2);
@@ -461,7 +459,7 @@ toast.className = 'notranslate';
 const bg = type === 'success' ? '#242426' : '#ef4444';
 const textColor = type === 'success' ? '#fbbf24' : '#ffffff';
 const borderStyle = type === 'success' ? 'border border-[#3a3a3d]' : '';
-toast.style.cssText = `position:fixed;top:20px;left:50%;transform:translateX(-50%);background:${bg};color:${textColor};padding:12px 24px;border-radius:16px;font-weight:bold;z-index:9999;box-shadow:0 10px 25px rgba(0,0,0,0.2);font-size:14px;${borderStyle}`;
+toast.style.cssText = position:fixed;top:20px;left:50%;transform:translateX(-50%);background:${bg};color: {borderStyle}`;
 toast.textContent = message;
 document.body.appendChild(toast);
 setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
@@ -489,27 +487,23 @@ date: row[3] ? row[3].trim() : ''
 renderReviews();
 } catch (err) {
 console.error("Помилка завантаження відгуків:", err);
-document.getElementById('reviews-list').innerHTML = `<div class="text-center py-6 text-red-400">Не вдалося завантажити відгуки. Спробуйте пізніше.</div>`;
+document.getElementById('reviews-list').innerHTML = <div class="text-center py-6 text-red-400"&gt;Не вдалося завантажити відгуки. Спробуйте пізніше.&lt;/div>;
 }
 }
 
 function renderReviews() {
 const container = document.getElementById('reviews-list');
 if (loadedReviews.length === 0) {
-container.innerHTML = `<div class="text-center py-10 text-slate-400">Відгуків поки немає. Будьте першим, хто залишить відгук!</div>`;
+container.innerHTML = <div class="text-center py-10 text-slate-400"&gt;Відгуків поки немає. Будьте першим, хто залишить відгук!&lt;/div>;
 return;
 }
 
 let html = '';
 loadedReviews.forEach(rev => {
 let stars = '⭐'.repeat(rev.rating || 5);
-html += `<div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm">
-<div class="flex justify-between items-center mb-1.5">
-<span class="font-bold text-slate-800 text-sm">${rev.name}</span>
-<span class="text-xs text-amber-500 font-bold flex gap-0.5">${stars}</span>
-</div>
-<p class="text-slate-600 text-xs leading-relaxed whitespace-pre-line">${rev.text}</p>
-${rev.date ? `<div class="text-[10px] text-slate-400 mt-2 text-right">${rev.date}</div>` : ''}
+html += <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm"&gt; &lt;div class="flex justify-between items-center mb-1.5"&gt; &lt;span class="font-bold text-slate-800 text-sm"&gt;${rev.name}</span>
+<span class="text-xs text-amber-500 font-bold flex gap-0.5">${stars}&lt;/span&gt; &lt;/div&gt; &lt;p class="text-slate-600 text-xs leading-relaxed whitespace-pre-line"&gt;${rev.text}</p>
+${rev.date ?<div class="text-[10px] text-slate-400 mt-2 text-right">${rev.date}&lt;/div> : ''}
 </div>`;
 });
 container.innerHTML = html;
@@ -529,7 +523,7 @@ if (!fromPopState && window.history.state?.modal === "reviews") history.back();
 async function loadProductsFromSheet() {
 const CACHE_KEY = 'elmarino_products_cache';
 const CACHE_TIME_KEY = 'elmarino_cache_time';
-const CACHE_EXPIRE = 4 * 60 * 1000; // Змінено з 15 на 4 хвилини
+const CACHE_EXPIRE = 15 * 60 * 1000;
 
 const cachedData = localStorage.getItem(CACHE_KEY);
 const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
@@ -545,7 +539,7 @@ return;
 
 try {
 const response = await fetch(SPREADSHEET_URL);
-if (!response.ok) throw new Error(`Помилка:${response.status}`);
+if (!response.ok) throw new Error(Помилка:${response.status}`);
 const csvText = await response.text();
 
 let rows = parseCSV(csvText);
@@ -611,7 +605,7 @@ if (p.category && !cats.includes(p.category)) cats.push(p.category);
 let html = '';
 cats.forEach(cat => {
 const activeStyle = (cat === selectedCategory) ? 'border-[#3a3a3d] bg-[#242426] font-bold text-amber-400 scale-[1.02]' : 'bg-white text-slate-700 border-slate-200';
-html += `<div onclick="filterByCategory('${cat}')" class="${activeStyle} p-3 rounded-2xl shadow-sm text-center text-xs font-semibold cursor-pointer border hover:border-amber-400 transition-all">${cat}</div>`;
+html += <div onclick="filterByCategory('${cat}')" class="${activeStyle} p-3 rounded-2xl shadow-sm text-center text-xs font-semibold cursor-pointer border hover:border-amber-400 transition-all"&gt;${cat}</div>`;
 });
 document.getElementById('categories').innerHTML = html;
 
@@ -641,7 +635,7 @@ subContainer.classList.remove('hidden');
 let html = '';
 subcats.forEach(sub => {
 const activeStyle = (sub === selectedSubcategory) ? 'border-[#3b2d2c] bg-[#4a3e3d] font-bold text-amber-400 shadow-md scale-[1.01]' : 'bg-white text-[#5c4a44] border-[#dfc3b0] hover:border-[#cbb09d]';
-html += `<div onclick="filterBySubcategory('${sub}')" class="${activeStyle} p-2.5 rounded-xl shadow-sm text-center text-xs font-semibold cursor-pointer border transition-all truncate">${sub}</div>`;
+html += <div onclick="filterBySubcategory('${sub}')" class=" {sub}</div>`;
 });
 subContainer.innerHTML = html;
 }
@@ -682,19 +676,17 @@ const realIndex = allProducts.findIndex(item => item.name === p.name);
 const mainImage = p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=60';
 const loadingType = idx < 4 ? 'eager' : 'lazy';
 
-html += `<div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col justify-between">
+html += <div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col justify-between">
 <div>
 <div class="w-full h-40 bg-slate-50 flex items-center justify-center overflow-hidden">
 <img src="${mainImage}" class="max-w-full max-h-full object-contain" loading="${loadingType}">
 </div>
 <div class="p-3">
-<h3 class="text-sm font-bold text-slate-800 leading-tight line-clamp-2 min-h-[40px]">${p.name}</h3>
-<p class="text-slate-500 text-xs mt-1 min-h-[32px] clamp-desc">${p.description}</p>
+<h3 class="text-sm font-bold text-slate-800 leading-tight line-clamp-2 min-h-[40px]">${p.name}&lt;/h3&gt; &lt;p class="text-slate-500 text-xs mt-1 min-h-[32px] clamp-desc"&gt;${p.description}</p>
 </div>
 </div>
 <div class="p-3 pt-0">
-<p class="text-slate-800 font-black text-base">${p.price} грн</p>
-<button onclick="addToCartFromList(${realIndex}); event.stopPropagation();" class="mt-2 w-full bg-[#242426] active:bg-[#323235] text-amber-400 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border border-[#3a3a3d]">В кошик</button>
+<p class="text-slate-800 font-black text-base">${p.price} грн&lt;/p&gt; &lt;button onclick="addToCartFromList(${realIndex}); event.stopPropagation();" class="mt-2 w-full bg-[#242426] active:bg-[#323235] text-amber-400 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border border-[#3a3a3d]">В кошик</button>
 </div>
 </div>`;
 });
@@ -748,9 +740,7 @@ function updateFilterIndicator() {
 const indicator = document.getElementById('filter-indicator');
 const textEl = document.getElementById('filter-indicator-text');
 let parts = [];
-if (selectedCategory) parts.push(`Категорія: <b>${selectedCategory}</b>`);
-if (selectedSubcategory) parts.push(`Підкатегорія: <b>${selectedSubcategory}</b>`);
-if (currentSearchTerm) parts.push(`Пошук: <b>"${currentSearchTerm}"</b>`);
+if (selectedCategory) parts.push(Категорія: &lt;b&gt;${selectedCategory}</b>); if (selectedSubcategory) parts.push(Підкатегорія: <b> {currentSearchTerm}"</b>`);
 if (parts.length > 0) { indicator.classList.remove('hidden'); indicator.classList.add('flex'); textEl.innerHTML = parts.join(' | '); }
 else { indicator.classList.add('hidden'); indicator.classList.remove('flex'); }
 }
@@ -782,7 +772,7 @@ currentPhotoIndex = 0;
 updateModalPhoto();
 
 let displayCategoryName = p.category;
-if (p.subcategory) displayCategoryName += ` / ${p.subcategory}`;
+if (p.subcategory) displayCategoryName += / ${p.subcategory}`;
 document.getElementById('modal-product-category').textContent = displayCategoryName;
 
 document.getElementById('modal-product-name').textContent = p.name;
@@ -808,7 +798,7 @@ sizeLabel.textContent = parsedData.sizeLabel;
 let sizeOptions = parsedData.sizes.map((s, idx) => {
 let parsed = parseSizePrice(s, p.price);
 let isSelected = idx === 0 ? 'selected' : '';
-return `<option value="${parsed.sizeName}" data-price="${parsed.price}" ${isSelected}>${s}</option>`;
+return <option value="${parsed.sizeName}" data-price=" {isSelected}>${s}&lt;/option>;
 }).join('');
 sizeSelect.innerHTML = sizeOptions;
 } else {
@@ -821,7 +811,7 @@ colorBlock.classList.remove('hidden');
 colorLabel.textContent = parsedData.colorLabel;
 let colorOptions = parsedData.colors.map((c, idx) => {
 let isSelected = idx === 0 ? 'selected' : '';
-return `<option value="${c}" data-index="${idx}" ${isSelected}>${c}</option>`;
+return <option value="${c}" data-index=" {isSelected}>${c}&lt;/option>;
 }).join('');
 colorSelect.innerHTML = colorOptions;
 } else {
@@ -834,7 +824,7 @@ scentBlock.classList.remove('hidden');
 scentLabel.textContent = parsedData.scentLabel;
 let scentOptions = parsedData.scents.map((sc, idx) => {
 let isSelected = idx === 0 ? 'selected' : '';
-return `<option value="${sc}" ${isSelected}>${sc}</option>`;
+return <option value="${sc}"  {sc}</option>`;
 }).join('');
 scentSelect.innerHTML = scentOptions;
 } else {
@@ -899,7 +889,7 @@ const counter = document.getElementById('photo-counter');
 
 if (currentPhotos.length > 1) {
 prevBtn.classList.remove('hidden'); nextBtn.classList.remove('hidden'); counter.classList.remove('hidden');
-counter.textContent = `${currentPhotoIndex + 1} із ${currentPhotos.length}`;
+counter.textContent = ${currentPhotoIndex + 1} із ${currentPhotos.length};
 } else {
 prevBtn.classList.add('hidden'); nextBtn.classList.add('hidden'); counter.classList.add('hidden');
 }
@@ -932,335 +922,4 @@ updateLightboxImage();
 
 function changePhoto(direction) {
 if (currentPhotos.length <= 1) return;
-currentPhotoIndex += direction;
-if (currentPhotoIndex < 0) currentPhotoIndex = currentPhotos.length - 1;
-if (currentPhotoIndex >= currentPhotos.length) currentPhotoIndex = 0;
-resetZoom();
-updateModalPhoto();
-syncColorByPhoto();
-if (!document.getElementById('fullscreen-lightbox').classList.contains('hidden')) {
-updateLightboxImage();
-}
-}
-
-function changeModalQty(delta) {
-currentModalQty += delta;
-if (currentModalQty < 1) currentModalQty = 1;
-document.getElementById('modal-qty').textContent = currentModalQty;
-updateModalPrice();
-}
-
-function hideProductModal(fromPopState = false) {
-document.getElementById('product-modal').classList.add('hidden');
-currentProductIndex = null;
-if (!fromPopState && window.history.state?.modal === "product") history.back();
-}
-
-function openFullscreenPhoto() {
-if (currentPhotos.length === 0) return;
-const lightbox = document.getElementById('fullscreen-lightbox');
-lightbox.classList.remove('hidden');
-resetZoom();
-updateLightboxImage();
-history.pushState({modal: "lightbox"}, null, null);
-}
-
-function updateLightboxImage() {
-const img = document.getElementById('lightbox-img');
-img.src = currentPhotos[currentPhotoIndex];
-
-const prevBtn = document.getElementById('lightbox-prev-btn');
-const nextBtn = document.getElementById('lightbox-next-btn');
-if (currentPhotos.length > 1) {
-prevBtn.classList.remove('hidden');
-nextBtn.classList.remove('hidden');
-} else {
-prevBtn.classList.add('hidden');
-nextBtn.classList.add('hidden');
-}
-}
-
-function closeFullscreenPhoto(fromPopState = false) {
-const lightbox = document.getElementById('fullscreen-lightbox');
-lightbox.classList.add('hidden');
-resetZoom();
-if (!fromPopState && window.history.state?.modal === "lightbox") history.back();
-}
-
-function resetZoom() {
-scale = 1;
-translateX = 0;
-translateY = 0;
-updateTransform();
-}
-
-function updateTransform() {
-const img = document.getElementById('lightbox-img');
-if (img) {
-img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-}
-}
-
-function addToCart(index, qty, size, color, scent, customPrice) {
-const p = allProducts[index];
-let unitPrice = customPrice !== undefined ? customPrice : p.price;
-let cleanNum = parseFloat(String(unitPrice).replace(/\s/g, '').replace(',', '.'));
-
-let cartItem = {
-name: p.name,
-price: cleanNum,
-qty: qty,
-size: size,
-color: color,
-scent: scent,
-image: p.images.length > 0 ? p.images[0] : ''
-};
-
-let existingIndex = cart.findIndex(item => 
-item.name === cartItem.name && 
-item.size === cartItem.size && 
-item.color === cartItem.color && 
-item.scent === cartItem.scent
-);
-
-if (existingIndex > -1) {
-cart[existingIndex].qty += qty;
-} else {
-cart.push(cartItem);
-}
-
-updateCartCounter();
-showToast(`✅ ${p.name} додано в кошик!`);
-}
-
-function updateCartCounter() {
-let totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
-document.getElementById('cart-count').textContent = totalCount;
-}
-
-function showCart() {
-renderCartItems();
-document.getElementById('cart-modal').classList.remove('hidden');
-history.pushState({modal: "cart"}, null, null);
-}
-
-function hideCart(fromPopState = false) {
-document.getElementById('cart-modal').classList.add('hidden');
-if (!fromPopState && window.history.state?.modal === "cart") history.back();
-}
-
-function renderCartItems() {
-const container = document.getElementById('cart-items');
-if (cart.length === 0) {
-container.innerHTML = `<div class="text-center py-10 text-slate-400 font-medium">Ваш кошик порожній 🛒</div>`;
-document.getElementById('cart-total').textContent = '0 грн';
-return;
-}
-
-let html = '';
-let totalSum = 0;
-
-cart.forEach((item, index) => {
-let itemTotal = item.price * item.qty;
-totalSum += itemTotal;
-
-let optionsText = [];
-if (item.size) optionsText.push(`Варіант: <b>${item.size}</b>`);
-if (item.color) optionsText.push(`Колір: <b>${item.color}</b>`);
-if (item.scent) optionsText.push(`Запах: <b>${item.scent}</b>`);
-
-html += `<div class="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-100 gap-3">
-<div class="w-16 h-16 bg-white rounded-xl flex items-center justify-center overflow-hidden shrink-0 border">
-<img src="${item.image || 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=100&q=60'}" class="max-w-full max-h-full object-contain">
-</div>
-<div class="flex-1 min-w-0">
-<h4 class="text-xs font-bold text-slate-800 truncate">${item.name}</h4>
-${optionsText.length > 0 ? `<p class="text-[11px] text-slate-500 mt-0.5">${optionsText.join(' | ')}</p>` : ''}
-<div class="flex items-center gap-2 mt-2">
-<button onclick="changeCartQty(${index}, -1)" class="w-7 h-7 bg-white rounded-lg border font-bold text-sm shadow-sm">-</button>
-<span class="text-xs font-bold text-slate-800">${item.qty}</span>
-<button onclick="changeCartQty(${index}, 1)" class="w-7 h-7 bg-white rounded-lg border font-bold text-sm shadow-sm">+</button>
-<span class="text-xs font-black text-slate-800 ml-auto">${itemTotal.toFixed(2).replace('.', ',')} грн</span>
-</div>
-</div>
-<button onclick="removeFromCart(${index})" class="text-slate-400 hover:text-red-500 text-lg p-1">✕</button>
-</div>`;
-});
-
-container.innerHTML = html;
-document.getElementById('cart-total').textContent = totalSum.toFixed(2).replace('.', ',') + ' грн';
-}
-
-function changeCartQty(index, delta) {
-cart[index].qty += delta;
-if (cart[index].qty <= 0) {
-cart.splice(index, 1);
-}
-updateCartCounter();
-renderCartItems();
-}
-
-function removeFromCart(index) {
-cart.splice(index, 1);
-updateCartCounter();
-renderCartItems();
-}
-
-function showCheckoutModal() {
-if (cart.length === 0) {
-showToast("❌ Кошик порожній!", "error");
-return;
-}
-hideCart(true);
-document.getElementById('checkout-modal').classList.remove('hidden');
-history.pushState({modal: "checkout"}, null, null);
-}
-
-function hideCheckoutModal(fromPopState = false) {
-document.getElementById('checkout-modal').classList.add('hidden');
-if (!fromPopState && window.history.state?.modal === "checkout") history.back();
-}
-
-function submitOrder() {
-let name = document.getElementById('customer-name').value.trim();
-let phone = document.getElementById('customer-phone').value.trim();
-
-if (!name || !phone) {
-showToast("❌ Будь ласка, введіть ім'я та номер телефону!", "error");
-return;
-}
-
-let orderText = `🛒 Нове замовлення у магазині ElMarino!\n\n👤 Ім'я: ${name}\n📞 Телефон: ${phone}\n\nТовари:\n`;
-let totalSum = 0;
-
-cart.forEach(item => {
-let itemTotal = item.price * item.qty;
-totalSum += itemTotal;
-let opts = [];
-if (item.size) opts.push(item.size);
-if (item.color) opts.push(item.color);
-if (item.scent) opts.push(item.scent);
-let optsStr = opts.length > 0 ? ` (${opts.join(', ')})` : '';
-orderText += `▪️ ${item.name}${optsStr} x ${item.qty} шт. — ${itemTotal.toFixed(2)} грн\n`;
-});
-
-orderText += `\n💰 Загальна сума: ${totalSum.toFixed(2)} грн`;
-
-let encodedMessage = encodeURIComponent(orderText);
-let telegramUrl = `https://t.me/ElMarino_we?text=${encodedMessage}`;
-
-window.open(telegramUrl, '_blank');
-cart = [];
-updateCartCounter();
-hideCheckoutModal();
-showToast("✅ Замовлення успішно сформовано!");
-}
-
-function initSwipeListeners() {
-const zone = document.getElementById('modal-swipe-zone');
-if (!zone) return;
-
-zone.addEventListener('touchstart', e => {
-touchStartX = e.changedTouches[0].screenX;
-}, {passive: true});
-
-zone.addEventListener('touchend', e => {
-touchEndX = e.changedTouches[0].screenX;
-handleSwipe();
-}, {passive: true});
-
-const lightbox = document.getElementById('fullscreen-lightbox');
-const lightboxImg = document.getElementById('lightbox-img');
-if (!lightbox || !lightboxImg) return;
-
-// Логіка жестів для лайтбоксу (Пінч-зум, перетягування та свайпи)
-lightbox.addEventListener('touchstart', e => {
-if (e.touches.length === 2) {
-initialDistance = Math.hypot(
-e.touches[0].clientX - e.touches[1].clientX,
-e.touches[0].clientY - e.touches[1].clientY
-);
-} else if (e.touches.length === 1) {
-startX = e.touches[0].clientX - translateX;
-startY = e.touches[0].clientY - translateY;
-lightboxTouchStartX = e.touches[0].screenX;
-}
-}, {passive: true});
-
-lightbox.addEventListener('touchmove', e => {
-if (e.touches.length === 2) {
-let currentDistance = Math.hypot(
-e.touches[0].clientX - e.touches[1].clientX,
-e.touches[0].clientY - e.touches[1].clientY
-);
-if (initialDistance > 0) {
-let factor = currentDistance / initialDistance;
-scale = Math.min(Math.max(1, scale * (factor > 1 ? 1.05 : 0.95)), 4);
-updateTransform();
-}
-} else if (e.touches.length === 1 && scale > 1) {
-translateX = e.touches[0].clientX - startX;
-translateY = e.touches[0].clientY - startY;
-updateTransform();
-}
-}, {passive: true});
-
-lightbox.addEventListener('touchend', e => {
-if (e.changedTouches.length === 1 && scale === 1) {
-lightboxTouchEndX = e.changedTouches[0].screenX;
-handleLightboxSwipe();
-}
-if (e.touches.length < 2) {
-initialDistance = 0;
-}
-if (scale <= 1) {
-resetZoom();
-}
-}, {passive: true});
-
-// Подвійний тап для швидкого зуму
-lightboxImg.addEventListener('click', e => {
-let currentTime = new Date().getTime();
-let tapLength = currentTime - lastTapTime;
-if (tapLength < 300 && tapLength > 0) {
-if (scale > 1) {
-resetZoom();
-} else {
-scale = 2.5;
-updateTransform();
-}
-e.stopPropagation();
-}
-lastTapTime = currentTime;
-});
-}
-
-function handleSwipe() {
-const threshold = 50;
-if (touchEndX < touchStartX - threshold) {
-changePhoto(1);
-}
-if (touchEndX > touchStartX + threshold) {
-changePhoto(-1);
-}
-}
-
-function handleLightboxSwipe() {
-const threshold = 50;
-if (lightboxTouchEndX < lightboxTouchStartX - threshold) {
-changePhoto(1);
-updateLightboxImage();
-}
-if (lightboxTouchEndX > lightboxTouchStartX + threshold) {
-changePhoto(-1);
-updateLightboxImage();
-}
-}
-
-window.onload = function() {
-loadProductsFromSheet();
-};
-</script>
-</body>
-</html>
-
+currentPhotoIndex +
