@@ -606,8 +606,11 @@ function renderReviews() {
   let html = '';
   loadedReviews.forEach(rev => {
     let stars = '⭐'.repeat(Math.min(5, rev.rating || 5));
+    const safeName = (rev.product || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     const productLine = rev.product
-      ? `<div class="text-[10px] text-amber-700 font-medium mb-1">📦 ${rev.product}</div>`
+      ? `<button type="button" onclick="openProductFromReview('${safeName}')" class="text-left text-[11px] text-amber-700 font-bold mb-1.5 hover:underline active:opacity-70 flex items-start gap-1">
+           <span>📦</span><span class="underline decoration-amber-300 underline-offset-2">${rev.product}</span>
+         </button>`
       : '';
     html += `
       <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm">
@@ -621,6 +624,23 @@ function renderReviews() {
       </div>`;
   });
   container.innerHTML = html;
+}
+
+function openProductFromReview(productName) {
+  if (!productName || !allProducts.length) {
+    showToast('Товар не знайдено', 'error');
+    return;
+  }
+  const idx = allProducts.findIndex(p =>
+    p.name.trim().toLowerCase() === productName.trim().toLowerCase()
+  );
+  if (idx === -1) {
+    showToast('Товар не знайдено в каталозі', 'error');
+    return;
+  }
+  // Закриваємо модалку відгуків і відкриваємо товар
+  hideReviewsModal(true);
+  setTimeout(() => showProductDetails(idx), 50);
 }
 
 function getReviewsForProduct(productName) {
