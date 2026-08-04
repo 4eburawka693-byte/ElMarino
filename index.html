@@ -191,6 +191,41 @@ body { font-family: system-ui, sans-serif; }
             <button onclick="changeModalQty(1)" class="w-10 h-10 bg-white rounded-xl border font-bold text-xl active:bg-slate-100 shadow-sm">+</button>
           </div>
         </div>
+
+        <!-- Відгуки під товаром -->
+        <div class="mt-6 border-t border-slate-100 pt-5">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-1.5">
+              <span class="text-amber-500">⭐</span> Відгуки
+              <span id="product-reviews-count" class="text-xs font-medium text-slate-400 ml-1"></span>
+            </h3>
+            <button onclick="toggleReviewForm()" class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-100 px-3 py-1.5 rounded-xl active:bg-amber-100">
+              ✍️ Написати
+            </button>
+          </div>
+
+          <div id="product-review-form" class="hidden mb-4 bg-slate-50 border border-slate-100 rounded-2xl p-3.5 space-y-3">
+            <input id="review-name" type="text" placeholder="Ваше ім'я" class="w-full p-3 rounded-xl border outline-none focus:border-amber-500 text-sm font-medium">
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-500 font-medium">Оцінка:</span>
+              <div id="review-stars" class="flex gap-0.5">
+                <button type="button" onclick="setReviewRating(1)" class="review-star text-2xl leading-none px-1 py-1 text-amber-400" data-v="1" style="color:#fbbf24">★</button>
+                <button type="button" onclick="setReviewRating(2)" class="review-star text-2xl leading-none px-1 py-1 text-amber-400" data-v="2" style="color:#fbbf24">★</button>
+                <button type="button" onclick="setReviewRating(3)" class="review-star text-2xl leading-none px-1 py-1 text-amber-400" data-v="3" style="color:#fbbf24">★</button>
+                <button type="button" onclick="setReviewRating(4)" class="review-star text-2xl leading-none px-1 py-1 text-amber-400" data-v="4" style="color:#fbbf24">★</button>
+                <button type="button" onclick="setReviewRating(5)" class="review-star text-2xl leading-none px-1 py-1 text-amber-400" data-v="5" style="color:#fbbf24">★</button>
+              </div>
+            </div>
+            <textarea id="review-text" rows="3" placeholder="Ваш відгук про товар..." class="w-full p-3 rounded-xl border outline-none focus:border-amber-500 text-sm resize-none"></textarea>
+            <button id="submit-review-btn" onclick="submitProductReview()" class="w-full bg-[#242426] text-amber-400 py-3 rounded-xl font-bold text-sm border border-[#3a3a3d] active:bg-[#323235]">
+              Надіслати відгук
+            </button>
+          </div>
+
+          <div id="product-reviews-list" class="space-y-3">
+            <div class="text-center py-4 text-slate-400 text-xs">Завантаження відгуків...</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -276,6 +311,9 @@ body { font-family: system-ui, sans-serif; }
 const SHEET_ID = '1SyxBE2iwqqt-JtEZ8N9vkdrtxUUcxtv_goVA878TMog';
 const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
 const REVIEWS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=відгуки`;
+
+// АВТОМАТИЧНІ ВІДГУКИ — після розгортання Apps Script вставте URL сюди:
+const REVIEWS_API_URL = 'https://script.google.com/macros/s/AKfycbyp2b8vU2jS5IGNgaBWYYArf-a9j6K4PtLawzBYRdOdn6paz_4QHdNH23Xzopv8gFbu/exec';
 
 // Telegram Bot
 const TELEGRAM_BOT_TOKEN = '8775134268:AAE9lKCPpZWs4E94uwAbMR26O2GPaJ8osDw';
@@ -491,53 +529,236 @@ function showToast(message, type = 'success') {
   }, 2500);
 }
 
+let currentReviewRating = 5;
+let reviewsLoaded = false;
+
 async function loadReviewsFromSheet() {
   try {
-    const response = await fetch(REVIEWS_URL);
+    // 1) Якщо є Apps Script API — читаємо звідти (автоматичні відгуки)
+    if (REVIEWS_API_URL) {
+      const response = await fetch(REVIEWS_API_URL + '?t=' + Date.now());
+      const data = await response.json();
+      if (data && data.ok && Array.isArray(data.reviews)) {
+        loadedReviews = data.reviews.map(r => ({
+          product: String(r.product || ''),
+          name: String(r.name || ''),
+          text: String(r.text || ''),
+          rating: parseInt(r.rating, 10) || 5,
+          date: String(r.date || '')
+        }));
+        reviewsLoaded = true;
+        renderReviews();
+        if (currentProductIndex !== null) renderProductReviews();
+        return;
+      }
+    }
+
+    // 2) Запасний варіант — CSV з таблиці
+    const response = await fetch(REVIEWS_URL + '&_=' + Date.now());
     if (!response.ok) throw new Error("Не вдалося завантажити відгуки");
     const csvText = await response.text();
     const rows = parseCSV(csvText);
 
+    const header = (rows[0] || []).map(c => (c || '').toLowerCase());
+    const productFirst = header.some(h => h.includes('товар') || h.includes('product')) ||
+      (header[0] && (header[0].includes('товар') || header[0].includes('назва')));
+
     loadedReviews = [];
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
-      if (row && row[0] && row[0].trim() !== '') {
+      if (!row || !row[0] || row[0].trim() === '') continue;
+      if (productFirst || row.length >= 5) {
         loadedReviews.push({
-          name: row[0].trim(),
-          text: row[1] ? row[1].trim() : '',
-          rating: row[2] ? parseInt(row[2].trim()) : 5,
-          date: row[3] ? row[3].trim() : ''
+          product: (row[0] || '').trim(),
+          name: (row[1] || '').trim(),
+          text: (row[2] || '').trim(),
+          rating: parseInt((row[3] || '5').toString().trim()) || 5,
+          date: (row[4] || '').trim()
+        });
+      } else {
+        loadedReviews.push({
+          product: '',
+          name: (row[0] || '').trim(),
+          text: (row[1] || '').trim(),
+          rating: parseInt((row[2] || '5').toString().trim()) || 5,
+          date: (row[3] || '').trim()
         });
       }
     }
+    reviewsLoaded = true;
     renderReviews();
+    if (currentProductIndex !== null) renderProductReviews();
   } catch (err) {
     console.error("Помилка завантаження відгуків:", err);
-    document.getElementById('reviews-list').innerHTML = '<div class="text-center py-6 text-red-400">Не вдалося завантажити відгуки. Спробуйте пізніше.</div>';
+    reviewsLoaded = true;
+    const el = document.getElementById('reviews-list');
+    if (el) el.innerHTML = '<div class="text-center py-6 text-red-400">Не вдалося завантажити відгуки.</div>';
   }
 }
 
 function renderReviews() {
   const container = document.getElementById('reviews-list');
+  if (!container) return;
   if (loadedReviews.length === 0) {
-    container.innerHTML = '<div class="text-center py-10 text-slate-400">Відгуків поки немає. Будьте першим, хто залишить відгук!</div>';
+    container.innerHTML = '<div class="text-center py-10 text-slate-400">Відгуків поки немає. Будьте першим!</div>';
     return;
   }
-
   let html = '';
   loadedReviews.forEach(rev => {
-    let stars = '⭐'.repeat(rev.rating || 5);
+    let stars = '⭐'.repeat(Math.min(5, rev.rating || 5));
+    const productLine = rev.product
+      ? `<div class="text-[10px] text-amber-700 font-medium mb-1">📦 ${rev.product}</div>`
+      : '';
     html += `
       <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm">
+        ${productLine}
         <div class="flex justify-between items-center mb-1.5">
           <span class="font-bold text-slate-800 text-sm">${rev.name}</span>
-          <span class="text-xs text-amber-500 font-bold flex gap-0.5">${stars}</span>
+          <span class="text-xs text-amber-500 font-bold">${stars}</span>
         </div>
         <p class="text-slate-600 text-xs leading-relaxed whitespace-pre-line">${rev.text}</p>
         ${rev.date ? `<div class="text-[10px] text-slate-400 mt-2 text-right">${rev.date}</div>` : ''}
       </div>`;
   });
   container.innerHTML = html;
+}
+
+function getReviewsForProduct(productName) {
+  if (!productName) return [];
+  const name = productName.trim().toLowerCase();
+  return loadedReviews.filter(r => r.product && r.product.trim().toLowerCase() === name);
+}
+
+function renderProductReviews() {
+  const list = document.getElementById('product-reviews-list');
+  const countEl = document.getElementById('product-reviews-count');
+  if (!list) return;
+
+  if (currentProductIndex === null) {
+    list.innerHTML = '';
+    return;
+  }
+  const p = allProducts[currentProductIndex];
+  const reviews = getReviewsForProduct(p.name);
+
+  if (countEl) countEl.textContent = reviews.length ? `(${reviews.length})` : '';
+
+  if (reviews.length === 0) {
+    list.innerHTML = '<div class="text-center py-4 text-slate-400 text-xs">Відгуків ще немає. Будьте першим!</div>';
+    return;
+  }
+
+  let html = '';
+  reviews.forEach(rev => {
+    const stars = '⭐'.repeat(Math.min(5, rev.rating || 5));
+    html += `
+      <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+        <div class="flex justify-between items-center mb-1">
+          <span class="font-bold text-slate-800 text-xs">${rev.name}</span>
+          <span class="text-xs text-amber-500">${stars}</span>
+        </div>
+        <p class="text-slate-600 text-xs leading-relaxed whitespace-pre-line">${rev.text}</p>
+        ${rev.date ? `<div class="text-[10px] text-slate-400 mt-1.5 text-right">${rev.date}</div>` : ''}
+      </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function toggleReviewForm() {
+  const form = document.getElementById('product-review-form');
+  if (!form) return;
+  form.classList.toggle('hidden');
+  if (!form.classList.contains('hidden')) {
+    currentReviewRating = 5;
+    setReviewRating(5);
+    document.getElementById('review-name').value = '';
+    document.getElementById('review-text').value = '';
+  }
+}
+
+function setReviewRating(n) {
+  currentReviewRating = n;
+  document.querySelectorAll('.review-star').forEach(btn => {
+    const v = parseInt(btn.getAttribute('data-v'), 10);
+    if (v <= n) {
+      btn.style.color = '#fbbf24'; // жовта
+    } else {
+      btn.style.color = '#d1d5db'; // сіра
+    }
+  });
+}
+
+async function submitProductReview() {
+  if (currentProductIndex === null) return;
+  const p = allProducts[currentProductIndex];
+  const name = (document.getElementById('review-name').value || '').trim();
+  const text = (document.getElementById('review-text').value || '').trim();
+
+  if (!name || !text) {
+    showToast("❌ Вкажіть ім'я та текст відгуку", "error");
+    return;
+  }
+  if (!REVIEWS_API_URL) {
+    showToast("❌ Відгуки ще не налаштовані (немає API URL)", "error");
+    return;
+  }
+
+  const btn = document.getElementById('submit-review-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Надсилаємо...';
+
+  const payload = {
+    product: p.name,
+    name: name,
+    text: text,
+    rating: currentReviewRating
+  };
+
+  try {
+    // Зберігаємо відгук автоматично (Apps Script → таблиця)
+    const res = await fetch(REVIEWS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data && data.ok) {
+      const saved = data.review || {
+        product: p.name,
+        name: name,
+        text: text,
+        rating: currentReviewRating,
+        date: new Date().toLocaleDateString('uk-UA')
+      };
+      loadedReviews.unshift(saved);
+      renderProductReviews();
+      renderReviews();
+      document.getElementById('product-review-form').classList.add('hidden');
+      showToast('✅ Дякуємо за відгук!');
+
+      // Дублюємо в Telegram (необов'язково, але зручно)
+      const stars = '⭐'.repeat(currentReviewRating);
+      const msg =
+        `⭐ <b>Новий відгук</b>\n\n` +
+        `📦 <b>Товар:</b> ${p.name}\n` +
+        `👤 <b>Ім'я:</b> ${name}\n` +
+        `Оцінка: ${stars}\n\n💬 ${text}`;
+      fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: 'HTML' })
+      }).catch(() => {});
+    } else {
+      showToast('❌ Помилка збереження відгуку', 'error');
+    }
+  } catch (e) {
+    console.error(e);
+    showToast('❌ Помилка з\'єднання', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Надіслати відгук';
+  }
 }
 
 function showReviewsModal() {
@@ -938,6 +1159,16 @@ function showProductDetails(index) {
     addToCart(index, currentModalQty, chosenSize, chosenColor, chosenScent, activePrice);
     hideProductModal();
   };
+
+  // Відгуки по цьому товару
+  document.getElementById('product-review-form')?.classList.add('hidden');
+  const revList = document.getElementById('product-reviews-list');
+  if (revList) revList.innerHTML = '<div class="text-center py-4 text-slate-400 text-xs">Завантаження...</div>';
+  if (reviewsLoaded) {
+    renderProductReviews();
+  } else {
+    loadReviewsFromSheet().then(() => renderProductReviews());
+  }
 
   history.pushState({modal: "product"}, null, null);
   document.getElementById('product-modal').classList.remove('hidden');
@@ -1373,6 +1604,7 @@ function initApp() {
     history.replaceState({ page: 'home' }, '', location.href.split('#')[0] + '#');
   }
   loadProductsFromSheet();
+  loadReviewsFromSheet(); // заздалегідь вантажимо відгуки
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);
