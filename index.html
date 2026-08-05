@@ -16,7 +16,12 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body { font-family: system-ui, sans-serif; }
-.product-card { transition: all 0.2s ease; cursor: pointer; }
+.product-card {
+  transition: all 0.2s ease;
+  cursor: pointer;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 280px;
+}
 .product-card:active { transform: scale(0.98); }
 .clamp-desc {
   display: -webkit-box !important;
@@ -24,6 +29,13 @@ body { font-family: system-ui, sans-serif; }
   -webkit-box-orient: vertical !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+}
+.product-img {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.product-img.is-loaded {
+  opacity: 1;
 }
 #lightbox-img {
   transition: transform 0.1s ease-out;
@@ -800,22 +812,25 @@ async function loadProductsFromSheet() {
   const cachedData = localStorage.getItem(CACHE_KEY);
   const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
   const now = Date.now();
+  const isCacheValid = cachedData && cachedTime && (now - parseInt(cachedTime) < CACHE_EXPIRE);
 
-  if (cachedData && cachedTime && (now - parseInt(cachedTime) < CACHE_EXPIRE)) {
-    allProducts = JSON.parse(cachedData);
-    renderCategories();
-    applyFilterAndSort();
-    initSwipeListeners();
-    return;
+  // Спочатку показуємо кеш — магазин відкривається одразу
+  if (cachedData) {
+    try {
+      allProducts = JSON.parse(cachedData);
+      renderCategories();
+      applyFilterAndSort();
+      initSwipeListeners();
+    } catch (e) { console.warn('Пошкоджений кеш', e); }
   }
+  if (isCacheValid) return;
 
   try {
     const response = await fetch(SPREADSHEET_URL);
     if (!response.ok) throw new Error(`Помилка: ${response.status}`);
     const csvText = await response.text();
-
     let rows = parseCSV(csvText);
-    allProducts = [];
+    const freshProducts = [];
 
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
@@ -827,18 +842,15 @@ async function loadProductsFromSheet() {
             .filter(Boolean);
         }
         let safePrice = row[2] ? row[2].trim() : '0,00';
-
         let rawCategory = row[1] ? row[1].trim() : 'Інше';
         let categoryPart = rawCategory;
         let subcategoryPart = null;
-
         if (rawCategory.includes('/')) {
           let parts = rawCategory.split('/');
           categoryPart = parts[0].trim();
           subcategoryPart = parts[1] ? parts[1].trim() : null;
         }
-
-        allProducts.push({
+        freshProducts.push({
           name: row[0].trim(),
           category: categoryPart,
           subcategory: subcategoryPart,
@@ -851,20 +863,18 @@ async function loadProductsFromSheet() {
       }
     }
 
+    allProducts = freshProducts;
     localStorage.setItem(CACHE_KEY, JSON.stringify(allProducts));
-    localStorage.setItem(CACHE_TIME_KEY, now.toString());
+    localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
 
-    renderCategories();
-    applyFilterAndSort();
+    if (!selectedCategory && !selectedSubcategory && !currentSearchTerm) {
+      renderCategories();
+      applyFilterAndSort();
+    }
     initSwipeListeners();
   } catch (error) {
     console.error(error);
-    if (cachedData) {
-      allProducts = JSON.parse(cachedData);
-      renderCategories();
-      applyFilterAndSort();
-      initSwipeListeners();
-    } else {
+    if (!cachedData) {
       document.getElementById('products').innerHTML = '<p class="col-span-2 text-center py-10 text-red-400">Не вдалося завантажити товари. Перевірте інтернет або таблицю.</p>';
     }
   }
@@ -941,34 +951,129 @@ function applyFilterAndSort() {
   }
 
   updateFilterIndicator();
-  renderProducts(filtered);
+  filteredProductsCache = filtered;
+  renderedCount = 0;
+  renderProductsPage(true);
+}
+
+let imageObserver = null;
+let loadMoreObserver = null;
+let filteredProductsCache = [];
+let renderedCount = 0;
+const PAGE_SIZE = 12;
+
+function initLazyImages() {
+  if (imageObserver) imageObserver.disconnect();
+  const imgs = document.querySelectorAll('img.product-img[data-src]');
+  if (!imgs.length) return;
+  if (!('IntersectionObserver' in window)) {
+    imgs.forEach(img => loadProductImage(img));
+    return;
+  }
+  imageObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        loadProductImage(entry.target);
+        imageObserver.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: '250px 0px', threshold: 0.01 });
+  imgs.forEach(img => imageObserver.observe(img));
+}
+
+function loadProductImage(img) {
+  const src = img.getAttribute('data-src');
+  if (!src) return;
+  img.removeAttribute('data-src');
+  img.onload = () => img.classList.add('is-loaded');
+  img.onerror = () => img.classList.add('is-loaded');
+  img.src = src;
+}
+
+function buildProductCard(p, idx, realIndex) {
+  const mainImage = p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=60';
+  const isAboveFold = idx < 4 && renderedCount === 0;
+  const imgTag = isAboveFold
+    ? `<img src="${mainImage}" class="product-img is-loaded max-w-full max-h-full object-contain" loading="eager" decoding="async" fetchpriority="high" alt="">`
+    : `<img data-src="${mainImage}" class="product-img max-w-full max-h-full object-contain" loading="lazy" decoding="async" alt="">`;
+
+  return `
+    <div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col justify-between">
+      <div>
+        <div class="w-full h-40 bg-slate-50 flex items-center justify-center overflow-hidden">
+          ${imgTag}
+        </div>
+        <div class="p-3">
+          <h3 class="text-sm font-bold text-slate-800 leading-tight line-clamp-2 min-h-[40px]">${p.name}</h3>
+          <p class="text-slate-500 text-xs mt-1 min-h-[32px] clamp-desc">${p.description || ''}</p>
+        </div>
+      </div>
+      <div class="p-3 pt-0">
+        <p class="text-slate-800 font-black text-base">${p.price} грн</p>
+        <button onclick="addToCartFromList(${realIndex}); event.stopPropagation();" class="mt-2 w-full bg-[#242426] active:bg-[#323235] text-amber-400 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border border-[#3a3a3d]">В кошик</button>
+      </div>
+    </div>`;
+}
+
+function renderProductsPage(reset) {
+  const container = document.getElementById('products');
+  const products = filteredProductsCache;
+
+  if (!products.length) {
+    container.innerHTML = '<p class="col-span-2 text-center py-10 text-slate-500">Товарів не знайдено</p>';
+    return;
+  }
+
+  const nameToIndex = new Map();
+  allProducts.forEach((item, i) => nameToIndex.set(item.name, i));
+
+  if (reset) {
+    renderedCount = 0;
+    container.innerHTML = '';
+  }
+
+  const start = renderedCount;
+  const end = Math.min(start + PAGE_SIZE, products.length);
+  let html = '';
+  for (let i = start; i < end; i++) {
+    const p = products[i];
+    const realIndex = nameToIndex.get(p.name) ?? 0;
+    html += buildProductCard(p, i - start, realIndex);
+  }
+
+  const oldSentinel = document.getElementById('load-more-sentinel');
+  if (oldSentinel) oldSentinel.remove();
+
+  container.insertAdjacentHTML('beforeend', html);
+  renderedCount = end;
+
+  if (renderedCount < products.length) {
+    container.insertAdjacentHTML('beforeend',
+      '<div id="load-more-sentinel" class="col-span-2 h-8 flex items-center justify-center text-slate-400 text-xs">⏳</div>'
+    );
+    setupLoadMoreObserver();
+  }
+
+  requestAnimationFrame(() => initLazyImages());
+}
+
+function setupLoadMoreObserver() {
+  if (loadMoreObserver) loadMoreObserver.disconnect();
+  const sentinel = document.getElementById('load-more-sentinel');
+  if (!sentinel || !('IntersectionObserver' in window)) return;
+  loadMoreObserver = new IntersectionObserver((entries) => {
+    if (entries.some(e => e.isIntersecting)) {
+      loadMoreObserver.disconnect();
+      renderProductsPage(false);
+    }
+  }, { rootMargin: '400px 0px' });
+  loadMoreObserver.observe(sentinel);
 }
 
 function renderProducts(products) {
-  let html = '';
-  products.forEach((p, idx) => {
-    const realIndex = allProducts.findIndex(item => item.name === p.name);
-    const mainImage = p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=60';
-    const loadingType = idx < 4 ? 'eager' : 'lazy';
-
-    html += `
-      <div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col justify-between">
-        <div>
-          <div class="w-full h-40 bg-slate-50 flex items-center justify-center overflow-hidden">
-            <img src="${mainImage}" class="max-w-full max-h-full object-contain" loading="${loadingType}" alt="${p.name}">
-          </div>
-          <div class="p-3">
-            <h3 class="text-sm font-bold text-slate-800 leading-tight line-clamp-2 min-h-[40px]">${p.name}</h3>
-            <p class="text-slate-500 text-xs mt-1 min-h-[32px] clamp-desc">${p.description || ''}</p>
-          </div>
-        </div>
-        <div class="p-3 pt-0">
-          <p class="text-slate-800 font-black text-base">${p.price} грн</p>
-          <button onclick="addToCartFromList(${realIndex}); event.stopPropagation();" class="mt-2 w-full bg-[#242426] active:bg-[#323235] text-amber-400 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border border-[#3a3a3d]">В кошик</button>
-        </div>
-      </div>`;
-  });
-  document.getElementById('products').innerHTML = html || '<p class="col-span-2 text-center py-10 text-slate-500">Товарів не знайдено</p>';
+  filteredProductsCache = products;
+  renderedCount = 0;
+  renderProductsPage(true);
 }
 
 function toggleSortMenu() {
