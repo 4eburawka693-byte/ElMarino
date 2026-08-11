@@ -930,18 +930,20 @@ function renderSubcategories() {
 function applyFilterAndSort() {
   let filtered = [...allProducts];
 
-  if (selectedCategory) {
-    filtered = filtered.filter(p => p.category === selectedCategory);
-  }
-  if (selectedSubcategory) {
-    filtered = filtered.filter(p => p.subcategory === selectedSubcategory);
-  }
+  // Якщо є пошук — шукаємо по всьому каталогу (ігноруємо категорію)
   if (currentSearchTerm) {
     filtered = filtered.filter(p =>
       p.name.toLowerCase().includes(currentSearchTerm) ||
       (p.description && p.description.toLowerCase().includes(currentSearchTerm)) ||
       (p.searchTags && p.searchTags.toLowerCase().includes(currentSearchTerm))
     );
+  } else {
+    if (selectedCategory) {
+      filtered = filtered.filter(p => p.category === selectedCategory);
+    }
+    if (selectedSubcategory) {
+      filtered = filtered.filter(p => p.subcategory === selectedSubcategory);
+    }
   }
 
   if (currentSortOrder === 'low-to-high') {
@@ -1125,7 +1127,15 @@ function filterBySubcategory(sub) {
 }
 
 function filterProducts() {
-  currentSearchTerm = document.getElementById('search').value.toLowerCase();
+  currentSearchTerm = document.getElementById('search').value.toLowerCase().trim();
+  // Під час пошуку скидаємо категорію, щоб шукати по всіх товарах
+  if (currentSearchTerm) {
+    if (selectedCategory || selectedSubcategory) {
+      selectedCategory = null;
+      selectedSubcategory = null;
+      renderCategories();
+    }
+  }
   applyFilterAndSort();
 }
 
