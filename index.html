@@ -38,9 +38,13 @@ body { font-family: system-ui, sans-serif; }
   opacity: 1;
 }
 #lightbox-img {
-  transition: transform 0.1s ease-out;
+  transition: transform 0.15s ease-out;
   transform-origin: center center;
   touch-action: none;
+  will-change: transform;
+}
+#lightbox-img.zooming {
+  transition: none; /* під час щипка — без затримки, щоб не «прыгало» */
 }
 </style>
 </head>
@@ -365,7 +369,11 @@ let startY = 0;
 let translateX = 0;
 let translateY = 0;
 let initialDistance = 0;
+let initialScale = 1;
 let lastTapTime = 0;
+let isPinching = false;
+let pinchJustEnded = false;
+let lightboxTouchStartY = 0;
 
 let deferredInstallPrompt = null;
 let loadedReviews = [];
@@ -1650,32 +1658,36 @@ function initSwipeListeners() {
   const lightboxImg = document.getElementById('lightbox-img');
   if (!lightbox || !lightboxImg) return;
 
-  // Логіка жестів для лайтбоксу (пінч-зум, перетягування та свайпи)
+  // Плавний пінч-зум + свайп тільки коли фото не збільшене
   lightbox.addEventListener('touchstart', e => {
     if (e.touches.length === 2) {
+      isPinching = true;
+      pinchJustEnded = false;
+      lightboxImg.classList.add('zooming');
       initialDistance = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
+      initialScale = scale;
     } else if (e.touches.length === 1) {
       startX = e.touches[0].clientX - translateX;
       startY = e.touches[0].clientY - translateY;
       lightboxTouchStartX = e.touches[0].screenX;
+      lightboxTouchStartY = e.touches[0].screenY;
     }
   }, {passive: true});
 
   lightbox.addEventListener('touchmove', e => {
-    if (e.touches.length === 2) {
-      let currentDistance = Math.hypot(
+    if (e.touches.length === 2 && initialDistance > 0) {
+      isPinching = true;
+      const currentDistance = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
-      if (initialDistance > 0) {
-        let factor = currentDistance / initialDistance;
-        scale = Math.min(Math.max(1, scale * (factor > 1 ? 1.05 : 0.95)), 4);
-        updateTransform();
-      }
-    } else if (e.touches.length === 1 && scale > 1) {
+      // Плавний зум від початкового масштабу (не стрибками)
+      scale = Math.min(4, Math.max(1, initialScale * (currentDistance / initialDistance)));
+      updateTransform();
+    } else if (e.touches.length === 1 && scale > 1.05 && !isPinching) {
       translateX = e.touches[0].clientX - startX;
       translateY = e.touches[0].clientY - startY;
       updateTransform();
@@ -1683,27 +1695,52 @@ function initSwipeListeners() {
   }, {passive: true});
 
   lightbox.addEventListener('touchend', e => {
-    if (e.changedTouches.length === 1 && scale === 1) {
+    if (isPinching || e.touches.length >= 1) {
+      // Закінчили щипок — не перемикаємо фото
+      if (e.touches.length < 2) {
+        isPinching = false;
+        pinchJustEnded = true;
+        lightboxImg.classList.remove('zooming');
+        initialDistance = 0;
+        if (scale < 1.08) {
+          resetZoom();
+        }
+        // Блокуємо свайп ще 300мс після зуму
+        setTimeout(() => { pinchJustEnded = false; }, 300);
+      }
+      return;
+    }
+
+    if (pinchJustEnded) return;
+
+    // Свайп лише якщо зум = 1 і жест переважно горизонтальний
+    if (scale <= 1.05 && e.changedTouches.length === 1) {
       lightboxTouchEndX = e.changedTouches[0].screenX;
-      handleLightboxSwipe();
+      const endY = e.changedTouches[0].screenY;
+      const dx = lightboxTouchEndX - lightboxTouchStartX;
+      const dy = endY - lightboxTouchStartY;
+      if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        handleLightboxSwipe();
+      }
     }
-    if (e.touches.length < 2) {
-      initialDistance = 0;
-    }
-    if (scale <= 1) {
+
+    if (scale <= 1.05) {
       resetZoom();
     }
   }, {passive: true});
 
-  // Подвійний тап для швидкого зуму
+  // Подвійний тап — плавний зум 2x
   lightboxImg.addEventListener('click', e => {
-    let currentTime = new Date().getTime();
-    let tapLength = currentTime - lastTapTime;
-    if (tapLength < 300 && tapLength > 0) {
-      if (scale > 1) {
+    const currentTime = Date.now();
+    const tapLength = currentTime - lastTapTime;
+    if (tapLength < 280 && tapLength > 0) {
+      lightboxImg.classList.remove('zooming');
+      if (scale > 1.1) {
         resetZoom();
       } else {
-        scale = 2.5;
+        scale = 2;
+        translateX = 0;
+        translateY = 0;
         updateTransform();
       }
       e.stopPropagation();
@@ -1723,14 +1760,16 @@ function handleSwipe() {
 }
 
 function handleLightboxSwipe() {
-  const threshold = 50;
-  if (lightboxTouchEndX < lightboxTouchStartX - threshold) {
+  if (scale > 1.05 || isPinching || pinchJustEnded) return;
+  const dx = lightboxTouchEndX - lightboxTouchStartX;
+  if (dx < -70) {
     changePhoto(1);
     updateLightboxImage();
-  }
-  if (lightboxTouchEndX > lightboxTouchStartX + threshold) {
+    resetZoom();
+  } else if (dx > 70) {
     changePhoto(-1);
     updateLightboxImage();
+    resetZoom();
   }
 }
 
