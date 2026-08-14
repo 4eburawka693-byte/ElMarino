@@ -245,14 +245,17 @@ body { font-family: system-ui, sans-serif; }
       </div>
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex items-center justify-between gap-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] z-30">
-      <div>
-        <span class="text-slate-400 text-xs block font-medium">Загальна ціна</span>
-        <span id="modal-product-price" class="text-2xl font-black text-slate-800"></span>
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex flex-col gap-2 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] z-30">
+      <p id="modal-stock-status" class="hidden text-center text-xs font-bold"></p>
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <span class="text-slate-400 text-xs block font-medium">Загальна ціна</span>
+          <span id="modal-product-price" class="text-2xl font-black text-slate-800"></span>
+        </div>
+        <button id="modal-product-btn" class="flex-1 bg-[#242426] active:bg-[#323235] text-amber-400 py-4 rounded-2xl font-bold transition-all shadow-lg text-center border border-[#3a3a3d] text-base">
+          Додати в кошик
+        </button>
       </div>
-      <button id="modal-product-btn" class="flex-1 bg-[#242426] active:bg-[#323235] text-amber-400 py-4 rounded-2xl font-bold transition-all shadow-lg text-center border border-[#3a3a3d] text-base">
-        Додати в кошик
-      </button>
     </div>
   </div>
 </div>
@@ -866,7 +869,8 @@ async function loadProductsFromSheet() {
           description: row[3] ? row[3].trim() : '',
           images: imagesArray,
           optionsField: row[5] ? row[5].trim() : '',
-          searchTags: row[6] ? row[6].trim() : ''
+          searchTags: row[6] ? row[6].trim() : '',
+          stockStatus: row[7] ? String(row[7]).trim() : ''
         });
       }
     }
@@ -1000,12 +1004,27 @@ function loadProductImage(img) {
   img.src = src;
 }
 
+function isUnavailable(p) {
+  const s = (p.stockStatus || '').toLowerCase();
+  if (!s) return false;
+  return /нема|нет в|out of|очікуєм|ожидаем|скоро в|немає|немае/.test(s);
+}
+
 function buildProductCard(p, idx, realIndex) {
   const mainImage = p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=60';
   const isAboveFold = idx < 4 && renderedCount === 0;
   const imgTag = isAboveFold
     ? `<img src="${mainImage}" class="product-img is-loaded max-w-full max-h-full object-contain" loading="eager" decoding="async" fetchpriority="high" alt="">`
     : `<img data-src="${mainImage}" class="product-img max-w-full max-h-full object-contain" loading="lazy" decoding="async" alt="">`;
+
+  const stock = (p.stockStatus || '').trim();
+  const unavailable = isUnavailable(p);
+  const stockHtml = stock
+    ? `<p class="text-[11px] font-bold mt-1 ${unavailable ? 'text-red-500' : 'text-amber-600'}">${stock}</p>`
+    : '';
+  const btnHtml = unavailable
+    ? `<button disabled class="mt-2 w-full bg-slate-200 text-slate-500 py-2.5 rounded-xl text-sm font-bold border border-slate-200 cursor-not-allowed">Недоступно</button>`
+    : `<button onclick="addToCartFromList(${realIndex}); event.stopPropagation();" class="mt-2 w-full bg-[#242426] active:bg-[#323235] text-amber-400 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border border-[#3a3a3d]">В кошик</button>`;
 
   return `
     <div onclick="showProductDetails(${realIndex})" class="product-card bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col justify-between">
@@ -1020,7 +1039,8 @@ function buildProductCard(p, idx, realIndex) {
       </div>
       <div class="p-3 pt-0">
         <p class="text-slate-800 font-black text-base">${p.price} грн</p>
-        <button onclick="addToCartFromList(${realIndex}); event.stopPropagation();" class="mt-2 w-full bg-[#242426] active:bg-[#323235] text-amber-400 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border border-[#3a3a3d]">В кошик</button>
+        ${stockHtml}
+        ${btnHtml}
       </div>
     </div>`;
 }
@@ -1188,6 +1208,11 @@ function updateFilterIndicator() {
 }
 
 function addToCartFromList(index) {
+  const p0 = allProducts[index];
+  if (p0 && isUnavailable(p0)) {
+    showToast(p0.stockStatus || 'Товар недоступний', 'error');
+    return;
+  }
   const p = allProducts[index];
   const parsedData = parseOptionsField(p.optionsField);
   let defaultSize = parsedData.sizes.length > 0 ? parseSizePrice(parsedData.sizes[0], p.price).sizeName : null;
@@ -1277,31 +1302,53 @@ function showProductDetails(index) {
   updateModalPrice();
   setTimeout(() => { syncColorByPhoto(); }, 10);
 
-  document.getElementById('modal-product-btn').onclick = function() {
-    let chosenSize = (!sizeBlock.classList.contains('hidden')) ? sizeSelect.value : null;
-    let chosenColor = (!colorBlock.classList.contains('hidden')) ? colorSelect.value : null;
-    let chosenScent = (!scentBlock.classList.contains('hidden')) ? scentSelect.value : null;
+  const stockEl = document.getElementById('modal-stock-status');
+  const modalBtn = document.getElementById('modal-product-btn');
+  const stockText = (p.stockStatus || '').trim();
+  if (stockText) {
+    stockEl.textContent = stockText;
+    stockEl.classList.remove('hidden');
+    stockEl.className = 'text-center text-xs font-bold ' + (isUnavailable(p) ? 'text-red-500' : 'text-amber-600');
+  } else {
+    stockEl.textContent = '';
+    stockEl.classList.add('hidden');
+  }
 
-    if (!sizeBlock.classList.contains('hidden') && !chosenSize) {
-      showToast("❌ Будь ласка, оберіть потрібний варіант!", "error");
-      return;
-    }
-    if (!colorBlock.classList.contains('hidden') && !chosenColor) {
-      showToast("❌ Будь ласка, оберіть колір товару!", "error");
-      return;
-    }
-    if (!scentBlock.classList.contains('hidden') && !chosenScent) {
-      showToast("❌ Будь ласка, оберіть запах товару!", "error");
-      return;
-    }
+  if (isUnavailable(p)) {
+    modalBtn.textContent = stockText || 'Недоступно';
+    modalBtn.disabled = true;
+    modalBtn.className = 'flex-1 bg-slate-200 text-slate-500 py-4 rounded-2xl font-bold text-center border border-slate-200 text-base cursor-not-allowed';
+    modalBtn.onclick = null;
+  } else {
+    modalBtn.textContent = 'Додати в кошик';
+    modalBtn.disabled = false;
+    modalBtn.className = 'flex-1 bg-[#242426] active:bg-[#323235] text-amber-400 py-4 rounded-2xl font-bold transition-all shadow-lg text-center border border-[#3a3a3d] text-base';
+    modalBtn.onclick = function() {
+      let chosenSize = (!sizeBlock.classList.contains('hidden')) ? sizeSelect.value : null;
+      let chosenColor = (!colorBlock.classList.contains('hidden')) ? colorSelect.value : null;
+      let chosenScent = (!scentBlock.classList.contains('hidden')) ? scentSelect.value : null;
 
-    let activePrice = p.price;
-    if (!sizeBlock.classList.contains('hidden') && sizeSelect.selectedOptions.length > 0) {
-      activePrice = sizeSelect.selectedOptions[0].getAttribute('data-price');
-    }
-    addToCart(index, currentModalQty, chosenSize, chosenColor, chosenScent, activePrice);
-    hideProductModal();
-  };
+      if (!sizeBlock.classList.contains('hidden') && !chosenSize) {
+        showToast("❌ Будь ласка, оберіть потрібний варіант!", "error");
+        return;
+      }
+      if (!colorBlock.classList.contains('hidden') && !chosenColor) {
+        showToast("❌ Будь ласка, оберіть колір товару!", "error");
+        return;
+      }
+      if (!scentBlock.classList.contains('hidden') && !chosenScent) {
+        showToast("❌ Будь ласка, оберіть запах товару!", "error");
+        return;
+      }
+
+      let activePrice = p.price;
+      if (!sizeBlock.classList.contains('hidden') && sizeSelect.selectedOptions.length > 0) {
+        activePrice = sizeSelect.selectedOptions[0].getAttribute('data-price');
+      }
+      addToCart(index, currentModalQty, chosenSize, chosenColor, chosenScent, activePrice);
+      hideProductModal();
+    };
+  }
 
   // Відгуки по цьому товару
   document.getElementById('product-review-form')?.classList.add('hidden');
@@ -1788,4 +1835,3 @@ if (document.readyState === 'loading') {
 </script>
 </body>
 </html>
-
