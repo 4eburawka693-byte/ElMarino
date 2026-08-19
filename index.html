@@ -77,12 +77,14 @@ body { font-family: system-ui, sans-serif; }
     </div>
   </header>
 
-  <div class="p-4 flex flex-col gap-3">
+  <div id="search-bar" class="p-4 flex flex-col gap-3 sticky top-[56px] z-30 bg-[#f4f5f7]/95 backdrop-blur-sm border-b border-slate-100/80">
     <div class="flex gap-2 items-center">
       <div class="relative flex-1">
-        <input id="search" type="text" placeholder="🔍 Пошук товарів..."
+        <input id="search" type="search" enterkeyhint="search" autocomplete="off"
+          placeholder="🔍 Пошук товарів..."
           class="w-full p-3.5 pl-4 rounded-2xl border border-slate-200 focus:border-amber-500 outline-none shadow-sm text-sm"
-          onkeyup="filterProducts()">
+          oninput="debouncedFilterProducts()"
+          onfocus="onSearchFocus()">
       </div>
       <button onclick="resetFilters()" class="bg-white text-slate-700 h-12 px-4 rounded-2xl text-sm font-medium border border-slate-200 active:bg-slate-50 transition-colors shadow-sm">Всі</button>
 
@@ -104,9 +106,9 @@ body { font-family: system-ui, sans-serif; }
     </div>
   </div>
 
-  <div id="subcat-anchor" class="scroll-mt-20"></div>
+  <div id="subcat-anchor" class="scroll-mt-28"></div>
 
-  <div class="px-4 mb-3 flex flex-col gap-3">
+  <div id="categories-wrap" class="px-4 mb-3 flex flex-col gap-3">
     <div id="categories" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
     <div id="subcategories" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2 bg-[#f2e6dc] p-4 rounded-2xl border-2 border-[#dfc3b0] shadow-inner"></div>
   </div>
@@ -1154,6 +1156,34 @@ function filterBySubcategory(sub) {
   }
 }
 
+function onSearchFocus() {
+  // Підняти пошук під шапку, щоб під клавіатурою було видно товари
+  setTimeout(() => {
+    const bar = document.getElementById('search-bar');
+    if (!bar) return;
+    const headerH = document.querySelector('header')?.offsetHeight || 56;
+    const y = bar.getBoundingClientRect().top + window.scrollY - headerH;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  }, 120);
+}
+
+function updateCategoriesVisibility() {
+  const wrap = document.getElementById('categories-wrap');
+  if (!wrap) return;
+  // Під час пошуку ховаємо категорії — більше місця для результатів
+  if (currentSearchTerm) {
+    wrap.classList.add('hidden');
+  } else {
+    wrap.classList.remove('hidden');
+  }
+}
+
+let searchTimeout = null;
+function debouncedFilterProducts() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(filterProducts, 120);
+}
+
 function filterProducts() {
   currentSearchTerm = document.getElementById('search').value.toLowerCase().trim();
   // Під час пошуку скидаємо категорію, щоб шукати по всіх товарах
@@ -1164,7 +1194,12 @@ function filterProducts() {
       renderCategories();
     }
   }
+  updateCategoriesVisibility();
   applyFilterAndSort();
+  // Після оновлення списку тримаємо пошук і перші товари в зоні видимості
+  if (currentSearchTerm) {
+    onSearchFocus();
+  }
 }
 
 function resetFilters() {
@@ -1173,6 +1208,7 @@ function resetFilters() {
   document.getElementById('search').value = '';
   currentSearchTerm = "";
   history.pushState({ page: 'home' }, '', '#');
+  updateCategoriesVisibility();
   renderCategories();
   applyFilterAndSort();
 }
@@ -1184,6 +1220,7 @@ function goHome() {
   currentSortOrder = "default";
   document.getElementById('search').value = '';
   history.pushState({ page: 'home' }, '', '#');
+  updateCategoriesVisibility();
   renderCategories();
   applyFilterAndSort();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1835,3 +1872,4 @@ if (document.readyState === 'loading') {
 </script>
 </body>
 </html>
+
