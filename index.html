@@ -174,8 +174,8 @@ body { font-family: system-ui, sans-serif; }
     <button onclick="hideProductModal()" class="fixed top-4 right-4 bg-[#242426]/70 text-white w-10 h-10 rounded-full flex items-center justify-center text-base font-bold z-50 shadow-lg border border-white/20 active:scale-95">✕</button>
 
     <div class="overflow-y-auto flex-1 pb-28">
-      <div id="modal-swipe-zone" class="w-full h-80 sm:h-96 bg-slate-50 flex items-center justify-center overflow-hidden relative cursor-pointer" onclick="openFullscreenPhoto()">
-        <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain pointer-events-none">
+      <div id="modal-swipe-zone" class="w-full h-80 sm:h-96 bg-slate-50 flex items-center justify-center overflow-hidden relative cursor-pointer" style="touch-action: pan-y;" onclick="if(!window.__modalSwiped) openFullscreenPhoto()">
+        <img id="modal-product-image" src="" class="max-w-full max-h-full object-contain pointer-events-none select-none" draggable="false">
         <button id="prev-photo-btn" onclick="changePhoto(-1); event.stopPropagation();" class="absolute left-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none z-10">＜</button>
         <button id="next-photo-btn" onclick="changePhoto(1); event.stopPropagation();" class="absolute right-3 bg-[#242426]/40 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg active:bg-[#242426]/60 select-none z-10">＞</button>
         <span id="photo-counter" class="absolute bottom-3 right-3 bg-[#242426]/60 text-white text-xs px-2.5 py-1 rounded-full font-medium"></span>
@@ -1118,6 +1118,17 @@ function setSortOrder(order) {
   applyFilterAndSort();
 }
 
+function scrollToProducts() {
+  setTimeout(() => {
+    const productsEl = document.getElementById('products');
+    if (!productsEl) return;
+    const headerH = (document.querySelector('header')?.offsetHeight || 56) +
+      (document.getElementById('search-bar')?.offsetHeight || 60) + 8;
+    const y = productsEl.getBoundingClientRect().top + window.scrollY - headerH;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  }, 80);
+}
+
 function filterByCategory(cat) {
   if (selectedCategory === cat) {
     selectedCategory = null;
@@ -1148,11 +1159,9 @@ function filterBySubcategory(sub) {
   }
   renderSubcategories();
   applyFilterAndSort();
+  // Після підкатегорії піднімаємо екран до товарів
   if (selectedSubcategory) {
-    setTimeout(() => {
-      const anchorEl = document.getElementById('subcat-anchor');
-      if (anchorEl) anchorEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 50);
+    scrollToProducts();
   }
 }
 
@@ -1725,18 +1734,37 @@ function hideSuccessModal(fromPopState = false) {
   if (!fromPopState && window.history.state?.modal === "success") history.back();
 }
 
+let modalSwipeBound = false;
 function initSwipeListeners() {
   const zone = document.getElementById('modal-swipe-zone');
-  if (!zone) return;
+  if (zone && !modalSwipeBound) {
+    modalSwipeBound = true;
+    let startX = 0, startY = 0;
 
-  zone.addEventListener('touchstart', e => {
-    touchStartX = e.changedTouches[0].screenX;
-  }, {passive: true});
+    zone.addEventListener('touchstart', e => {
+      if (!e.touches || !e.touches[0]) return;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      touchStartX = e.touches[0].screenX;
+      window.__modalSwiped = false;
+    }, {passive: true});
 
-  zone.addEventListener('touchend', e => {
-    touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
-  }, {passive: true});
+    zone.addEventListener('touchend', e => {
+      if (!e.changedTouches || !e.changedTouches[0]) return;
+      touchEndX = e.changedTouches[0].screenX;
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+      const dx = endX - startX;
+      const dy = endY - startY;
+      // Свайп лише якщо рух переважно горизонтальний
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+        window.__modalSwiped = true;
+        if (dx < 0) changePhoto(1);
+        else changePhoto(-1);
+        setTimeout(() => { window.__modalSwiped = false; }, 350);
+      }
+    }, {passive: true});
+  }
 
   const lightbox = document.getElementById('fullscreen-lightbox');
   const lightboxImg = document.getElementById('lightbox-img');
@@ -1872,4 +1900,3 @@ if (document.readyState === 'loading') {
 </script>
 </body>
 </html>
-
